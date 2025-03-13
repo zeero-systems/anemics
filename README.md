@@ -1,2 +1,3 @@
-# ts-framework
-A custom framework with minimal dependencies
+# ANEMICS
+
+An anemic framework with minimal dependencies
