@@ -1,4 +1,4 @@
-import type { AnnotationInterface, ArtifactType, DecorationType } from '@zxxxro/commons';
+import type { AnnotationInterface, ArtifactType, DecorationType, DecoratorFunctionType } from '@zxxxro/commons';
 
 import { AnnotationException, Common, Decorator, DecoratorKindEnum, Metadata, Text } from '@zxxxro/commons';
 import Framer from '~/controller/services/Framer.ts';
@@ -20,4 +20,4 @@ export class Model implements AnnotationInterface {
   }
 }
 
-export default () => Decorator.apply(Model);
+export default (): DecoratorFunctionType => Decorator.apply(Model);

@@ -1,5 +1,5 @@
 import type { MiddlewarePositionType } from '~/controller/types.ts';
-import type { AnnotationInterface, ArtifactType, DecorationType } from '@zxxxro/commons';
+import type { AnnotationInterface, ArtifactType, DecorationType, DecoratorFunctionType } from '@zxxxro/commons';
 
 import { AnnotationException, Common, Decorator, DecoratorKindEnum, Entity, Metadata } from '@zxxxro/commons';
 
@@ -23,4 +23,4 @@ export class Middleware extends Entity implements AnnotationInterface {
   }
 }
 
-export default (position: MiddlewarePositionType = 'last') => Decorator.apply(Middleware, position);
+export default (position: MiddlewarePositionType = 'last'): DecoratorFunctionType => Decorator.apply(Middleware, position);

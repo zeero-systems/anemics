@@ -1,4 +1,4 @@
-import type { AnnotationInterface, ArtifactType, DecorationType } from '@zxxxro/commons';
+import type { AnnotationInterface, ArtifactType, DecorationType, DecoratorFunctionType } from '@zxxxro/commons';
 import { ParameterType } from '~/controller/types.ts';
 
 import { AnnotationException, Common, Decorator, DecoratorKindEnum, Entity, Factory, Metadata } from '@zxxxro/commons';
@@ -65,4 +65,4 @@ export class Endpoint extends Entity implements AnnotationInterface {
   }
 }
 
-export default (path?: string | undefined) => Decorator.apply(Endpoint, { path });
+export default (path?: string | undefined): DecoratorFunctionType => Decorator.apply(Endpoint, { path });

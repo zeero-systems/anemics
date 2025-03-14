@@ -1,4 +1,4 @@
-import type { AnnotationInterface, ArtifactType, DecorationType } from '@zxxxro/commons';
+import type { AnnotationInterface, ArtifactType, DecorationType, DecoratorFunctionType } from '@zxxxro/commons';
 
 import { AnnotationException, Decorator, DecoratorKindEnum } from '@zxxxro/commons';
 
@@ -15,4 +15,4 @@ export class Options implements AnnotationInterface {
   }
 }
 
-export default (path?: string) => Decorator.apply(Options, { path });
+export default (path?: string): DecoratorFunctionType => Decorator.apply(Options, { path });
