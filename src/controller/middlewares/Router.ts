@@ -9,7 +9,7 @@ export class Router implements MiddlewareInterface {
   async onRequest(endpoint: EndpointType | undefined, context: ContextType, next: NextType): Promise<void> {
     if (endpoint) {
       const rawBody = await new endpoint.controller.target()[endpoint.handler.propertyKey](
-        ...(context.metadata.parameters || []),
+        ...(context.responser.metadata.parameters || []),
       );
 
       if (rawBody) {

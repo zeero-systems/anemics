@@ -11,12 +11,14 @@ export interface ResponserInterface {
   headers: Headers | undefined
   status: HttpStatusEnum | undefined
   statusText: string | undefined
+  metadata: Record<string | symbol, any>
   setRaw(raw: any): void
   setBody(body: BodyType): void
   setHeaders(headers: Headers): void
   setHeader(name: string, value: string): void
   setStatus(status: HttpStatusEnum): void
   setStatusText(statusText: string): void
+  addMetadata(key: string | symbol, value: any): void
 }
 
 export interface PathInterface { 

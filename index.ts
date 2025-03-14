@@ -30,14 +30,14 @@ class Validator implements MiddlewareInterface {
   static weigth = 0;
   async onRequest(endpoint: EndpointType | undefined, context: ContextType, next: NextType): Promise<void> {
     if (endpoint) {
-      if (context.metadata.model) {
+      if (context.responser.metadata.model) {
         const onlyInvalids = [
           ValidationEnum.INVALID,
           ValidationEnum.UNGUARDED,
           ValidationEnum.EXCEPTION,
           ValidationEnum.ERROR,
         ];
-        const validationErrors = await Artifact.validateProperties(context.metadata.model, onlyInvalids);
+        const validationErrors = await Artifact.validateProperties(context.responser.metadata.model, onlyInvalids);
 
         if (validationErrors) {
           context.responser.setBody(JSON.stringify(validationErrors));

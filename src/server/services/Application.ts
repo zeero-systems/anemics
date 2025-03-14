@@ -20,8 +20,7 @@ export class Application {
 
     const context: ContextType = { 
       requester: new Requester(request),
-      responser: new Responser(),
-      metadata: {}
+      responser: new Responser()
     }
     
     if (isMethod(context.requester.method)) {
@@ -42,7 +41,7 @@ export class Application {
         await next('middle', 0)();
         await next('after', 0)();
       } catch (error: any) {
-        context.metadata.error = error
+        context.responser.addMetadata('error', error)
         
         await next('error', 0)();
       }

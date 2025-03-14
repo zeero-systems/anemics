@@ -16,5 +16,4 @@ export type NextType = () => Promise<void>
 export type ContextType = { 
   requester: RequesterInterface
   responser: ResponserInterface
-  metadata: Record<string | symbol, any>
 }

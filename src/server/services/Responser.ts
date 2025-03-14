@@ -4,12 +4,13 @@ import type { BodyType } from '~/server/types.ts';
 import HttpStatusEnum from '~/server/enums/HttpStatusEnum.ts';
 
 export class Responser implements ResponserInterface {
+
   raw: any;
   body: BodyType 
   headers: Headers | undefined
   status: HttpStatusEnum | undefined
   statusText: string | undefined
-  code: string | undefined
+  metadata: Record<string | symbol, any> = {}
   
   setRaw(raw: any) {
     this.raw = raw
@@ -18,8 +19,8 @@ export class Responser implements ResponserInterface {
     this.body = body
   }
 
-  setCode(code: string) {
-    this.code = code
+  addMetadata(key: string | symbol, value: any): void {
+    this.metadata[key] = value
   }
 
   setHeaders(headers: Headers) {
