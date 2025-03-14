@@ -1,6 +1,6 @@
 {
   "name": "@zxxxro/anemics",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "license": "GPL-3.0",
   "exports": "./mod.ts",
   "tasks": {
@@ -12,8 +12,7 @@
     "@std/bdd": "jsr:@std/testing/bdd",
     "@std/assert": "jsr:@std/assert@1",
     "@std/expect": "jsr:@std/expect",
-    "@std/http": "jsr:@std/http",
-    "@zxxxro/commons": "jsr:@zxxxro/commons@0.x"
+    "@zxxxro/commons": "jsr:@zxxxro/commons@^0.17.1"
   },
   "fmt": {
     "files": {

@@ -12,9 +12,6 @@ export class Endpoint extends Entity implements AnnotationInterface {
       if (!Metadata.getProperty(artifact.target, Common.singleton)) {
         const decorationMap = decoration.context.metadata[Decorator.metadata];
 
-        console.log(decorationMap)
-        console.log(decoration.options)
-
         const properties = [...Object.getOwnPropertyNames(artifact.target.prototype), 'constructor'];
         const methods = ['Get', 'Post', 'Put', 'Patch', 'Options', 'Delete'];
 

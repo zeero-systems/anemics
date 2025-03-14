@@ -1,6 +1,5 @@
 import { ConstructorType } from '@zxxxro/commons';
 import { MethodType } from '~/server/types.ts';
-import type { ContextType, NextType } from '~/server/types.ts'
 
 export type ParameterType = ('request' | 'response' | 'query' | 'params' | 'formData') & string
 
@@ -23,4 +22,11 @@ export type EndpointType = {
   handler: HandlerType
 }
 
-export type MiddlewarePositionType = 'last' | 'first' | 'weight' 
+export type EventType = 'before' | 'middle' | 'after';
+
+export type ActionType = 'first' | 'last' | 'ordered';
+
+export type OptionsType = {
+  action: ActionType
+  event: EventType
+} & { [key: string | symbol]: any }

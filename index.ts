@@ -7,11 +7,12 @@ import { Artifact, Required, ValidationEnum } from '@zxxxro/commons';
 import { ContextType, NextType } from '~/server/types.ts';
 import { MiddlewareInterface } from '~/controller/interfaces.ts';
 import { ResponserInterface } from '~/server/interfaces.ts';
-import { EndpointType } from '~/controller/types.ts';
+import { ActionType, EndpointType, EventType } from '~/controller/types.ts';
 import Get from '~/controller/annotations/Get.ts';
 import Decoder from '~/server/middlewares/Decoder.ts';
 import Router from '~/controller/middlewares/Router.ts';
 import Encoder from '~/server/middlewares/Encoder.ts';
+import Middleware from '~/controller/annotations/Middleware.ts';
 
 @Model()
 class User {
@@ -24,22 +25,27 @@ class UserFilter {
   id!: number;
 }
 
+@Middleware('middle', 'ordered')
 class Validator implements MiddlewareInterface {
   static weigth = 0;
   async onRequest(endpoint: EndpointType | undefined, context: ContextType, next: NextType): Promise<void> {
-
     if (endpoint) {
       if (context.metadata.model) {
-        const onlyInvalids = [ValidationEnum.INVALID, ValidationEnum.UNGUARDED, ValidationEnum.EXCEPTION, ValidationEnum.ERROR]
-        const validationErrors = await Artifact.validateProperties(context.metadata.model, onlyInvalids)
-        
+        const onlyInvalids = [
+          ValidationEnum.INVALID,
+          ValidationEnum.UNGUARDED,
+          ValidationEnum.EXCEPTION,
+          ValidationEnum.ERROR,
+        ];
+        const validationErrors = await Artifact.validateProperties(context.metadata.model, onlyInvalids);
+
         if (validationErrors) {
-          context.responser.setBody(JSON.stringify(validationErrors))
-          context.responser.setStatus(400)
-  
-          context.responser.setHeader('Content-Type', 'application/json')
-  
-          return
+          context.responser.setBody(JSON.stringify(validationErrors));
+          context.responser.setStatus(400);
+
+          context.responser.setHeader('Content-Type', 'application/json');
+
+          return;
         }
       }
     }
@@ -48,12 +54,16 @@ class Validator implements MiddlewareInterface {
   }
 }
 
+@Middleware('after', 'ordered')
 class Logger implements MiddlewareInterface {
-  static weigth = 0;
   async onRequest(endpoint: EndpointType | undefined, context: ContextType, next: NextType): Promise<void> {
     (async () => {
-      console.log(`[${endpoint?.handler.method}] ${endpoint?.controller.path ? `${endpoint?.controller.path}/` : ''}${endpoint?.handler.path ?? ''}`);
-    })()
+      console.log(
+        `[${endpoint?.handler.method}] ${endpoint?.controller.path ? `${endpoint?.controller.path}/` : ''}${
+          endpoint?.handler.path ?? ''
+        }`,
+      );
+    })();
     return next();
   }
 }
@@ -73,21 +83,21 @@ class UserController {
   constructor(public userService: UserService) {}
 
   @Get()
-  async getUsers(context: ContextType): Promise<string> {
-    context.responser.setHeader('Content-Type', 'text/html')
+  async getUsers(userFilter: UserFilter, context: ContextType): Promise<string> {
+    context.responser.setHeader('Content-Type', 'text/html');
 
     return `<div><b>[{ name: 'Eduardo' }]</b><div>`;
   }
 
   @Post()
-  async postUser(formData: FormData, responser: ResponserInterface): Promise<void> {    
-    responser.setBody(formData)
-    responser.setStatus(201)
+  async postUser(formData: FormData, responser: ResponserInterface): Promise<void> {
+    responser.setBody(formData);
+    responser.setStatus(201);
   }
 }
 
 @Module({
-  middlewares: [Decoder, Logger, Validator, Router, Encoder],
+  middlewares: [Logger, Decoder, Validator, Router, Encoder],
   providers: [UserService],
 })
 class AppModule {

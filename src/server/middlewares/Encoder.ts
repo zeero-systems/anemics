@@ -1,9 +1,10 @@
 import type { ContextType, NextType } from '~/server/types.ts';
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 import type { EndpointType } from '~/controller/types.ts';
+import Middleware from '~/controller/annotations/Middleware.ts';
 
+@Middleware('after', 'ordered')
 export class Encoder implements MiddlewareInterface {
-  static weigth: number = 0;
   async onRequest(endpoint: EndpointType | undefined, context: ContextType, next: NextType): Promise<void> {
     if (endpoint) {
 

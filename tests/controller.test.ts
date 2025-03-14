@@ -56,7 +56,7 @@ describe('controller', () => {
   }
   
   it('endpoint annotations', () => {
-    console.log(Router.endpoints)
+    
   });
 
   @Module()

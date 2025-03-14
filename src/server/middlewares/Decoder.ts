@@ -5,9 +5,10 @@ import type { EndpointType } from '~/controller/types.ts';
 import { ConstructorType, Factory, Text } from '@zxxxro/commons';
 
 import Model from '~/controller/services/Framer.ts';
+import Middleware from '~/controller/annotations/Middleware.ts';
 
+@Middleware('before', 'ordered')
 export class Decoder implements MiddlewareInterface {
-  static weigth: number = 0;
   async onRequest(endpoint: EndpointType | undefined, context: ContextType, next: NextType): Promise<void> {
     
     if (endpoint) {

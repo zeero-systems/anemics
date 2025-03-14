@@ -9,6 +9,7 @@ import {
   Decorator,
   DecoratorFunctionType,
   DecoratorKindEnum,
+  Factory,
   Metadata,
   Mixin,
   Provider,
@@ -16,15 +17,14 @@ import {
   Text,
 } from '@zxxxro/commons';
 import { ModuleParametersType } from '~/module/types.ts';
-import Middleware from '~/controller/annotations/Middleware.ts';
+import Interceptor from '~/controller/services/Interceptor.ts';
 
 export class Module implements AnnotationInterface {
   onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P & ModuleParametersType>): any {
-    let target = artifact.target as any;
 
     if (decoration.kind == DecoratorKindEnum.CLASS) {
-      if (!Metadata.getProperty(target, Common.singleton)) {
-        target = new Proxy(target, {
+      if (!Metadata.getProperty(artifact.target, Common.singleton)) {
+        artifact.target = new Proxy(artifact.target, {
           construct(currentTarget, currentArgs, newTarget) {
             if (currentTarget.prototype !== newTarget.prototype) {
               return Reflect.construct(currentTarget, currentArgs, newTarget);
@@ -33,16 +33,20 @@ export class Module implements AnnotationInterface {
             if (decoration?.parameters?.middlewares) {
               for (let index = 0; index < decoration.parameters.middlewares.length; index++) {
                 const middlewareTarget = decoration.parameters.middlewares[index];
-                const middlewareDecorator = {
-                  target: middlewareTarget,
-                  context: {
-                    kind: DecoratorKindEnum.CLASS,
-                    name: Text.toFirstLetterUppercase(middlewareTarget.name || middlewareTarget.constructor.name),
-                    metadata: Metadata.get(middlewareTarget),
-                  },
-                } as any;
+                const middlewareName = Text.toFirstLetterUppercase(middlewareTarget.name || middlewareTarget.constructor.name)
+                
+                const middleware = Factory.construct(middlewareTarget)
 
-                Mixin([Consumer(), Middleware(), Singleton()])(middlewareDecorator.target, middlewareDecorator.context);
+                if (!middleware.event) {
+                  throw new AnnotationException(`The {name} do not have a middleware annotation.`, {
+                    key: 'NOT_IMPLEMENTED',
+                    context: { name: middlewareName, kind: decoration.kind },
+                  });
+                }
+
+                if(!Interceptor.exists(middlewareName, middleware.event)) {
+                  Interceptor.add(middleware, { action: middleware.action, event: middleware.event })
+                }
               }
             }
 
@@ -50,10 +54,10 @@ export class Module implements AnnotationInterface {
           },
         });
 
-        target.toString = Function.prototype.toString.bind(artifact.target);
+        artifact.target.toString = Function.prototype.toString.bind(artifact.target);
       }
 
-      return Mixin([Consumer(), Provider(), Component(decoration.parameters), Singleton()])(target, decoration.context);
+      return Mixin([Consumer(), Provider(), Component(decoration.parameters), Singleton()])(artifact.target, decoration.context);
     }
 
     throw new AnnotationException('Method not implemented for {name} on {kind}.', {

@@ -1,7 +1,9 @@
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 import type { ContextType, NextType } from '~/server/types.ts';
 import type { EndpointType } from '~/controller/types.ts';
+import Middleware from '~/controller/annotations/Middleware.ts';
 
+@Middleware('middle', 'ordered')
 export class Router implements MiddlewareInterface {
   static weigth: number = 0;
   async onRequest(endpoint: EndpointType | undefined, context: ContextType, next: NextType): Promise<void> {
