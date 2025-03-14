@@ -46,7 +46,9 @@ export { HttpStatusEnum } from '~/server/enums/HttpStatusEnum.ts';
 
 import Decoder from '~/server/middlewares/Decoder.ts';
 import Encoder from '~/server/middlewares/Encoder.ts';
+import Router from '~/controller/middlewares/Router.ts';
 
+export { Router } from '~/controller/middlewares/Router.ts';
 export { Decoder } from '~/server/middlewares/Decoder.ts';
 export { Encoder } from '~/server/middlewares/Encoder.ts';
 
@@ -82,5 +84,6 @@ export default {
   Encoder,
   Application,
   Requester,
-  Responser
+  Responser,
+  Router
 }
