@@ -9,12 +9,17 @@ export class Responser implements ResponserInterface {
   headers: Headers | undefined
   status: HttpStatusEnum | undefined
   statusText: string | undefined
+  code: string | undefined
   
   setRaw(raw: any) {
     this.raw = raw
   }
   setBody(body: BodyType) {
     this.body = body
+  }
+
+  setCode(code: string) {
+    this.code = code
   }
 
   setHeaders(headers: Headers) {

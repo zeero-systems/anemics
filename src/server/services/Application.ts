@@ -1,4 +1,5 @@
 import type { ContextType, NextType } from '~/server/types.ts';
+import type { EventType } from '~/controller/types.ts';
 
 import Interceptor from '~/controller/services/Interceptor.ts';
 import Responser from '~/server/services/Responser.ts';
@@ -6,9 +7,6 @@ import Gateway from '~/controller/services/Gateway.ts';
 import Requester from '~/server/services/Requester.ts';
 
 import isMethod from '~/server/guards/isMethod.ts';
-import { EventType } from '~/controller/types.ts';
-import { Exception, ExceptionInterface } from '@zxxxro/commons';
-import { Any } from 'https://jsr.io/@std/expect/1.0.13/_asymmetric_matchers.ts';
 
 export class Application {
 
