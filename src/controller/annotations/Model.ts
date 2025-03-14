@@ -1,13 +1,13 @@
 import type { AnnotationInterface, ArtifactType, DecorationType } from '@zxxxro/commons';
 
 import { AnnotationException, Common, Decorator, DecoratorKindEnum, Metadata, Text } from '@zxxxro/commons';
-import Structure from '~/controller/services/Structure.ts';
+import Framer from '~/controller/services/Framer.ts';
 
 export class Model implements AnnotationInterface {
   onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P>): any {
     if (decoration.kind == DecoratorKindEnum.CLASS) {
       if (!Metadata.getProperty(artifact.target, Common.singleton)) {
-        Structure.set(Text.toFirstLetterUppercase(artifact.name), artifact.target);
+        Framer.set(Text.toFirstLetterUppercase(artifact.name), artifact.target);
       }
       
       return artifact.target;

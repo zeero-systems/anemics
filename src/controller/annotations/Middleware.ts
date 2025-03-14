@@ -3,7 +3,7 @@ import type { AnnotationInterface, ArtifactType, DecorationType } from '@zxxxro/
 
 import { AnnotationException, Common, Decorator, DecoratorKindEnum, Entity, Metadata } from '@zxxxro/commons';
 
-import Interceptor from '~/interceptor/services/Interceptor.ts'
+import Interceptor from '~/controller/services/Interceptor.ts'
 
 export class Middleware extends Entity implements AnnotationInterface {
   onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P & MiddlewarePositionType>): any {

@@ -5,7 +5,7 @@ import Model from '~/controller/annotations/Model.ts';
 import Post from '~/controller/annotations/Post.ts';
 import { Artifact, Required, ValidationEnum } from '@zxxxro/commons';
 import { ContextType, NextType } from '~/server/types.ts';
-import { MiddlewareInterface } from '~/interceptor/interfaces.ts';
+import { MiddlewareInterface } from '~/controller/interfaces.ts';
 import { ResponserInterface } from '~/server/interfaces.ts';
 import { EndpointType } from '~/controller/types.ts';
 import Get from '~/controller/annotations/Get.ts';

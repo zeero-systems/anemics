@@ -16,7 +16,6 @@ import {
   Text,
 } from '@zxxxro/commons';
 import { ModuleParametersType } from '~/module/types.ts';
-import Endpoint from '~/controller/annotations/Endpoint.ts';
 import Middleware from '~/controller/annotations/Middleware.ts';
 
 export class Module implements AnnotationInterface {

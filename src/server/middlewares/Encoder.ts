@@ -1,5 +1,5 @@
 import type { ContextType, NextType } from '~/server/types.ts';
-import type { MiddlewareInterface } from '~/interceptor/interfaces.ts';
+import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 import type { EndpointType } from '~/controller/types.ts';
 
 export class Encoder implements MiddlewareInterface {

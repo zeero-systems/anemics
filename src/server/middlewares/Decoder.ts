@@ -1,10 +1,10 @@
 import type { ContextType, NextType } from '~/server/types.ts';
-import type { MiddlewareInterface } from '~/interceptor/interfaces.ts';
+import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 import type { EndpointType } from '~/controller/types.ts';
 
 import { ConstructorType, Factory, Text } from '@zxxxro/commons';
 
-import Model from '~/controller/services/Structure.ts';
+import Model from '~/controller/services/Framer.ts';
 
 export class Decoder implements MiddlewareInterface {
   static weigth: number = 0;

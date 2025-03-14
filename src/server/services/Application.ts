@@ -1,8 +1,8 @@
 import type { ContextType, NextType } from '~/server/types.ts';
 
-import Interceptor from '~/interceptor/services/Interceptor.ts';
+import Interceptor from '~/controller/services/Interceptor.ts';
 import Responser from '~/server/services/Responser.ts';
-import Endpoint from '../../controller/services/Router.ts';
+import Gateway from '~/controller/services/Gateway.ts';
 import Requester from '~/server/services/Requester.ts';
 
 import isMethod from '~/server/guards/isMethod.ts';
@@ -24,7 +24,7 @@ export class Application {
     }
     
     if (isMethod(context.requester.method)) {
-      const routers = Endpoint.endpoints.get(context.requester.method);
+      const routers = Gateway.endpoints.get(context.requester.method);
 
       const router = routers?.find((route) => {
         return route.handler.pattern.test(context.requester.url);
@@ -46,3 +46,5 @@ export class Application {
     })
   }
 }
+
+export default Application

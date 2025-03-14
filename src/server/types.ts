@@ -1,4 +1,4 @@
-import HttpStatusEnum from './enums/HttpStatusEnums.ts';
+import HttpStatusEnum from '~/server/enums/HttpStatusEnum.ts';
 import { RequesterInterface, ResponserInterface } from '~/server/interfaces.ts';
 
 export type MethodType = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE' | 'OPTIONS'

@@ -11,7 +11,7 @@ import Put from '~/controller/annotations/Put.ts';
 import Delete from '~/controller/annotations/Delete.ts';
 import Module from '~/module/annotations/Module.ts';
 import { PathInterface, QueryInterface, RequesterInterface, ResponserInterface } from '~/server/interfaces.ts';
-import Router from '~/controller/services/Router.ts';
+import Router from '~/controller/services/Gateway.ts';
 
 describe('controller', () => {
   

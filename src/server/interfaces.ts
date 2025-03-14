@@ -1,5 +1,5 @@
 import { BodyType } from '~/server/types.ts';
-import HttpStatusEnum from '~/server/enums/HttpStatusEnums.ts';
+import HttpStatusEnum from '~/server/enums/HttpStatusEnum.ts';
 
 export interface RequesterInterface extends Request {
   request: Request

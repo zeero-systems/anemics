@@ -3,7 +3,7 @@ import { ParameterType } from '~/controller/types.ts';
 
 import { AnnotationException, Common, Decorator, DecoratorKindEnum, Entity, Factory, Metadata } from '@zxxxro/commons';
 
-import Router from '~/controller/services/Router.ts';
+import Gateway from '~/controller/services/Gateway.ts';
 import isMethod from '~/server/guards/isMethod.ts';
 
 export class Endpoint extends Entity implements AnnotationInterface {
@@ -27,7 +27,7 @@ export class Endpoint extends Entity implements AnnotationInterface {
                 const controllerMethod = String(decorationMap.annotation.constructor.name).toUpperCase();
 
                 if (isMethod(controllerMethod)) {
-                  Router.add(controllerMethod, {
+                  Gateway.add(controllerMethod, {
                     controller: {
                       path: decoration.parameters?.path ?? '',
                       target: artifact.target,

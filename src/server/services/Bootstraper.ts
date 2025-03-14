@@ -1,5 +1,5 @@
 import { ConstructorType, Factory } from '@zxxxro/commons';
-import { Application } from './Application.ts';
+import { Application } from '~/server/services/Application.ts';
 
 export class Bootstraper {
   public static create(target: ConstructorType<any>) {

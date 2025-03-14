@@ -1,5 +1,6 @@
 import { ConstructorType } from '@zxxxro/commons';
 import { MethodType } from '~/server/types.ts';
+import type { ContextType, NextType } from '~/server/types.ts'
 
 export type ParameterType = ('request' | 'response' | 'query' | 'params' | 'formData') & string
 

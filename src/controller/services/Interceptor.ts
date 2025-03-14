@@ -1,4 +1,4 @@
-import type { MiddlewareInterface } from '~/interceptor/interfaces.ts';
+import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 
 import { ConstructorType, List } from '@zxxxro/commons';
 
