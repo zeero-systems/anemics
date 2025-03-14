@@ -28,6 +28,7 @@ import Gateway from '~/controller/services/Gateway.ts';
 import Framer from '~/controller/services/Framer.ts';
 import Interceptor from '~/controller/services/Interceptor.ts';
 import Application from '~/server/services/Application.ts';
+import Bootstraper from '~/server/services/Bootstraper.ts';
 import Requester from '~/server/services/Requester.ts';
 import Responser from '~/server/services/Responser.ts';
 
@@ -35,6 +36,7 @@ export { Gateway } from '~/controller/services/Gateway.ts';
 export { Framer } from '~/controller/services/Framer.ts';
 export { Interceptor } from '~/controller/services/Interceptor.ts';
 export { Application } from '~/server/services/Application.ts';
+export { Bootstraper } from '~/server/services/Bootstraper.ts';
 export { Requester } from '~/server/services/Requester.ts';
 export { Responser } from '~/server/services/Responser.ts';
 
@@ -63,6 +65,7 @@ export default {
   Delete,
   Endpoint,
   Get,
+  Bootstraper,
   Middleware,
   Model,
   Options,
