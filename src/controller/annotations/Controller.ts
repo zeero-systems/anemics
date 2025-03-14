@@ -5,7 +5,7 @@ import Endpoint from '~/controller/annotations/Endpoint.ts';
 export class Controller implements AnnotationInterface {
   onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P & { path?: string | undefined }>): any {
     if (decoration.kind == DecoratorKindEnum.CLASS) {            
-      return Mixin([Consumer(), Endpoint(decoration.parameters?.path), Singleton()])(artifact.target, decoration.context);
+      return Mixin([Consumer(), Singleton(), Endpoint(decoration.parameters?.path)])(artifact.target, decoration.context);
     }
 
     throw new AnnotationException('Method not implemented for {name} on {kind}.', {

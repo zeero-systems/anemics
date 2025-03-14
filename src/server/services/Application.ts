@@ -7,6 +7,8 @@ import Requester from '~/server/services/Requester.ts';
 
 import isMethod from '~/server/guards/isMethod.ts';
 import { EventType } from '~/controller/types.ts';
+import { Exception, ExceptionInterface } from '@zxxxro/commons';
+import { Any } from 'https://jsr.io/@std/expect/1.0.13/_asymmetric_matchers.ts';
 
 export class Application {
 
@@ -37,9 +39,15 @@ export class Application {
         await Interceptor[event][index].onRequest(router, context, next(event, index + 1))
       };
 
-      await next('before', 0)();
-      await next('middle', 0)();
-      await next('after', 0)();
+      try {
+        await next('before', 0)();
+        await next('middle', 0)();
+        await next('after', 0)();
+      } catch (error: any) {
+        context.metadata.error = error
+        
+        await next('error', 0)();
+      }
     }
 
     return new Response(context.responser.body, {

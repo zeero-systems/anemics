@@ -9,6 +9,7 @@ export class Interceptor {
   public static before: Array<MiddlewareInterface> = []
   public static middle: Array<MiddlewareInterface> = []
   public static after: Array<MiddlewareInterface> = []
+  public static error: Array<MiddlewareInterface> = []
 
   public static add(target: MiddlewareInterface, options: OptionsType = { event: 'middle', action: 'ordered' }): void {
     Interceptor[options.action](target, options)

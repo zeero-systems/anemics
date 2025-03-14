@@ -10,7 +10,7 @@
     "jsr:@std/internal@^1.0.5": "1.0.5",
     "jsr:@std/path@^1.0.8": "1.0.8",
     "jsr:@std/testing@*": "1.0.9",
-    "jsr:@zxxxro/commons@~0.17.1": "0.17.1"
+    "jsr:@zxxxro/commons@~0.17.2": "0.17.2"
   },
   "jsr": {
     "@std/assert@1.0.11": {
@@ -51,8 +51,8 @@
         "jsr:@std/path"
       ]
     },
-    "@zxxxro/commons@0.17.1": {
-      "integrity": "78108e402a19856508c4d96e4ec5807baff8fca6dc00a839bab46d867241ca8b"
+    "@zxxxro/commons@0.17.2": {
+      "integrity": "afc70596c019fbacc44f45583c98a922c19bc6429ffa1ab66121e33c7b4e4177"
     }
   },
   "workspace": {
@@ -60,7 +60,7 @@
       "jsr:@std/assert@1",
       "jsr:@std/expect@*",
       "jsr:@std/testing@*",
-      "jsr:@zxxxro/commons@~0.17.1"
+      "jsr:@zxxxro/commons@~0.17.2"
     ]
   }
 }

@@ -1,7 +1,7 @@
 import type { AnnotationInterface, ArtifactType, DecorationType, DecoratorFunctionType } from '@zxxxro/commons';
 import { ParameterType } from '~/controller/types.ts';
 
-import { AnnotationException, Common, Decorator, DecoratorKindEnum, Entity, Factory, Metadata } from '@zxxxro/commons';
+import { AnnotationException, Annotations, Decorator, DecoratorKindEnum, Entity, Factory } from '@zxxxro/commons';
 
 import Gateway from '~/controller/services/Gateway.ts';
 import isMethod from '~/server/guards/isMethod.ts';
@@ -9,7 +9,7 @@ import isMethod from '~/server/guards/isMethod.ts';
 export class Endpoint extends Entity implements AnnotationInterface {
   onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P & { path?: string | undefined }>): any {
     if (decoration.kind == DecoratorKindEnum.CLASS) {
-      if (!Metadata.getProperty(artifact.target, Common.singleton)) {
+      if (!Decorator.hasAnnotation(artifact.target, Annotations.Singleton)) {
         const decorationMap = decoration.context.metadata[Decorator.metadata];
 
         const properties = [...Object.getOwnPropertyNames(artifact.target.prototype), 'constructor'];

@@ -3,11 +3,11 @@ import Module from '~/module/annotations/Module.ts';
 import Bootstraper from '~/server/services/Bootstraper.ts';
 import Model from '~/controller/annotations/Model.ts';
 import Post from '~/controller/annotations/Post.ts';
-import { Artifact, Required, ValidationEnum } from '@zxxxro/commons';
+import { Artifact,Required, ValidationEnum } from '@zxxxro/commons';
 import { ContextType, NextType } from '~/server/types.ts';
 import { MiddlewareInterface } from '~/controller/interfaces.ts';
 import { ResponserInterface } from '~/server/interfaces.ts';
-import { ActionType, EndpointType, EventType } from '~/controller/types.ts';
+import { EndpointType } from '~/controller/types.ts';
 import Get from '~/controller/annotations/Get.ts';
 import Decoder from '~/server/middlewares/Decoder.ts';
 import Router from '~/controller/middlewares/Router.ts';
@@ -64,6 +64,7 @@ class Logger implements MiddlewareInterface {
         }`,
       );
     })();
+    
     return next();
   }
 }
@@ -97,11 +98,17 @@ class UserController {
 }
 
 @Module({
-  middlewares: [Logger, Decoder, Validator, Router, Encoder],
   providers: [UserService],
 })
+class UserModule {
+  constructor(public userService: UserService) {}
+}
+
+@Module({
+  middlewares: [Logger, Decoder, Validator, Router, Encoder],
+})
 class AppModule {
-  constructor() {}
+  constructor(public userModule: UserModule) {}
 }
 
 async function bootstrap() {
