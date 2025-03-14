@@ -16,7 +16,7 @@
     "jsr:@std/path@^1.0.8": "1.0.8",
     "jsr:@std/streams@^1.0.9": "1.0.9",
     "jsr:@std/testing@*": "1.0.9",
-    "jsr:@zxxxro/commons@0.16.1": "0.16.1"
+    "jsr:@zxxxro/commons@*": "0.16.1"
   },
   "jsr": {
     "@std/assert@1.0.11": {
@@ -89,7 +89,7 @@
       "jsr:@std/expect@*",
       "jsr:@std/http@*",
       "jsr:@std/testing@*",
-      "jsr:@zxxxro/commons@0.16.1"
+      "jsr:@zxxxro/commons@*"
     ]
   }
 }
