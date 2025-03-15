@@ -1,23 +1,23 @@
-import type { ContextType, NextType } from '~/server/types.ts';
-import type { MiddlewareInterface } from '~/controller/interfaces.ts';
+import type { ContextType, NextType } from '~/application/types.ts';
+import type { InterceptorInterface } from '~/controller/interfaces.ts';
 import type { EndpointType } from '~/controller/types.ts';
 
-import { ConstructorType, Factory, Text } from '@zxxxro/commons';
+import { Container, Text } from '@zxxxro/commons';
 
-import Model from '~/controller/services/Framer.ts';
-import Middleware from '~/controller/annotations/Middleware.ts';
+import Framer from '~/controller/services/framer.service.ts';
+import Middleware from '~/controller/annotations/middleware.annotation.ts';
 
 @Middleware('before', 'ordered')
-export class Decoder implements MiddlewareInterface {
-  async onRequest(endpoint: EndpointType | undefined, context: ContextType, next: NextType): Promise<void> {
+export class DecoderInterceptor implements InterceptorInterface {
+  async onUse<T>(context: ContextType<T & EndpointType>, next: NextType): Promise<void> {
     
-    if (endpoint) {
+    if (context.extra) {
       context.responser.addMetadata('parameters', [])
 
       const url = new URL(context.requester.url)
 
-      for (let index = 0; index < endpoint.handler.parameterNames.length; index++) {
-        const parameterName = Text.toFirstLetterUppercase(endpoint.handler.parameterNames[index]);
+      for (let index = 0; index < context.extra.handler.parameterNames.length; index++) {
+        const parameterName = Text.toFirstLetterUppercase(context.extra.handler.parameterNames[index]);
 
         context.responser.metadata.parameters[index] = undefined;
 
@@ -41,7 +41,7 @@ export class Decoder implements MiddlewareInterface {
         }
 
         if (parameterName == 'Path') {
-          context.responser.metadata.parameters[index] = endpoint.handler.path.split('/').reduce((accum, curr: string, index: number) => {
+          context.responser.metadata.parameters[index] = context.extra.handler.path.split('/').reduce((accum, curr: string, index: number) => {
             if (/:[A-Za-z1-9]{1,}/.test(curr)) {
               return { ...accum, [curr.replace(':', '')]: url.pathname.split('/')[index] };
             }
@@ -53,12 +53,11 @@ export class Decoder implements MiddlewareInterface {
         if (parameterName == 'FormData') {
           context.responser.metadata.parameters[index] = await context.requester.request.formData()
         }
-
-        if (Model.models.has(parameterName)) {
-          const ModelClass = Model.models.get(parameterName) as ConstructorType<any>
+        
+        if (Container.exists(parameterName)) {
           const body = context.requester.bodyUsed ? await context.requester.json() : undefined;
           const search = Object.fromEntries(url.searchParams);
-          const model = Factory.construct(ModelClass, { arguments: body || search })
+          const model = Container.construct(parameterName, { arguments: body || search })
 
           context.responser.metadata.model = model
           context.responser.metadata.parameters[index] = model
@@ -70,4 +69,4 @@ export class Decoder implements MiddlewareInterface {
   }
 }
 
-export default Decoder;
+export default DecoderInterceptor;

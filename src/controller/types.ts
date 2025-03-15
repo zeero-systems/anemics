@@ -1,5 +1,5 @@
 import { ConstructorType } from '@zxxxro/commons';
-import { MethodType } from '~/server/types.ts';
+import { MethodType } from '~/application/types.ts';
 
 export type ParameterType = ('request' | 'response' | 'query' | 'params' | 'formData') & string
 
@@ -30,3 +30,5 @@ export type OptionsType = {
   action: ActionType
   event: EventType
 } & { [key: string | symbol]: any }
+
+export default {}

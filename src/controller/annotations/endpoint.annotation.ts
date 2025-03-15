@@ -3,8 +3,8 @@ import { ParameterType } from '~/controller/types.ts';
 
 import { AnnotationException, Annotations, Decorator, DecoratorKindEnum, Entity, Factory } from '@zxxxro/commons';
 
-import Gateway from '~/controller/services/Gateway.ts';
-import isMethod from '~/server/guards/isMethod.ts';
+import Gateway from '~/controller/services/gateway.service.ts';
+import isMethod from '~/application/guards/is-method.guard.ts';
 
 export class Endpoint extends Entity implements AnnotationInterface {
   onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P & { path?: string | undefined }>): any {

@@ -1,12 +1,13 @@
 import type { ActionType, EventType, OptionsType } from '~/controller/types.ts';
 import type { AnnotationInterface, ArtifactType, DecorationType, DecoratorFunctionType } from '@zxxxro/commons';
 
-import { Annotations, AnnotationException, Consumer, Mixin, Decorator, Singleton, DecoratorKindEnum, Entity } from '@zxxxro/commons';
+import { Annotations, AnnotationException, Consumer, Mixin, Decorator, Singleton, DecoratorKindEnum } from '@zxxxro/commons';
+import Interceptor from '~/controller/services/interceptor.service.ts';
 
-export class Middleware extends Entity implements AnnotationInterface {
+export class Middleware implements AnnotationInterface {
   onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P & OptionsType>): any {
     if (decoration.kind == DecoratorKindEnum.CLASS) {
-
+      
       if (!Decorator.hasAnnotation(artifact.target, Annotations.Singleton)) {
         artifact.target = new Proxy(artifact.target, {
           construct(currentTarget, currentArgs, newTarget) {
@@ -24,15 +25,18 @@ export class Middleware extends Entity implements AnnotationInterface {
               enumerable: true,
               value: decoration.parameters?.action
             })
-
+            
             return instance
           },
         });
 
         artifact.target.toString = Function.prototype.toString.bind(artifact.target);
+        artifact.target = Mixin([Consumer(), Singleton()])(artifact.target, decoration.context);
+
+        Interceptor.add(artifact.target)
       }
-      
-      return Mixin([Consumer(), Singleton()])(artifact.target, decoration.context);
+
+      return artifact.target
     }
 
     throw new AnnotationException('Method not implemented for {name} on {kind}.', {

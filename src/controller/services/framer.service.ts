@@ -1,7 +1,7 @@
 import { ConstructorType } from '@zxxxro/commons';
 
 export class Framer {
-  public static readonly module: unique symbol = Symbol('PAYLOAD')
+  public static readonly model: unique symbol = Symbol('MODEL')
 
   public static models: Map<string | symbol, ConstructorType<any>> = new Map();
   

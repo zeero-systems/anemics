@@ -1,7 +1,7 @@
 import type { AnnotationInterface, ArtifactType, DecorationType, DecoratorFunctionType } from '@zxxxro/commons';
 
 import { AnnotationException, Annotations, Decorator, DecoratorKindEnum, Text } from '@zxxxro/commons';
-import Framer from '~/controller/services/Framer.ts';
+import Framer from '~/controller/services/framer.service.ts';
 
 export class Model implements AnnotationInterface {
   onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P>): any {

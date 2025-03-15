@@ -1,15 +1,16 @@
-import type { ContextType, NextType } from '~/server/types.ts';
-import type { MiddlewareInterface } from '~/controller/interfaces.ts';
+import type { ContextType, NextType } from '~/application/types.ts';
+import type { InterceptorInterface } from '~/controller/interfaces.ts';
 import type { EndpointType } from '~/controller/types.ts';
-import Middleware from '~/controller/annotations/Middleware.ts';
+
+import Middleware from '~/controller/annotations/middleware.annotation.ts';
 
 @Middleware('after', 'ordered')
-export class Encoder implements MiddlewareInterface {
-  async onRequest(endpoint: EndpointType | undefined, context: ContextType, next: NextType): Promise<void> {
-    if (endpoint) {
+export class EncoderInterceptor implements InterceptorInterface {
+  async onUse<T>(context: ContextType<T & EndpointType>, next: NextType): Promise<void> {
+    if (context.extra) {
 
       if (!context.responser.status) {
-        context.responser.setStatus(endpoint?.handler.method == 'POST' ? 201 : 200);
+        context.responser.setStatus(context.extra?.handler.method == 'POST' ? 201 : 200);
       }
 
       if (context.responser.raw) {
@@ -48,4 +49,4 @@ export class Encoder implements MiddlewareInterface {
   }
 }
 
-export default Encoder;
+export default EncoderInterceptor;

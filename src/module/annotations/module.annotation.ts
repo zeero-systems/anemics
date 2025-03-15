@@ -9,7 +9,6 @@ import {
   DecoratorContextType,
   DecoratorFunctionType,
   DecoratorKindEnum,
-  Factory,
   Metadata,
   Mixin,
   Provider,
@@ -17,7 +16,9 @@ import {
   Text,
 } from '@zxxxro/commons';
 import { ModuleParametersType } from '~/module/types.ts';
-import Interceptor from '~/controller/services/Interceptor.ts';
+
+import Middleware from '~/controller/annotations/middleware.annotation.ts';
+import Controller from '~/controller/annotations/controller.annotation.ts';
 
 export class Module implements AnnotationInterface {
   onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P & ModuleParametersType>): any {
@@ -53,21 +54,27 @@ export class Module implements AnnotationInterface {
 
         if (decoration?.parameters?.middlewares) {
           for (let index = 0; index < decoration.parameters.middlewares.length; index++) {
-            const middlewareTarget = decoration.parameters.middlewares[index];
-            const middlewareName = Text.toFirstLetterUppercase(middlewareTarget.name || middlewareTarget.constructor.name)
-            
-            const middleware = Factory.construct(middlewareTarget)
+            const middlewareTarget = decoration.parameters.middlewares[index]
+            const middlewareContext = {
+              kind: DecoratorKindEnum.CLASS,
+              name: Text.toFirstLetterUppercase(middlewareTarget.name || middlewareTarget.constructor.name),
+              metadata: Metadata.getProperty(middlewareTarget, Decorator.metadata),
+            } as DecoratorContextType
 
-            if (!middleware.event) {
-              throw new AnnotationException(`The {name} do not have a middleware annotation.`, {
-                key: 'NOT_IMPLEMENTED',
-                context: { name: middlewareName, kind: decoration.kind },
-              });
-            }
+            Mixin([Middleware()])(middlewareTarget, middlewareContext);
+          }
+        }
 
-            if(!Interceptor.exists(middlewareName, middleware.event)) {
-              Interceptor.add(middleware, { action: middleware.action, event: middleware.event })
-            }
+        if (decoration?.parameters?.controllers) {
+          for (let index = 0; index < decoration.parameters.controllers.length; index++) {
+            const controllerTarget = decoration.parameters.controllers[index]
+            const controllerContext = {
+              kind: DecoratorKindEnum.CLASS,
+              name: Text.toFirstLetterUppercase(controllerTarget.name || controllerTarget.constructor.name),
+              metadata: Metadata.getProperty(controllerTarget, Decorator.metadata),
+            } as DecoratorContextType
+
+            Mixin([Controller()])(controllerTarget, controllerContext);
           }
         }
         

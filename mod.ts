@@ -1,62 +1,62 @@
-import Controller from '~/controller/annotations/Controller.ts';
-import Delete from '~/controller/annotations/Delete.ts';
-import Endpoint from '~/controller/annotations/Endpoint.ts';
-import Get from '~/controller/annotations/Get.ts';
-import Middleware from '~/controller/annotations/Middleware.ts';
-import Model from '~/controller/annotations/Model.ts';
-import Options from '~/controller/annotations/Options.ts';
-import Patch from '~/controller/annotations/Patch.ts';
-import Post from '~/controller/annotations/Post.ts';
-import Put from '~/controller/annotations/Put.ts';
-import Module from '~/module/annotations/Module.ts';
+import Controller from '~/controller/annotations/controller.annotation.ts';
+import Delete from '~/controller/annotations/delete.annotation.ts';
+import Endpoint from '~/controller/annotations/endpoint.annotation.ts';
+import Get from '~/controller/annotations/get.annotation.ts';
+import Middleware from '~/controller/annotations/middleware.annotation.ts';
+import Model from '~/controller/annotations/model.annotation.ts';
+import Options from '~/controller/annotations/options.annotation.ts';
+import Patch from '~/controller/annotations/patch.annotation.ts';
+import Post from '~/controller/annotations/post.annotation.ts';
+import Put from '~/controller/annotations/put.annotation.ts';
+import Module from '~/module/annotations/module.annotation.ts';
 
-import isMethod from '~/server/guards/isMethod.ts';
+import isMethod from '~/application/guards/is-method.guard.ts';
 
-export { default as Controller } from '~/controller/annotations/Controller.ts';
-export { default as Delete } from '~/controller/annotations/Delete.ts';
-export { default as Endpoint } from '~/controller/annotations/Endpoint.ts';
-export { default as Get } from '~/controller/annotations/Get.ts';
-export { default as Middleware } from '~/controller/annotations/Middleware.ts';
-export { default as Model } from '~/controller/annotations/Model.ts';
-export { default as Options } from '~/controller/annotations/Options.ts';
-export { default as Patch } from '~/controller/annotations/Patch.ts';
-export { default as Post } from '~/controller/annotations/Post.ts';
-export { default as Put } from '~/controller/annotations/Put.ts';
-export { default as Module } from '~/module/annotations/Module.ts';
+export { default as Controller } from '~/controller/annotations/controller.annotation.ts';
+export { default as Delete } from '~/controller/annotations/delete.annotation.ts';
+export { default as Endpoint } from '~/controller/annotations/endpoint.annotation.ts';
+export { default as Get } from '~/controller/annotations/get.annotation.ts';
+export { default as Middleware } from '~/controller/annotations/middleware.annotation.ts';
+export { default as Model } from '~/controller/annotations/model.annotation.ts';
+export { default as Options } from '~/controller/annotations/options.annotation.ts';
+export { default as Patch } from '~/controller/annotations/patch.annotation.ts';
+export { default as Post } from '~/controller/annotations/post.annotation.ts';
+export { default as Put } from '~/controller/annotations/put.annotation.ts';
+export { default as Module } from '~/module/annotations/module.annotation.ts';
 
-import Gateway from '~/controller/services/Gateway.ts';
-import Framer from '~/controller/services/Framer.ts';
-import Interceptor from '~/controller/services/Interceptor.ts';
-import Application from '~/server/services/Application.ts';
-import Bootstraper from '~/server/services/Bootstraper.ts';
-import Requester from '~/server/services/Requester.ts';
-import Responser from '~/server/services/Responser.ts';
+import Gateway from '~/controller/services/gateway.service.ts';
+import Framer from '~/controller/services/framer.service.ts';
+import Interceptor from '~/controller/services/interceptor.service.ts';
+import Application from '~/application/services/application.service.ts';
+import Bootstraper from '~/application/services/bootstraper.service.ts';
+import Requester from '~/application/services/requester.service.ts';
+import Responser from '~/application/services/responser.service.ts';
 
-export { Gateway } from '~/controller/services/Gateway.ts';
-export { Framer } from '~/controller/services/Framer.ts';
-export { Interceptor } from '~/controller/services/Interceptor.ts';
-export { Application } from '~/server/services/Application.ts';
-export { Bootstraper } from '~/server/services/Bootstraper.ts';
-export { Requester } from '~/server/services/Requester.ts';
-export { Responser } from '~/server/services/Responser.ts';
+export { Gateway } from '~/controller/services/gateway.service.ts';
+export { Framer } from '~/controller/services/framer.service.ts';
+export { Interceptor } from '~/controller/services/interceptor.service.ts';
+export { Application } from '~/application/services/application.service.ts';
+export { Bootstraper } from '~/application/services/bootstraper.service.ts';
+export { Requester } from '~/application/services/requester.service.ts';
+export { Responser } from '~/application/services/responser.service.ts';
 
-import HttpStatusEnum from '~/server/enums/HttpStatusEnum.ts';
+import HttpStatusEnum from '~/application/enums/http-status.annotation.ts';
 
-export { HttpStatusEnum } from '~/server/enums/HttpStatusEnum.ts';
+export { HttpStatusEnum } from '~/application/enums/http-status.annotation.ts';
 
-import Decoder from '~/server/middlewares/Decoder.ts';
-import Encoder from '~/server/middlewares/Encoder.ts';
-import Router from '~/controller/middlewares/Router.ts';
+import DecoderInterceptor from '~/application/interceptors/decoder.interceptor.ts';
+import EncoderInterceptor from '~/application/interceptors/encoder.interceptor.ts';
+import RouterInterceptor from '~/controller/interceptors/router.interceptor.ts';
 
-export { Router } from '~/controller/middlewares/Router.ts';
-export { Decoder } from '~/server/middlewares/Decoder.ts';
-export { Encoder } from '~/server/middlewares/Encoder.ts';
+export { RouterInterceptor } from '~/controller/interceptors/router.interceptor.ts';
+export { DecoderInterceptor } from '~/application/interceptors/decoder.interceptor.ts';
+export { EncoderInterceptor } from '~/application/interceptors/encoder.interceptor.ts';
 
 export * from '~/controller/interfaces.ts';
 export * from '~/controller/types.ts';
 export * from '~/module/types.ts';
-export * from '~/server/interfaces.ts';
-export * from '~/server/types.ts';
+export * from '~/application/interfaces.ts';
+export * from '~/application/types.ts';
 
 export const Guards = {
   isMethod
@@ -80,10 +80,10 @@ export default {
   Interceptor,
   HttpStatusEnum,
   Guards,
-  Decoder,
-  Encoder,
+  DecoderInterceptor,
+  EncoderInterceptor,
   Application,
   Requester,
   Responser,
-  Router
+  RouterInterceptor
 }

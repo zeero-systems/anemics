@@ -1,8 +1,8 @@
 import { EndpointType } from '~/controller/types.ts';
-import { MethodType } from '~/server/types.ts';
+import { MethodType } from '~/application/types.ts';
 
 export class Gateway {
-  public static readonly module: unique symbol = Symbol('ROUTER')
+  public static readonly endpoint: unique symbol = Symbol('ENDPOINT')
 
   public static endpoints: Map<MethodType, Array<EndpointType>> = new Map([
     ['DELETE', []],
