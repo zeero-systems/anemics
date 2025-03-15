@@ -22,9 +22,9 @@ export type EndpointType = {
   handler: HandlerType
 }
 
-export type EventType = 'before' | 'middle' | 'after' | 'error';
+export type EventType = 'before' | 'middle' | 'after' | 'error' | 'finally';
 
-export type ActionType = 'first' | 'last' | 'ordered';
+export type ActionType = 'first' | 'last';
 
 export type OptionsType = {
   action: ActionType

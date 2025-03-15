@@ -6,7 +6,7 @@ import { Container, Text } from '@zxxxro/commons';
 
 import Middleware from '~/controller/annotations/middleware.annotation.ts';
 
-@Middleware('before', 'ordered')
+@Middleware('before', 'first')
 export class DecoderInterceptor implements InterceptorInterface {
   async onUse<T>(context: ContextType<T & EndpointType>, next: NextType): Promise<void> {
     

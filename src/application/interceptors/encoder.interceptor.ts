@@ -4,7 +4,7 @@ import type { EndpointType } from '~/controller/types.ts';
 
 import Middleware from '~/controller/annotations/middleware.annotation.ts';
 
-@Middleware('after', 'ordered')
+@Middleware('after', 'first')
 export class EncoderInterceptor implements InterceptorInterface {
    onUse<T>(context: ContextType<T & EndpointType>, next: NextType): Promise<void> {
     if (context.extra) {

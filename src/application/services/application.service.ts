@@ -10,8 +10,6 @@ import isMethod from '~/application/guards/is-method.guard.ts';
 
 export class Application {
 
-  static events: Array<EventType> = ['before', 'middle', 'after']
-
   constructor(public module: any) {} 
 
   async listen(options: any, handler: (request: Request) => Promise<Response>): Promise<any> {
@@ -41,14 +39,16 @@ export class Application {
       };
       
       try {
-        for (const event of Application.events) {
-          await next(event, 0)();
-        }
+        await next('before', 0)();
+        await next('middle', 0)();
+        await next('after', 0)();
       } catch (error: any) {
         context.responser.addMetadata('error', error)
         
         await next('error', 0)();
       }
+
+      await next('finally', 0)();
     }
 
     return new Response(context.responser.body, {
