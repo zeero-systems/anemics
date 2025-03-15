@@ -29,6 +29,7 @@ export type ActionType = 'first' | 'last' | 'ordered';
 export type OptionsType = {
   action: ActionType
   event: EventType
+  weight: number
 } & { [key: string | symbol]: any }
 
 export default {}

@@ -9,31 +9,10 @@ export class Middleware implements AnnotationInterface {
     if (decoration.kind == DecoratorKindEnum.CLASS) {
       
       if (!Decorator.hasAnnotation(artifact.target, Annotations.Singleton)) {
-        artifact.target = new Proxy(artifact.target, {
-          construct(currentTarget, currentArgs, newTarget) {
-            if (currentTarget.prototype !== newTarget.prototype) {
-              return Reflect.construct(currentTarget, currentArgs, newTarget);
-            }
-
-            const instance = Reflect.construct(currentTarget, currentArgs, newTarget);
-            
-            Reflect.defineProperty(instance, 'event', {
-              enumerable: true,
-              value: decoration.parameters?.event
-            })
-            Reflect.defineProperty(instance, 'action', {
-              enumerable: true,
-              value: decoration.parameters?.action
-            })
-            
-            return instance
-          },
-        });
-
-        artifact.target.toString = Function.prototype.toString.bind(artifact.target);
         artifact.target = Mixin([Consumer(), Singleton()])(artifact.target, decoration.context);
 
-        Interceptor.add(artifact.target)
+        // @ts-ignore we aways will have this parameters
+        Interceptor.add(artifact.target, decoration.parameters)
       }
 
       return artifact.target
@@ -46,4 +25,4 @@ export class Middleware implements AnnotationInterface {
   }
 }
 
-export default (event: EventType = 'middle', action: ActionType = 'last'): DecoratorFunctionType => Decorator.apply(Middleware, { event, action });
+export default (event: EventType = 'middle', action: ActionType = 'last', weight: number = 0): DecoratorFunctionType => Decorator.apply(Middleware, { event, action, weight });

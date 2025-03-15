@@ -6,7 +6,7 @@ import Middleware from '~/controller/annotations/middleware.annotation.ts';
 
 @Middleware('after', 'ordered')
 export class EncoderInterceptor implements InterceptorInterface {
-  async onUse<T>(context: ContextType<T & EndpointType>, next: NextType): Promise<void> {
+   onUse<T>(context: ContextType<T & EndpointType>, next: NextType): Promise<void> {
     if (context.extra) {
 
       if (!context.responser.status) {

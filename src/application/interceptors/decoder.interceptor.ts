@@ -4,7 +4,6 @@ import type { EndpointType } from '~/controller/types.ts';
 
 import { Container, Text } from '@zxxxro/commons';
 
-import Framer from '~/controller/services/framer.service.ts';
 import Middleware from '~/controller/annotations/middleware.annotation.ts';
 
 @Middleware('before', 'ordered')
