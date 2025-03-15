@@ -1,5 +1,5 @@
 import { ConstructorType } from '@zxxxro/commons';
-import { MethodType } from '~/application/types.ts';
+import { MethodType } from '~/bootstraper/types.ts';
 
 export type ParameterType = ('request' | 'response' | 'query' | 'params' | 'formData') & string
 
@@ -22,7 +22,7 @@ export type EndpointType = {
   handler: HandlerType
 }
 
-export type EventType = 'before' | 'middle' | 'after' | 'error' | 'finally';
+export type EventType = 'then' | 'catch' | 'finally';
 
 export type ActionType = 'first' | 'last';
 

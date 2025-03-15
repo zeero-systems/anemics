@@ -8,10 +8,8 @@ export class Interceptor {
 
   public static middlewares: Array<{ target: ConstructorType<InterceptorInterface>, options: OptionsType }> = []
 
-  public static before: Array<InterceptorInterface> = []
-  public static middle: Array<InterceptorInterface> = []
-  public static after: Array<InterceptorInterface> = []
-  public static error: Array<InterceptorInterface> = []
+  public static then: Array<InterceptorInterface> = []
+  public static catch: Array<InterceptorInterface> = []
   public static finally: Array<InterceptorInterface> = []
 
   public static exists(targetName: string | symbol, event: EventType): boolean {

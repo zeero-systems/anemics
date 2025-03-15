@@ -1,5 +1,5 @@
 import { EndpointType } from '~/controller/types.ts';
-import { MethodType } from '~/application/types.ts';
+import { MethodType } from '~/bootstraper/types.ts';
 
 export class Gateway {
   public static readonly endpoint: unique symbol = Symbol('ENDPOINT')

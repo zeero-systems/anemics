@@ -2,7 +2,7 @@
 import { describe, it } from '@std/bdd';
 import { expect } from '@std/expect';
 
-import Module from '~/module/annotations/Module.ts';
+import Module from '~/module/annotations/module.annotation.ts';
 import { Guards, Metadata, Container, Factory } from '@zxxxro/commons'
 
 describe('module', () => {

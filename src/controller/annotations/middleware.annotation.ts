@@ -25,4 +25,4 @@ export class Middleware implements AnnotationInterface {
   }
 }
 
-export default (event: EventType = 'middle', action: ActionType = 'last', weight: number = 0): DecoratorFunctionType => Decorator.apply(Middleware, { event, action, weight });
+export default (event: EventType = 'then', action: ActionType = 'last', weight: number = 0): DecoratorFunctionType => Decorator.apply(Middleware, { event, action, weight });

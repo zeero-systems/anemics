@@ -1,7 +1,7 @@
-import HttpStatusEnum from '~/application/enums/http-status.annotation.ts';
-import { RequesterInterface, ResponserInterface } from '~/application/interfaces.ts';
+import HttpStatusEnum from '~/bootstraper/enums/http-status.annotation.ts';
+import { RequesterInterface, ResponserInterface } from '~/bootstraper/interfaces.ts';
 
-export type MethodType = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE' | 'OPTIONS'
+export type MethodType = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE' | 'OPTIONS' | string
 
 export type BodyType = BodyInit | undefined | null
 
@@ -10,8 +10,6 @@ export type BodyInitType = {
   status?: HttpStatusEnum | undefined
   statusText?: string | undefined
 }
-
-export type NextType = () => Promise<void>
 
 export type ContextType<T> = { 
   requester: RequesterInterface

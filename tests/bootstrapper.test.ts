@@ -1,8 +1,8 @@
 import { describe, it } from '@std/bdd';
 import { expect } from '@std/expect';
 
-import Bootstraper from '~/server/services/Bootstraper.ts';
-import Module from '~/module/annotations/Module.ts';
+import Bootstraper from '~/bootstraper/services/bootstraper.service.ts';
+import Module from '~/module/annotations/module.annotation.ts';
 
 describe('bootstraper', () => {
   

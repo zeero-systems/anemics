@@ -1,7 +1,7 @@
-import type { ResponserInterface } from '~/application/interfaces.ts';
-import type { BodyType } from '~/application/types.ts';
+import type { ResponserInterface } from '~/bootstraper/interfaces.ts';
+import type { BodyType } from '~/bootstraper/types.ts';
 
-import HttpStatusEnum from '~/application/enums/http-status.annotation.ts';
+import HttpStatusEnum from '~/bootstraper/enums/http-status.annotation.ts';
 
 export class Responser implements ResponserInterface {
 

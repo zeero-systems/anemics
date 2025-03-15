@@ -1,6 +1,6 @@
 // deno-lint-ignore-file ban-types
 import { OmitType } from '@zxxxro/commons';
-import { RequesterInterface } from '~/application/interfaces.ts'
+import { RequesterInterface } from '~/bootstraper/interfaces.ts'
 
 export class Requester implements RequesterInterface {
   cache!: RequestCache;
