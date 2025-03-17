@@ -5,6 +5,7 @@ import Interceptor from '~/controller/services/interceptor.service.ts';
 import Responser from '~/bootstraper/services/responser.service.ts';
 import Gateway from '~/controller/services/gateway.service.ts';
 import Requester from '~/bootstraper/services/requester.service.ts';
+import * as uuid from "@std/uuid"
 
 export class Application {
 
@@ -17,10 +18,16 @@ export class Application {
 
   async handler(request: Request): Promise<Response> {
 
+    let traceId = request.headers.get('X-Request-Id')
+    if (!traceId || !uuid.validate(traceId)) {
+      traceId = crypto.randomUUID()
+    }
+
     const context: ContextType<EndpointType> = { 
+      traceId,
+      extra: undefined,
       requester: new Requester(request),
       responser: new Responser(),
-      extra: undefined
     }
 
     const endpoints = Gateway.endpoints.get(context.requester.method)

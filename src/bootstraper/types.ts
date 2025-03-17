@@ -11,7 +11,8 @@ export type BodyInitType = {
   statusText?: string | undefined
 }
 
-export type ContextType<T> = { 
+export type ContextType<T> = {
+  traceId: string | undefined
   requester: RequesterInterface
   responser: ResponserInterface
   extra: T | undefined
