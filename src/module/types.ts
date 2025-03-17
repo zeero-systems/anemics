@@ -7,7 +7,7 @@ export type ModuleParametersType = {
   controllers?: Array<ConstructorType<ControllerInterface>>,
   middlewares?: Array<ConstructorType<InterceptorInterface>>,
   modules?: Array<ConstructorType<ModuleInterface>>,
-  providers?: Array<ProviderType>
+  providers?: Array<ProviderType | { name: string | symbol, value: any }>
 }
 
 export default {}

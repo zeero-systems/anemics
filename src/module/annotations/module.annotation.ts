@@ -4,11 +4,13 @@ import {
   Annotations,
   ArtifactType,
   Consumer,
+  Container,
   DecorationType,
   Decorator,
   DecoratorContextType,
   DecoratorFunctionType,
   DecoratorKindEnum,
+  Guards,
   Metadata,
   Mixin,
   Provider,
@@ -19,6 +21,7 @@ import { ModuleParametersType } from '~/module/types.ts';
 
 import Middleware from '~/controller/annotations/middleware.annotation.ts';
 import Controller from '~/controller/annotations/controller.annotation.ts';
+import isProviderObject from '~/module/guards/isProviderObject.ts';
 
 export class Module implements AnnotationInterface {
   onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P & ModuleParametersType>): any {
@@ -29,13 +32,21 @@ export class Module implements AnnotationInterface {
         if (decoration?.parameters?.providers) {
           for (let index = 0; index < decoration.parameters.providers.length; index++) {
             const providerTarget = decoration.parameters.providers[index]
-            const providerContext = {
-              kind: DecoratorKindEnum.CLASS,
-              name: Text.toFirstLetterUppercase(providerTarget.name || providerTarget.constructor.name),
-              metadata: Metadata.getProperty(providerTarget, Decorator.metadata),
-            } as DecoratorContextType
+            
+            if (Guards.isClass(providerTarget)) {
+              const providerContext = {
+                kind: DecoratorKindEnum.CLASS,
+                name: Text.toFirstLetterUppercase(providerTarget.name || providerTarget.constructor.name),
+                metadata: Metadata.getProperty(providerTarget, Decorator.metadata),
+              } as DecoratorContextType
 
-            Mixin([Provider(), Singleton()])(providerTarget, providerContext);
+              Mixin([Provider(), Singleton()])(providerTarget, providerContext);
+            }
+
+            if (isProviderObject(providerTarget)) {
+              Container.set(Text.toFirstLetterUppercase(providerTarget.name), providerTarget.value);
+            }
+
           }
         }
 
