@@ -12,7 +12,7 @@
     "jsr:@std/internal@^1.0.5": "1.0.5",
     "jsr:@std/path@^1.0.8": "1.0.8",
     "jsr:@std/testing@*": "1.0.9",
-    "jsr:@std/uuid@*": "1.0.5",
+    "jsr:@std/uuid@^1.0.5": "1.0.5",
     "jsr:@zxxxro/commons@~0.18.2": "0.18.2"
   },
   "jsr": {
@@ -76,7 +76,7 @@
       "jsr:@std/assert@1",
       "jsr:@std/expect@*",
       "jsr:@std/testing@*",
-      "jsr:@std/uuid@*",
+      "jsr:@std/uuid@^1.0.5",
       "jsr:@zxxxro/commons@~0.18.2"
     ]
   }
