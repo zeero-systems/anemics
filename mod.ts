@@ -60,6 +60,7 @@ export { RouterInterceptor } from '~/controller/interceptors/router.interceptor.
 
 export * from '~/controller/interfaces.ts';
 export * from '~/controller/types.ts';
+export * from '~/module/interfaces.ts';
 export * from '~/module/types.ts';
 export * from '~/bootstraper/interfaces.ts';
 export * from '~/bootstraper/types.ts';
