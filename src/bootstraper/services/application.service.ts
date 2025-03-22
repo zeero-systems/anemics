@@ -1,12 +1,14 @@
 import type { InterceptorInterface } from '~/controller/interfaces.ts';
 
 import * as uuid from '@std/uuid';
-import { Container, ContainerInterface } from '@zxxxro/commons';
+import { Artifactor, Container, ContainerInterface } from '@zxxxro/commons';
 
 import Gateway from '~/controller/services/gateway.service.ts';
 import Interceptor from '~/controller/services/interceptor.service.ts';
 import Requester from '~/bootstraper/services/requester.service.ts';
 import Responser from '~/bootstraper/services/responser.service.ts';
+import { Module } from '~/module/annotations/module.annotation.ts';
+import { ModuleInterface } from '~/module/interfaces.ts';
 
 export class Application {
 
@@ -14,6 +16,18 @@ export class Application {
 
   constructor(public module: any) {
     Interceptor.construct(Application.container);
+  }
+
+  async update(): Promise<void> {
+    const container = Container.create('UPDATE')
+    const modules = Container.artifactsByTag.get(Module.tag)
+
+    if (modules) {
+      for (const [key, artifact] of modules) {
+        const module = container.construct<ModuleInterface>(key)
+        if (module?.onUpdate) await module.onUpdate()
+      }
+    }
   }
 
   async listen(options: any, handler: (request: Request) => Promise<Response>): Promise<any> {

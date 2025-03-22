@@ -1,4 +1,6 @@
 
-export interface ModuleInterface {}
+export interface ModuleInterface {
+  onUpdate?(): Promise<void>
+}
 
 export default {}

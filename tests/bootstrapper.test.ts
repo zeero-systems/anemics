@@ -11,6 +11,7 @@ import Controller from '~/controller/annotations/controller.annotation.ts';
 import Intercept from '~/controller/annotations/intercept.annotation.ts';
 import Get from '~/controller/annotations/get.annotation.ts';
 import { EndpointType } from '~/controller/types.ts';
+import { ModuleInterface } from '~/module/interfaces.ts';
 
 describe('bootstraper', () => {
   
@@ -83,6 +84,8 @@ describe('bootstraper', () => {
     }
   }
   
+  let updaterWasUpdated = false
+
   @Module({
     controllers: [AnyController],
     interceptors: [
@@ -92,8 +95,12 @@ describe('bootstraper', () => {
       ResponseInterceptor
     ]
   })
-  class AppModule {
+  class AppModule implements ModuleInterface {
     constructor() {}
+
+    async onUpdate(): Promise<void> {
+      updaterWasUpdated = true      
+    }
   }
   
   const app = Bootstraper.create(AppModule);
@@ -104,10 +111,16 @@ describe('bootstraper', () => {
     expect(response.status).toEqual(200)
   });
 
-  it('expect status 200', async () => {
+  it('expect status 500', async () => {
     const response = await app.handler(new Request('http://localhost:3001/any/user'))
 
     expect(response.status).toEqual(500)
+  });
+
+  it('expect status 200', async () => {
+    await app.update()
+
+    expect(updaterWasUpdated).toEqual(true)
   });
 
 });

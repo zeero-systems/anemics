@@ -1,6 +1,6 @@
 {
   "name": "@zxxxro/anemics",
-  "version": "0.16.3",
+  "version": "0.17",
   "license": "GPL-3.0",
   "exports": "./mod.ts",
   "tasks": {

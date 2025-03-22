@@ -53,6 +53,12 @@ export class Module implements AnnotationInterface {
         if (decoration.parameters?.modules) {
           Module.applyArtifacts(decoration.parameters.modules, [Module.tag])
         }
+
+        Artifactor.set(artifact.name, { 
+          name: artifact.name,
+          target: artifact.target,
+          tags: [Module.tag]
+        })
       }
 
       return Mixin([Consumer(), Provider()])(artifact.target, decoration.context);
