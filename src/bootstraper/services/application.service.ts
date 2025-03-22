@@ -10,11 +10,10 @@ import Responser from '~/bootstraper/services/responser.service.ts';
 
 export class Application {
 
-  constructor(
-    public module: any, 
-    public container: ContainerInterface
-  ) {
-    Interceptor.construct(this.container);
+  static container: ContainerInterface
+
+  constructor(public module: any) {
+    Interceptor.construct(Application.container);
   }
 
   async listen(options: any, handler: (request: Request) => Promise<Response>): Promise<any> {
@@ -59,6 +58,8 @@ export class Application {
     
           Promise.any(promises).then((endpoint: any) => {
             resolve(endpoint)
+          }).catch((error) => {
+            resolve(undefined)
           })
         }
       })
@@ -70,18 +71,18 @@ export class Application {
 
       try {
         for (const [key] of Container.artifactsByTag.get(Interceptor.thenTag) || []) {
-          await this.container.construct<InterceptorInterface>(key)?.onUse(context);
+          await Application.container.construct<InterceptorInterface>(key)?.onUse(context);
         }
       } catch (error: any) {
         context.responser.addMetadata('error', error);
   
         for (const [key] of Container.artifactsByTag.get(Interceptor.catchTag) || []) {
-          await this.container.construct<InterceptorInterface>(key)?.onUse(context);
+          await Application.container.construct<InterceptorInterface>(key)?.onUse(context);
         }
       }
   
       for (const [key] of Container.artifactsByTag.get(Interceptor.finallyTag) || []) {
-        this.container.construct<InterceptorInterface>(key)?.onUse(context);
+        Application.container.construct<InterceptorInterface>(key)?.onUse(context);
       }
   
       return new Response(context.responser.body, {

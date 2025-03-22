@@ -3,8 +3,8 @@ import { Application } from '~/bootstraper/services/application.service.ts';
 
 export class Bootstraper {
   public static create(artifact: ConstructorType<any>): Application {
-    const container = Container.create('PERPETUAL')
-    return new Application(container.construct(artifact.name), container)
+    Application.container = Container.create('PERPETUAL')
+    return new Application(Application.container.construct(artifact.name))
   }
 }
 
