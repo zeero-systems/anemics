@@ -1,6 +1,6 @@
 import type { EventType } from '~/controller/types.ts';
 
-import { ArtifactType, Container, ContainerInterface, Decorator, KeyType } from '@zxxxro/commons';
+import { Container, ContainerInterface, Decorator } from '@zxxxro/commons';
 import { Intercept } from '~/controller/annotations/intercept.annotation.ts';
 
 export class Interceptor {
@@ -9,10 +9,6 @@ export class Interceptor {
   public static readonly thenTag: unique symbol = Symbol('Interceptor.thenTag');
   public static readonly catchTag: unique symbol = Symbol('Interceptor.catchTag');
   public static readonly finallyTag: unique symbol = Symbol('Interceptor.finallyTag');
-
-  public static sort(artifacts: Array<[KeyType, ArtifactType]>) {
-    return artifacts
-  }
 
   public static construct(container: ContainerInterface): void {
     for (const event of ['then', 'catch', 'finally'] as Array<EventType>) {
