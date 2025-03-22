@@ -1,3 +1,4 @@
+import type { ModuleParametersType, ModuleParameterType } from '~/module/types.ts';
 import {
   Annotations,
   AnnotationException,
@@ -17,12 +18,12 @@ import {
   TagType,
 } from '@zxxxro/commons';
 
-import { ModuleParametersType, ModuleParameterType } from '~/module/types.ts';
+import { Controller } from "~/controller/annotations/controller.annotation.ts"
+import { Model } from '~/controller/annotations/model.annotation.ts';
+
+import Interceptor from "~/controller/services/interceptor.service.ts"
 
 import isArtifact from '~/module/guards/isArtifact.ts';
-
-import { Controller } from "~/controller/annotations/controller.annotation.ts"
-import Interceptor from "~/controller/services/interceptor.service.ts"
 
 export class Module implements AnnotationInterface {
   static readonly tag: unique symbol = Symbol('Module.tag')
@@ -31,6 +32,12 @@ export class Module implements AnnotationInterface {
     if (decoration.kind == DecoratorKindEnum.CLASS) {
       
       if (!Decorator.hasAnnotation(artifact.target, Module)) {
+        if (decoration.parameters?.any) {
+          Module.applyArtifacts(decoration.parameters.any)
+        }
+        if (decoration.parameters?.models) {
+          Module.applyArtifacts(decoration.parameters.models, [Model.tag])
+        }
         if (decoration.parameters?.consumers) {
           Module.applyArtifacts(decoration.parameters.consumers, [Annotations.Consumer.tag])
         }
@@ -57,7 +64,7 @@ export class Module implements AnnotationInterface {
     });
   }
 
-  private static applyArtifacts(artifacts: Array<ModuleParameterType<any>>, tags: Array<TagType>) {
+  private static applyArtifacts(artifacts: Array<ModuleParameterType<any>>, tags?: Array<TagType>) {
     for (let index = 0; index < artifacts.length; index++) {
       const artifact = artifacts[index]
 

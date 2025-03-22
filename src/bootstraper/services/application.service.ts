@@ -1,14 +1,12 @@
+import type { InterceptorInterface } from '~/controller/interfaces.ts';
+
 import * as uuid from '@std/uuid';
 import { Container, ContainerInterface } from '@zxxxro/commons';
 
-import type { ContextType } from '~/bootstraper/types.ts';
-import type { EndpointType } from '~/controller/types.ts';
-import type { InterceptorInterface } from '~/controller/interfaces.ts';
-
-import Interceptor from '~/controller/services/interceptor.service.ts';
-import Responser from '~/bootstraper/services/responser.service.ts';
 import Gateway from '~/controller/services/gateway.service.ts';
+import Interceptor from '~/controller/services/interceptor.service.ts';
 import Requester from '~/bootstraper/services/requester.service.ts';
+import Responser from '~/bootstraper/services/responser.service.ts';
 
 export class Application {
 
