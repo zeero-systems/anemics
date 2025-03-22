@@ -5,6 +5,8 @@ import type { ModuleInterface } from '~/module/interfaces.ts';
 export type ModuleParameterType<T> = ConstructorType<T> | ArtifactType
 
 export type ModuleParametersType = {
+  any?: Array<ModuleParameterType<any>>
+  models?: Array<ModuleParameterType<any>>
   consumers?: Array<ModuleParameterType<any>>
   providers?: Array<ModuleParameterType<any>>
   controllers?: Array<ModuleParameterType<ControllerInterface>>
