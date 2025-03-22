@@ -1,3 +1,4 @@
+import { ContainerInterface } from '@zxxxro/commons';
 import HttpStatusEnum from '~/bootstraper/enums/http-status.annotation.ts';
 import { RequesterInterface, ResponserInterface } from '~/bootstraper/interfaces.ts';
 
@@ -15,6 +16,7 @@ export type ContextType<T> = {
   traceId: string | undefined
   requester: RequesterInterface
   responser: ResponserInterface
+  container: ContainerInterface
   extra: T | undefined
 }
 

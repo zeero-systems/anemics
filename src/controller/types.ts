@@ -1,11 +1,11 @@
-import { ConstructorType } from '@zxxxro/commons';
-import { MethodType } from '~/bootstraper/types.ts';
+import type { KeyType } from '@zxxxro/commons';
+import type { MethodType } from '~/bootstraper/types.ts';
 
 export type ParameterType = ('request' | 'response' | 'query' | 'params' | 'formData') & string
 
 export type ControllerType = {
   path: string
-  target: ConstructorType<any>
+  targetName: KeyType
 }
 
 export type HandlerType = {
@@ -27,7 +27,6 @@ export type EventType = 'then' | 'catch' | 'finally';
 export type ActionType = 'first' | 'last';
 
 export type OptionsType = {
-  action: ActionType
   event: EventType
   weight: number
 } & { [key: string | symbol]: any }

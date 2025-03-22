@@ -3,7 +3,7 @@ import { describe, it } from '@std/bdd';
 import { expect } from '@std/expect';
 
 import Module from '~/module/annotations/module.annotation.ts';
-import { Guards, Metadata, Container, Factory } from '@zxxxro/commons'
+import { Guards, Metadata, Container, Locator } from '@zxxxro/commons'
 
 describe('module', () => {
 
@@ -20,9 +20,7 @@ describe('module', () => {
   @Module()
   class EmptyApp {}
   
-  @Module({
-    providers: [NonProviderMock]
-  })
+  @Module()
   class ProviderApp {}
   
   @Module({
@@ -33,14 +31,13 @@ describe('module', () => {
   }
   
   @Module({
-    providers: [NonProviderMock],
-    consumers: [NonConsumerMock],
+    consumers: [NonConsumerMock]
   })
   class ProviderConsumerApp {
     constructor(
       public nonProviderMock: NonProviderMock,
-      public nonConsumerMock: NonConsumerMock
-    ) {}
+      public nonConsumerMock: NonConsumerMock,
+    ) { }
   }
   
   @Module({
@@ -50,6 +47,14 @@ describe('module', () => {
     constructor(public providerConsumerApp: ProviderConsumerApp) {}
   }
 
+  @Module({
+    providers: [
+      { name: 'Obj', target: ProviderConsumerApp  }
+    ]
+  })
+  class ObjectProviderConsumerApp {
+    constructor(public obj: ProviderConsumerApp) {}
+  }
 
   it('check annotation', () => {
     const appModule = new EmptyApp()
@@ -66,28 +71,36 @@ describe('module', () => {
     })
   });
 
+  const container = Container.create('NEW')
+
   it('apply providers', () => {
-    new ProviderApp()
-    expect(Container.providers.get("NonProviderMock")).not.toBeUndefined()
+    const consumerApp = container.construct('ConsumerApp')
+    
+    expect(container.instances.get("NonProviderMock")).not.toBeUndefined()
   })
-
+  
   it('inject providers', () => {
-    const consumerApp = Factory.construct(ConsumerApp)
-    expect(consumerApp.nonProviderMock.getName()).not.toBeUndefined()
+    const consumerApp = container.construct<ConsumerApp>('ConsumerApp')
+    expect(consumerApp?.nonProviderMock.getName()).not.toBeUndefined()
   })
-
+  
   it('inject consumer and providers', () => {
-    const providerConsumerApp = Factory.construct(ProviderConsumerApp)
+    const providerConsumerApp = container.construct<ProviderConsumerApp>('ProviderConsumerApp')
     
-    expect(providerConsumerApp.nonProviderMock.getName()).not.toBeUndefined()
-    expect(providerConsumerApp.nonConsumerMock.nonProviderMock.getName()).not.toBeUndefined()
+    expect(providerConsumerApp?.nonProviderMock.getName()).not.toBeUndefined()
+    expect(providerConsumerApp?.nonConsumerMock?.nonProviderMock).toBeUndefined()
   })
-
+  
   it('inject another module', () => {
-    const anotherProviderConsumerApp = Factory.construct(AnotherProviderConsumerApp)
+    const anotherProviderConsumerApp = container.construct<AnotherProviderConsumerApp>('AnotherProviderConsumerApp')
     
-    expect(anotherProviderConsumerApp.providerConsumerApp.nonProviderMock.getName()).not.toBeUndefined()
-    expect(anotherProviderConsumerApp.providerConsumerApp.nonConsumerMock.nonProviderMock.getName()).not.toBeUndefined()
+    expect(anotherProviderConsumerApp?.providerConsumerApp.nonProviderMock.getName()).not.toBeUndefined()
+  })
+  
+  it('inject another module', () => {
+    const objectProviderConsumerApp = container.construct<ObjectProviderConsumerApp>('ObjectProviderConsumerApp')
+    
+    expect(objectProviderConsumerApp?.obj.nonConsumerMock?.nonProviderMock.getName()).toBeUndefined()
   })
 
 });

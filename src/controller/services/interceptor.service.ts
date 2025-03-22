@@ -1,45 +1,38 @@
-import type { InterceptorInterface } from '~/controller/interfaces.ts';
-import type { EventType, OptionsType } from '~/controller/types.ts';
+import type { EventType } from '~/controller/types.ts';
 
-import { ConstructorType, Factory } from '@zxxxro/commons';
+import { ArtifactType, Container, ContainerInterface, Decorator, KeyType } from '@zxxxro/commons';
+import { Intercept } from '~/controller/annotations/intercept.annotation.ts';
 
 export class Interceptor {
-  public static readonly middleware: unique symbol = Symbol('MIDDLEWARE');
+  public static readonly tag: unique symbol = Symbol('Interceptor.tag');
 
-  public static middlewares: Array<{ target: ConstructorType<InterceptorInterface>, options: OptionsType }> = []
+  public static readonly thenTag: unique symbol = Symbol('Interceptor.thenTag');
+  public static readonly catchTag: unique symbol = Symbol('Interceptor.catchTag');
+  public static readonly finallyTag: unique symbol = Symbol('Interceptor.finallyTag');
 
-  public static then: Array<InterceptorInterface> = []
-  public static catch: Array<InterceptorInterface> = []
-  public static finally: Array<InterceptorInterface> = []
-
-  public static exists(targetName: string | symbol, event: EventType): boolean {
-    return Interceptor[event].some((interceptor) => interceptor.constructor.name == targetName)
+  public static sort(artifacts: Array<[KeyType, ArtifactType]>) {
+    return artifacts
   }
 
-  public static construct(): void {
+  public static construct(container: ContainerInterface): void {
+    for (const event of ['then', 'catch', 'finally'] as Array<EventType>) {
+      const tag = Interceptor[`${event}Tag`];
+      const artifacts = Container.artifactsByTag.get(tag)
 
-    for (const interceptor of Interceptor.middlewares.sort((ma, mb) => {
-      return ma.options.weight - mb.options.weight
-    })) {
-      const middleware = Factory.construct(interceptor.target)
-      const middlewareName = interceptor.target.name
-      
-      if(!Interceptor.exists(middlewareName, interceptor.options.event)) {
-        Interceptor[interceptor.options.action](middleware, interceptor.options)
+      if (artifacts) {
+        const entries = artifacts?.entries().toArray()
+        const sorteds = entries.sort((ia, ib) => {
+          const iaa = Decorator.getDecoration(ia[1].target, Intercept, 'construct');
+          const iab = Decorator.getDecoration(ib[1].target, Intercept, 'construct');
+    
+          return iaa?.parameters?.weight - iab?.parameters?.weight;
+        });
+
+        Container.artifactsByTag.set(tag, new Map(sorteds));
+
+        sorteds.forEach(([key]) => container.construct(key)) 
       }
     }
-  }
-
-  public static add(target: ConstructorType<InterceptorInterface>, options: OptionsType): void {
-    Interceptor.middlewares.push({ target, options })
-  }
-
-  private static first(target: InterceptorInterface, options: OptionsType): void {
-    Interceptor[options.event].unshift(target);
-  }
-  
-  private static last(target: InterceptorInterface, options: OptionsType): void {
-    Interceptor[options.event].push(target);
   }
 }
 

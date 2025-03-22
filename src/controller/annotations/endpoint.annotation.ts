@@ -7,33 +7,37 @@ import Gateway from '~/controller/services/gateway.service.ts';
 import isMethod from '~/bootstraper/guards/is-method.guard.ts';
 
 export class Endpoint extends Entity implements AnnotationInterface {
+
+  static methods = ['Get', 'Post', 'Put', 'Patch', 'Options', 'Delete'];
+
   onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P & { path?: string | undefined }>): any {
     if (decoration.kind == DecoratorKindEnum.CLASS) {
       if (!Decorator.hasAnnotation(artifact.target, Annotations.Singleton)) {
         const decorationMap = decoration.context.metadata[Decorator.metadata];
 
         const properties = [...Object.getOwnPropertyNames(artifact.target.prototype), 'constructor'];
-        const methods = ['Get', 'Post', 'Put', 'Patch', 'Options', 'Delete'];
 
         for (const propertyKey of properties) {
           if (decorationMap.has(propertyKey)) {
             const decorationsMap: DecorationType<any>[] = decorationMap.get(propertyKey);
 
             for (const decorationMap of decorationsMap) {
-              if (methods.includes(decorationMap.annotation.constructor.name)) {
+              if (Endpoint.methods.includes(decorationMap.annotation.constructor.name)) {
                 const controllerMethod = String(decorationMap.annotation.constructor.name).toUpperCase();
 
                 if (isMethod(controllerMethod)) {
                   Gateway.add(controllerMethod, {
                     controller: {
                       path: decoration.parameters?.path ?? '',
-                      target: artifact.target,
+                      targetName: artifact.name,
                     },
                     handler: {
                       path: decorationMap.parameters.path ?? '',
                       method: controllerMethod,
                       pattern: new URLPattern({
-                        pathname: `/${decoration.parameters?.path}${
+                        pathname: `/${
+                          decoration.parameters?.path ? decoration.parameters?.path : ''
+                        }${
                           decorationMap.parameters.path ? `/${decorationMap.parameters.path}` : ''
                         }`,
                       }),

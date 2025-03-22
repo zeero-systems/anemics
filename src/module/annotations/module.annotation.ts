@@ -1,104 +1,97 @@
 import {
+  Annotations,
   AnnotationException,
   AnnotationInterface,
-  Annotations,
+  Artifactor,
   ArtifactType,
   Consumer,
-  Container,
   DecorationType,
   Decorator,
-  DecoratorContextType,
   DecoratorFunctionType,
   DecoratorKindEnum,
   Guards,
-  Metadata,
   Mixin,
+  Scoper,
   Provider,
-  Singleton,
   Text,
+  TagType,
 } from '@zxxxro/commons';
-import { ModuleParametersType } from '~/module/types.ts';
 
-import Middleware from '~/controller/annotations/middleware.annotation.ts';
-import Controller from '~/controller/annotations/controller.annotation.ts';
-import isProviderObject from '~/module/guards/isProviderObject.ts';
+import { ModuleParametersType, ModuleParameterType } from '~/module/types.ts';
+
+import isArtifact from '~/module/guards/isArtifact.ts';
+
+import { Controller } from "~/controller/annotations/controller.annotation.ts"
+import Interceptor from "~/controller/services/interceptor.service.ts"
 
 export class Module implements AnnotationInterface {
+  static readonly tag: unique symbol = Symbol('Module.tag')
+
   onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P & ModuleParametersType>): any {
-    
     if (decoration.kind == DecoratorKindEnum.CLASS) {
-      if (!Decorator.hasAnnotation(artifact.target, Annotations.Singleton)) {
-       
-        if (decoration?.parameters?.providers) {
-          for (let index = 0; index < decoration.parameters.providers.length; index++) {
-            const providerTarget = decoration.parameters.providers[index]
-            
-            if (Guards.isClass(providerTarget)) {
-              const providerContext = {
-                kind: DecoratorKindEnum.CLASS,
-                name: Text.toFirstLetterUppercase(providerTarget.name || providerTarget.constructor.name),
-                metadata: Metadata.getProperty(providerTarget, Decorator.metadata),
-              } as DecoratorContextType
-
-              Mixin([Provider(), Singleton()])(providerTarget, providerContext);
-            }
-
-            if (isProviderObject(providerTarget)) {
-              Container.set(Text.toFirstLetterUppercase(providerTarget.name), providerTarget.value);
-            }
-
-          }
-        }
-
-        if (decoration?.parameters?.consumers) {
-          for (let index = 0; index < decoration.parameters.consumers.length; index++) {
-            const consumerTarget = decoration.parameters.consumers[index]
-            const consumerContext = {
-              kind: DecoratorKindEnum.CLASS,
-              name: Text.toFirstLetterUppercase(consumerTarget.name || consumerTarget.constructor.name),
-              metadata: Metadata.getProperty(consumerTarget, Decorator.metadata),
-            } as DecoratorContextType
-
-            Mixin([Consumer()])(consumerTarget, consumerContext);
-          }
-        }
-
-        if (decoration?.parameters?.middlewares) {
-          for (let index = 0; index < decoration.parameters.middlewares.length; index++) {
-            const middlewareTarget = decoration.parameters.middlewares[index]
-            const middlewareContext = {
-              kind: DecoratorKindEnum.CLASS,
-              name: Text.toFirstLetterUppercase(middlewareTarget.name || middlewareTarget.constructor.name),
-              metadata: Metadata.getProperty(middlewareTarget, Decorator.metadata),
-            } as DecoratorContextType
-
-            Mixin([Middleware()])(middlewareTarget, middlewareContext);
-          }
-        }
-
-        if (decoration?.parameters?.controllers) {
-          for (let index = 0; index < decoration.parameters.controllers.length; index++) {
-            const controllerTarget = decoration.parameters.controllers[index]
-            const controllerContext = {
-              kind: DecoratorKindEnum.CLASS,
-              name: Text.toFirstLetterUppercase(controllerTarget.name || controllerTarget.constructor.name),
-              metadata: Metadata.getProperty(controllerTarget, Decorator.metadata),
-            } as DecoratorContextType
-
-            Mixin([Controller()])(controllerTarget, controllerContext);
-          }
-        }
-        
-        artifact.target.toString = Function.prototype.toString.bind(artifact.target);
-      }
       
-      return Mixin([Consumer(), Provider(), Singleton()])(artifact.target, decoration.context);
+      if (!Decorator.hasAnnotation(artifact.target, Module)) {
+        if (decoration.parameters?.consumers) {
+          Module.applyArtifacts(decoration.parameters.consumers, [Annotations.Consumer.tag])
+        }
+        if (decoration.parameters?.providers) {
+          Module.applyArtifacts(decoration.parameters.providers, [Annotations.Provider.tag])
+        }
+        if (decoration.parameters?.controllers) {
+          Module.applyArtifacts(decoration.parameters.controllers, [Controller.tag])
+        }
+        if (decoration.parameters?.interceptors) {
+          Module.applyArtifacts(decoration.parameters.interceptors, [Interceptor.tag])
+        }
+        if (decoration.parameters?.modules) {
+          Module.applyArtifacts(decoration.parameters.modules, [Module.tag])
+        }
+      }
+
+      return Mixin([Consumer(), Provider()])(artifact.target, decoration.context);
     }
 
     throw new AnnotationException('Method not implemented for {name} on {kind}.', {
       key: 'NOT_IMPLEMENTED',
       context: { name: artifact.name, kind: decoration.kind },
     });
+  }
+
+  private static applyArtifacts(artifacts: Array<ModuleParameterType<any>>, tags: Array<TagType>) {
+    for (let index = 0; index < artifacts.length; index++) {
+      const artifact = artifacts[index]
+
+      
+      if (Guards.isClass(artifact)) {
+        const artifactName = Text.toFirstLetterUppercase(artifact.name || artifact.constructor.name);
+        
+        if (!Artifactor.has(artifactName)) {
+          Artifactor.set(artifactName, { 
+            name: artifactName,
+            target: artifact,
+            tags
+          })
+        }
+      }
+
+      if (isArtifact(artifact)) {
+        const artifactName = Text.toFirstLetterUppercase(artifact.name);
+      
+        Artifactor.set(artifactName, { 
+          name: artifactName,
+          target: artifact.target,
+          tags
+        })
+
+        if (Guards.isClass(artifact.target)) {
+          Scoper.applyMetadata(artifact.target)
+
+          if (artifact.scope) {
+            Scoper.setMetadata(artifact.scope, artifact.target)
+          }
+        }
+      }
+    }
   }
 }
 

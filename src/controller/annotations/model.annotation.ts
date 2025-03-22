@@ -1,15 +1,22 @@
 import type { AnnotationInterface, ArtifactType, DecorationType, DecoratorFunctionType } from '@zxxxro/commons';
 
-import { AnnotationException, Annotations, Decorator, DecoratorKindEnum, Text } from '@zxxxro/commons';
-import Framer from '~/controller/services/framer.service.ts';
+import { AnnotationException, Artifactor, Decorator, DecoratorKindEnum, ScopeEnum, Scoper } from '@zxxxro/commons';
 
 export class Model implements AnnotationInterface {
+  public static readonly tag: unique symbol = Symbol('Model.tag');
+
   onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P>): any {
     if (decoration.kind == DecoratorKindEnum.CLASS) {
-      if (!Decorator.hasAnnotation(artifact.target, Annotations.Singleton)) {
-        Framer.set(Text.toFirstLetterUppercase(artifact.name), artifact.target);
+      if (!Decorator.hasAnnotation(artifact.target, Model)) {
+        Artifactor.set(artifact.name, {
+          name: artifact.name,
+          target: artifact.target,
+          tags: [Model.tag],
+        });
+
+        Scoper.setDecoration(ScopeEnum.Ephemeral, decoration);
       }
-      
+
       return artifact.target;
     }
 

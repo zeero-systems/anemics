@@ -1,12 +1,32 @@
-import type { AnnotationInterface, ArtifactType, DecorationType, DecoratorFunctionType } from '@zxxxro/commons';
-import { AnnotationException, Consumer, Decorator, DecoratorKindEnum, Mixin, Singleton } from '@zxxxro/commons';
+import type { 
+  AnnotationInterface, 
+  ArtifactType, 
+  DecorationType, 
+  DecoratorFunctionType 
+} from '@zxxxro/commons';
+
+import { 
+  AnnotationException, 
+  Consumer, 
+  Decorator, 
+  DecoratorKindEnum, 
+  Mixin, 
+  Scope,
+  ScopeEnum 
+} from '@zxxxro/commons';
 
 import Endpoint from '~/controller/annotations/endpoint.annotation.ts';
 
 export class Controller implements AnnotationInterface {
-  onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P & { path?: string | undefined }>): any {
+  static readonly tag: unique symbol = Symbol('Controller.tag')
+
+  onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P & { path?: string | undefined, scope: ScopeEnum }>): any {
     if (decoration.kind == DecoratorKindEnum.CLASS) {
-      return Mixin([Consumer(), Endpoint(decoration.parameters?.path), Singleton()])(artifact.target, decoration.context);
+      return Mixin([
+        Consumer(), 
+        Scope(decoration.parameters?.scope),
+        Endpoint(decoration.parameters?.path)
+      ])(artifact.target, decoration.context);
     }
 
     throw new AnnotationException('Method not implemented for {name} on {kind}.', {
@@ -16,4 +36,4 @@ export class Controller implements AnnotationInterface {
   }
 }
 
-export default (path?: string | undefined): DecoratorFunctionType => Decorator.apply(Controller, { path });
+export default (path?: string | undefined, scope: ScopeEnum = ScopeEnum.Transient): DecoratorFunctionType => Decorator.apply(Controller, { path, scope });

@@ -1,13 +1,15 @@
-import type { ModuleInterface } from '~/module/interfaces.ts';
+import type { ArtifactType, ConstructorType } from '@zxxxro/commons';
 import type { ControllerInterface, InterceptorInterface } from '~/controller/interfaces.ts';
-import type { ConstructorType, ProviderType } from '@zxxxro/commons';
+import type { ModuleInterface } from '~/module/interfaces.ts';
+
+export type ModuleParameterType<T> = ConstructorType<T> | ArtifactType
 
 export type ModuleParametersType = {
-  consumers?: Array<ConstructorType<any>>
-  controllers?: Array<ConstructorType<ControllerInterface>>,
-  middlewares?: Array<ConstructorType<InterceptorInterface>>,
-  modules?: Array<ConstructorType<ModuleInterface>>,
-  providers?: Array<ProviderType | { name: string | symbol, value: any }>
+  consumers?: Array<ModuleParameterType<any>>
+  providers?: Array<ModuleParameterType<any>>
+  controllers?: Array<ModuleParameterType<ControllerInterface>>
+  interceptors?: Array<ModuleParameterType<InterceptorInterface>>
+  modules?: Array<ModuleParameterType<ModuleInterface>>
 }
 
 export default {}
