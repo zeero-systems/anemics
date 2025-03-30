@@ -57,6 +57,8 @@ export default Querier
 // x put everything in files
 // add tests for a more use cases
 // - implement a lot more of the sql syntax
+// add raw to everything added until now
+// add skipBinding to everything added until now
 
 // anemics: databaser
 // implement a mongodb driver
