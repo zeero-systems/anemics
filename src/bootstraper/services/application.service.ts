@@ -1,7 +1,7 @@
 import type { InterceptorInterface } from '~/controller/interfaces.ts';
 
 import * as uuid from '@std/uuid';
-import { Artifactor, Container, ContainerInterface } from '@zxxxro/commons';
+import { Container, ContainerInterface } from '@zxxxro/commons';
 
 import Gateway from '~/controller/services/gateway.service.ts';
 import Interceptor from '~/controller/services/interceptor.service.ts';
@@ -23,7 +23,7 @@ export class Application {
     const modules = Container.artifactsByTag.get(Module.tag)
 
     if (modules) {
-      for (const [key, artifact] of modules) {
+      for (const [key] of modules) {
         const module = container.construct<ModuleInterface>(key)
         if (module?.onUpdate) await module.onUpdate()
       }
@@ -38,8 +38,10 @@ export class Application {
 
     const requester = new Requester(request)
 
+    console.log(request)
+
     const promises = [
-      new Promise((resolve, reject) => {
+      new Promise((resolve) => {
         let traceId = request.headers.get('X-Request-Id');
     
         if (!traceId || !uuid.validate(traceId)) {
@@ -54,13 +56,14 @@ export class Application {
           traceId,
         })
       }),
-      new Promise((resolve, reject) => {
+      new Promise((resolve) => {
         const endpoints = Gateway.endpoints.get(requester.method);
     
         if (endpoints) {
           const promises = []
           for (let index = 0; index < endpoints.length; index++) {
             promises.push(new Promise((resolve, reject) => {
+              // console.log(requester.url, endpoints[index].handler.pattern.test(requester.url), endpoints[index].handler)
                 if (endpoints[index].handler.pattern.test(requester.url)) {
                   resolve(endpoints[index])
                 } else {
@@ -73,6 +76,7 @@ export class Application {
           Promise.any(promises).then((endpoint: any) => {
             resolve(endpoint)
           }).catch((error) => {
+            console.log(error)
             resolve(undefined)
           })
         }

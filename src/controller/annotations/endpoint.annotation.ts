@@ -35,11 +35,11 @@ export class Endpoint extends Entity implements AnnotationInterface {
                       path: decorationMap.parameters.path ?? '',
                       method: controllerMethod,
                       pattern: new URLPattern({
-                        pathname: `/${
-                          decoration.parameters?.path ? decoration.parameters?.path : ''
-                        }${
-                          decorationMap.parameters.path ? `/${decorationMap.parameters.path}` : ''
-                        }`,
+                        pathname: [
+                          '',
+                          decoration.parameters?.path,
+                          decorationMap.parameters.path
+                        ].filter(p => typeof p !== 'undefined').join('/'),
                       }),
                       propertyKey,
                       parameterNames: Factory.getParameterNames(
