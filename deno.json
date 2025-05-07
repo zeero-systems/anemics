@@ -4,7 +4,7 @@
   "license": "GPL-3.0",
   "exports": "./mod.ts",
   "tasks": {
-    "dev": "deno run --watch index.ts"
+    "dev": "deno run --watch temp/index.ts"
   },
   "imports": {
     "-/": "./",
