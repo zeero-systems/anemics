@@ -80,21 +80,6 @@ export interface PredicateInterface extends ClauseInterface {
   toPredicateQuery(options: QueryOptionType): QueryType;
 }
 
-// export interface JoinInterface extends ClauseInterface {
-//   joins: Array<JoinType>;
-
-//   inner: JoinPredicateInterface;
-//   left: JoinPredicateInterface;
-
-//   toJoinQuery(options: QueryOptionType): QueryType;
-// }
-
-// export interface JoinPredicateInterface extends TableInterface {
-//   on: () => JoinInterface & PredicateInterface;
-//   using: () => JoinInterface & PredicateInterface;
-//   where: () => JoinInterface & PredicateInterface;
-// }
-
 export interface OrderInterface extends ClauseInterface {
   hasOrders(): boolean;
 

@@ -12,7 +12,7 @@ import { ModuleInterface } from '~/module/interfaces.ts';
 
 export class Application {
 
-  static container: ContainerInterface
+  static container: ContainerInterface = Container.create('PERPETUAL')
 
   constructor(public module: any) {
     Interceptor.construct(Application.container);
@@ -56,29 +56,17 @@ export class Application {
           traceId,
         })
       }),
-      new Promise((resolve) => {
+      new Promise((resolve, reject) => {
         const endpoints = Gateway.endpoints.get(requester.method);
-    
+
         if (endpoints) {
-          const promises = []
           for (let index = 0; index < endpoints.length; index++) {
-            promises.push(new Promise((resolve, reject) => {
-              // console.log(requester.url, endpoints[index].handler.pattern.test(requester.url), endpoints[index].handler)
-                if (endpoints[index].handler.pattern.test(requester.url)) {
-                  resolve(endpoints[index])
-                } else {
-                  reject()
-                }
-              })
-            )
+            if (endpoints[index].handler.pattern.test(requester.url)) {
+              return resolve(endpoints[index])
+            }
           }
-    
-          Promise.any(promises).then((endpoint: any) => {
-            resolve(endpoint)
-          }).catch((error) => {
-            console.log(error)
-            resolve(undefined)
-          })
+
+          return reject()
         }
       })
     ]

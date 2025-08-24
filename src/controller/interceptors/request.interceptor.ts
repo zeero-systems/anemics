@@ -47,6 +47,7 @@ export class RequestInterceptor implements InterceptorInterface {
         if (parameterName == 'FormData') {
           context.responser.metadata.parameters[index] = await context.requester.request.formData()
         }
+        
         if (Container.artifacts.has(parameterName)) {
           let body;
           if (context.requester.bodyUsed) body = await context.requester.json() 
