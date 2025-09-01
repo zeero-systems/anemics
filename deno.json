@@ -14,7 +14,7 @@
     "@std/expect": "jsr:@std/expect@1.0.17",
     "@std/uuid": "jsr:@std/uuid@^1.0.9",
     "@deno/postgres": "https://deno.land/x/postgres@v0.19.3/mod.ts",
-    "@zxxxro/commons": "jsr:@zxxxro/commons@^0.23.0"
+    "@zxxxro/commons": "jsr:@zeero-systems/commons@^0.5.0"
   },
   "fmt": {
     "files": {
