@@ -1,6 +1,6 @@
 {
-  "name": "@zxxxro/anemics",
-  "version": "0.17.2",
+  "name": "@zeero-systems/anemics",
+  "version": "0.2.",
   "license": "GPL-3.0",
   "exports": "./mod.ts",
   "tasks": {
@@ -9,10 +9,10 @@
   "imports": {
     "-/": "./",
     "~/": "./src/",
-    "@std/bdd": "jsr:@std/testing/bdd",
-    "@std/assert": "jsr:@std/assert@1",
-    "@std/expect": "jsr:@std/expect",
-    "@std/uuid": "jsr:@std/uuid@^1.0.5",
+    "@std/bdd": "jsr:@std/testing@1.0.15/bdd",
+    "@std/assert": "jsr:@std/assert@^1.0.14",
+    "@std/expect": "jsr:@std/expect@1.0.17",
+    "@std/uuid": "jsr:@std/uuid@^1.0.9",
     "@deno/postgres": "https://deno.land/x/postgres@v0.19.3/mod.ts",
     "@zxxxro/commons": "jsr:@zxxxro/commons@^0.23.0"
   },
