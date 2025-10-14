@@ -1,121 +1,109 @@
-import {
-  BracketFunction,
-  FirstTermType,
-  JoinKeyType,
-  JoinType,
-  OperatorType,
-  PredicateKeyType,
-  QueryOptionType,
-  QueryEventHanderType,
-  QueryType,
-  SecondTermType,
-  SelectType,
-  SubQueryType,
-  TableType,
-} from '~/querier/types.ts';
 
-export interface QueryInterface {
-  toQuery(options: QueryOptionType): QueryType;
+import { BuilderOptionsType, ClauseType, OperatorType, PredicateType, QueryFunction, QueryType, TableType, TermType } from './types.ts';
+
+export interface BuilderInterface<T> {
+  with(options: BuilderOptionsType): T
+  toQuery(options: QueryType): QueryType;
+  instantiate(): T;
+}
+
+export interface QuerierInterface<T extends BuilderInterface<T>> extends BuilderInterface<T> {
+  get select(): SelectClauseInterface<T>;
+  get from(): TableClauseInterface<T>;
+  get where(): PredicateClauseInterface<T>;
+  get left(): JoinClauseInterface<T>;
+  get right(): JoinClauseInterface<T>;
+  get inner(): JoinClauseInterface<T>;
+  get cross(): JoinClauseInterface<T>;
+  get full(): JoinClauseInterface<T>;
+  get order(): OrderClauseInterface<T>;
+  get raw(): RawClauseInterface<T>;
+}
+
+export interface IndexerInterface<T extends BuilderInterface<T>> extends BuilderInterface<T> {
+  get create(): NameClauseInterface<T>
+  get on(): TableClauseInterface<T>
+  get using(): IndexTypeClauseInterface<T>
+  get with(): SelectClauseInterface<T>
+  get raw(): RawClauseInterface<T>
+}
+
+// class t implements QuerierInterface {}
+
+export interface QueryInterface extends QuerierInterface<QueryInterface> {
+  clauses: Array<{ previous?: ClauseType; current: ClauseType }>;
+  queue(clause: ClauseType): any;
+  sorter(clauses: Array<string>): Array<ClauseType>;
+}
+
+export interface IndexInterface {
+  clauses: Array<{ previous?: ClauseType; current: ClauseType }>;
+  queue(clause: ClauseType): any;
+  sorter(clauses: Array<string>): Array<ClauseType>;
+}
+
+export interface TableInterface {
+  // get create(): CreateInterface<QueryInterface>;
 }
 
 export interface ClauseInterface {
-  [key: string]: any;
+  query(options: QueryType): QueryType;
 }
 
-export interface TableInterface extends ClauseInterface {
-  hasTables(): boolean;
+export interface RawClauseInterface<T> extends ClauseInterface {
+  text: string
 
-  table(raw: RawInterface): this & QuerierInterface;
-  table(alias: string, bracket: BracketFunction<SubQueryType>): this & QuerierInterface;
-  table(name: string, alias?: string): this & QuerierInterface;
-
-  toTableQuery(options: QueryOptionType): QueryType;
+  value(value: string): this & T;
+}
+export interface SelectClauseInterface<T> extends ClauseInterface {
+  column(name: any, alias?: any): this & T;
+}
+export interface TableClauseInterface<T extends BuilderInterface<T>> extends ClauseInterface { 
+  hasTables(): boolean; 
+  table(alias: string, query: QueryFunction<T>): this & T;
+  table(name: string, alias?: string): this & T;
 }
 
-export interface FromInterface extends TableInterface, ClauseInterface {
+export interface PredicateClauseInterface<T extends BuilderInterface<T>> extends ClauseInterface {
+  predicates: Array<PredicateType>
 
+  hasPredicates(): boolean
+
+  or(raw: RawClauseInterface<T>): this & T;
+  or(query: QueryFunction<T>): this & T;
+  or(operator: OperatorType, query: QueryFunction<T>): this & T;
+  or(operator: OperatorType, rightTerm?: TermType): this & T;
+  or(leftTerm: TermType, operator: OperatorType, query: QueryFunction<T>): this & T;
+  or(leftTerm: TermType, operator: OperatorType, rightTerm?: TermType): this & T;
+
+  and(raw: RawClauseInterface<T>): this & T;
+  and(query: QueryFunction<T>): this & T;
+  and(operator: OperatorType, query: QueryFunction<T>): this & T;
+  and(operator: OperatorType, rightTerm?: TermType): this & T;
+  and(leftTerm: TermType, operator: OperatorType, query: QueryFunction<T>): this & T;
+  and(leftTerm: TermType, operator: OperatorType, rightTerm?: TermType): this & T;
 }
 
-export interface SelectInterface extends ClauseInterface {
-  hasSelects(): boolean;
-
-  column(raw: RawInterface): this & QuerierInterface;
-  column(alias: string, bracket: BracketFunction<SubQueryType>): this & QuerierInterface;
-  column(name: string, alias?: string): this & QuerierInterface;
-
-  toSelectQuery(options: QueryOptionType): QueryType;
+export interface JoinClauseInterface<T extends BuilderInterface<T>> extends TableClauseInterface<T> {
+  on: PredicateClauseInterface<T>;
+  using: PredicateClauseInterface<T>;
 }
 
-export interface WhereInterface extends PredicateInterface, ClauseInterface {
-  
+export interface NameClauseInterface<T extends BuilderInterface<T>> extends ClauseInterface {
+  hasName(): boolean; 
+  name(alias: string, query: QueryFunction<T>): this & T;
+  name(value: string, alias?: string): this & T;
 }
 
-export interface JoinInterface extends TableInterface, ClauseInterface {
-  on: PredicateInterface;
-  using: PredicateInterface;
-  where: PredicateInterface;
+export interface IndexClauseInterface<T extends BuilderInterface<T>> extends ClauseInterface {
+  hasName(): boolean; 
+  name(alias: string, query: QueryFunction<T>): this & T;
+  name(value: string, alias?: string): this & T;
 }
 
-export interface PredicateInterface extends ClauseInterface {
-  hasPredicates(): boolean;
-
-  and(raw: RawInterface): this & QuerierInterface;
-  and(bracket: BracketFunction<SubQueryType>): this & QuerierInterface;
-  and(operator: OperatorType, bracket: BracketFunction<SubQueryType>): this & QuerierInterface;
-  and(operator: OperatorType, secondTerm?: SecondTermType): this & QuerierInterface;
-  and(
-    firstTerm: FirstTermType,
-    operator: OperatorType,
-    bracket: BracketFunction<SubQueryType>,
-  ): this & QuerierInterface;
-  and(firstTerm: FirstTermType, operator: OperatorType, secondTerm?: SecondTermType): this & QuerierInterface;
-
-  or(raw: RawInterface): this & QuerierInterface;
-  or(bracket: BracketFunction<SubQueryType>): this & QuerierInterface;
-  or(operator: OperatorType, bracket: BracketFunction<SubQueryType>): this & QuerierInterface;
-  or(operator: OperatorType, secondTerm?: SecondTermType): this & QuerierInterface;
-  or(firstTerm: FirstTermType, operator: OperatorType, bracket: BracketFunction<SubQueryType>): this & QuerierInterface;
-  or(firstTerm: FirstTermType, operator: OperatorType, secondTerm?: SecondTermType): this & QuerierInterface;
-
-  toPredicateQuery(options: QueryOptionType): QueryType;
+export interface OrderClauseInterface<T> extends ClauseInterface {
+  asc(column: string): this & T;
+  desc(column: string): this & T;
 }
-
-export interface OrderInterface extends ClauseInterface {
-  hasOrders(): boolean;
-
-  asc(raw: RawInterface): this & QuerierInterface;
-  asc(name: string): this & QuerierInterface;
-
-  desc(raw: RawInterface): this & QuerierInterface;
-  desc(name: string): this & QuerierInterface;
-
-  toOrderQuery(options: QueryOptionType): QueryType;
-}
-
-export interface RawInterface {
-  hasRaw(): boolean;
-  toRawQuery(options: QueryOptionType): QueryType;
-}
-
-export interface RawwerInterface {
-  text: (value: string) => QuerierInterface
-}
-
-export interface QuerierInterface {
-  syntax: 'SQL';
-
-  from: FromInterface;
-  select: SelectInterface;  
-  where: WhereInterface;
-  inner: JoinInterface;
-  left: JoinInterface;
-  order: OrderInterface;
-  raw: RawwerInterface;
-
-  clauses: Array<ClauseInterface>;
-
-  useClause: (clause: ClauseInterface) => ClauseInterface;
-  toQuery: (options?: QueryOptionType) => QueryType;
-}
-
+ 
 export default {};

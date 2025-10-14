@@ -1,8 +1,8 @@
 
-import { RawInterface } from '~/querier/interfaces.ts';
+import type { RawClauseInterface } from '~/querier/interfaces.ts';
 
-export const isRaw = (x: any): x is RawInterface => {
-  return !!x && x.rawValue
+export const isRaw = (x: any): x is RawClauseInterface<any> => {
+  return !!x && x.text
 }
 
 export default isRaw

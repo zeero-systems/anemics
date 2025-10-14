@@ -1,0 +1,16 @@
+export enum NumericEnum {
+  BIGINT = "BIGINT",
+  BIGSERIAL = "BIGSERIAL",
+  INTEGER = "INTEGER",
+  DECIMAL = "DECIMAL",
+  "DOUBLE PRECISION" = "DOUBLE PRECISION",
+  MONEY = "MONEY",
+  NUMERIC = "NUMERIC",
+  REAL = "REAL",
+  SERIAL = "SERIAL",
+  SMALLINT = "SMALLINT",
+  SMALLSERIAL = "SMALLSERIAL",
+}
+
+export default NumericEnum
+

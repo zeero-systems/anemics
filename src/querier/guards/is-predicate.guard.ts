@@ -1,8 +1,7 @@
-import { PredicateInterface } from '~/querier/interfaces.ts';
-import Predicate from '~/querier/adapters/sql/predicate.service.ts';
+import { PredicateClauseInterface } from '~/querier/interfaces.ts';
 
-export const isPredicate = (x: any): x is PredicateInterface => {
-  return x instanceof Predicate
+export const isPredicate = (x: any): x is PredicateClauseInterface<any> => {
+  return !!x && !!x.predicates
 }
 
 export default isPredicate

@@ -1,65 +1,56 @@
-import { PredicateInterface, QuerierInterface, RawInterface, TableInterface } from '~/querier/interfaces.ts';
-import OperatorEnum from './enums/operator.enum.ts';
-
-export type SubQueryType = QuerierInterface
-export type RawQueryType = RawInterface
-export type BracketFunction<T> = (bracket: SubQueryType) => T;
-export type OperatorType = keyof typeof OperatorEnum;
-export type BasicTerm = string | number | boolean | Array<string | number | boolean>;
-export type FirstTermType = BasicTerm
-export type SecondTermType = BasicTerm | SubQueryType | undefined
-export type TableKeyType = 'FROM' | 'INNER JOIN' | 'LEFT JOIN' | 'RIGHT JOIN' | 'CROSS JOIN'
-export type PredicateKeyType = 'ON' | 'USING' | 'WHERE'
-export type JoinKeyType = 'INNER' | 'LEFT' | 'RIGHT' | 'FULL' | 'CROSS'
-
-export type ExpressionType = {
-  firstTerm: FirstTermType;
-  secondTerm: SecondTermType;
-  operator: OperatorEnum;
-};
-
-export type PredicateType<P> = {
-  type: P
-  expression: ExpressionType | SubQueryType | RawQueryType;
-};
-
-export type QuerierOptionType = {
-  placeholder?: string
-  placeholderType?: 'counter' | 'static'
+export type BuilderOptionsType = {
+  grouping?: 'parentheses' | 'brackets' | 'braces'
 }
 
-export type QueryOptionType = QuerierOptionType & {
-  args: Array<string | number>;
-  counter: number
+export type QuerierOptionsType = {
+  syntax: 'postgreSQL' | 'mySQL'
 }
 
-export type QueryType = QueryOptionType & {
-  text: string;
-};
+export type IndexerOptionsType = {
+  syntax: 'postgreSQL' | 'mySQL'
+}
 
-export type SelectType = {
-  name: string;
-  alias?: string | SubQueryType | RawQueryType;
-};
+export type ValueType = string;
 
 export type TableType = {
-  name?: string | SubQueryType | RawQueryType;
+  name?: ValueType;
   alias?: string;
 };
 
-export type EventHanderType = 'onTable'
+export type QueryType = {
+  args: Array<string | number>;
+  text: string;
+  placeholder?: string
+  placeholderType?: 'counter' | 'static'
+};
 
-export type QueryEventHanderType = (type: EventHanderType, table: TableType) => void
+export type ClauseType = { name: string; target: any };
 
-export type JoinType = {
-  table: TableInterface
-  join: JoinKeyType
-  predicate: PredicateInterface
-}
+export type OperatorType = "eq" | "lt" | "gt" | "like" | "between" | "in" | "not in" | "is null" | "is not null" | "exists"
+
+export type TermType = string | number | boolean | Array<string | number | boolean>;
+
+export type ExpressionType = {
+  leftTerm: TermType;
+  rightTerm: TermType;
+  operator: OperatorType;
+};
+
+export type PredicateType = {
+  type: 'and' | 'or'
+  expression: ExpressionType
+};
 
 export type OrderType = {
-  key: 'ASC' | 'DESC';
-  name: string | RawQueryType,
+  key: 'asc' | 'desc';
+  column: string,
 }
 
-export default {};
+export type QueryFunction<T> = (query: T) => T;
+
+export type DescriptorOptionsType = {
+  predicate?: (name: string) => boolean
+  properties: PropertyDescriptor
+} 
+
+export default {}

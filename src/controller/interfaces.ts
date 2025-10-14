@@ -1,9 +1,34 @@
-import type { ContextType } from '~/bootstraper/types.ts'
+import type { RouteType, ContextType, NextFunctionType, MiddlewareEventType } from '~/controller/types.ts';
+
+import MethodEnum from '~/network/enums/method.enum.ts';
+import EventEnum from '~/controller/enums/event.enum.ts';
 
 export interface ControllerInterface {}
 
-export interface InterceptorInterface {
-  onUse<T>(context: ContextType<T>): Promise<void>
+export interface RouterInterface {
+  routes: { [key in MethodEnum]: Array<RouteType> }
+
+  find(url: string, method: MethodEnum): RouteType | undefined
 }
+
+export interface MiddlewareInterface {
+  event: MiddlewareEventType
+  onUse(context: ContextType, next: NextFunctionType): Promise<void>
+}
+
+export interface MiddlerInterface {
+  middlewares: { [key: string]: { [key in EventEnum]: Array<MiddlewareInterface> } }
+  
+  filter(event: EventEnum, key: string): Array<MiddlewareInterface>
+}
+
+export interface HttpAnnotationInterface {
+  path?: string
+} 
+
+export interface SocketAnnotationInterface {
+  namespace?: string
+}
+
 
 export default {}
