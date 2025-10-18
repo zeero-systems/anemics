@@ -15,6 +15,24 @@ import Controller from '~/controller/decorations/controller.decoration.ts';
 import Get from '~/controller/decorations/get.decoration.ts';
 
 describe('entrypoint', () => {
+  class JsonRequestMiddleware implements MiddlewareInterface {
+    name: string = 'Response';
+    event: EventType = 'after';
+    async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
+      if (context.requester) {
+        const hasContentType = context.requester.headers?.get('Content-Type');
+
+        if (!hasContentType || hasContentType == 'application/json') {
+          if (context.requester.body && !context.requester.bodyUsed) {
+            context.requester.parsed = await context.requester.json();
+          }
+        }
+
+        await next();
+      }
+    }
+  }
+
   class JsonResponseAnnotation implements MiddlewareInterface, AnnotationInterface {
     name: string = 'Response';
     event: EventType = 'after';
@@ -127,7 +145,7 @@ describe('entrypoint', () => {
       new Application(App, {
         http: { port: 3002 },
         middlewares: [
-          new JsonResponseAnnotation(),
+          new JsonRequestMiddleware(),
         ],
       }),
     );

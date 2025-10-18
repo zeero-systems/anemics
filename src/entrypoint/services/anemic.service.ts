@@ -21,7 +21,8 @@ export class Anemic implements AnemicInterface {
   }>();
 
   constructor(public application: ApplicationInterface) {
-    for (const server of this.application.servers) {
+    for (const server of this.application.servers) {  
+      // @TODO optmize middlewares caching this.execute for each route before find
       if (server.accepts.includes(MethodEnum.SOCKET)) {
         this.dispatcher.subscribe('start', () => server.start((request, socket) => {
           return this.socketHandler(new Requester(request), socket, new Responser(), server.options)
