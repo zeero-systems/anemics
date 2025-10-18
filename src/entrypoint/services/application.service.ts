@@ -59,7 +59,7 @@ export class Application implements ApplicationInterface {
           const alreadyExists = route[middleware.event].find((m: MiddlewareInterface) => m.name === middleware.name)
 
           if (!alreadyExists) {
-            route[middleware.event].push(middleware)
+            route[middleware.event].unshift(middleware)
           }
         }
       }
