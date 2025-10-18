@@ -77,7 +77,7 @@
   },
   "test": {
     "exclude": [
-      "test/services/persister.test.ts"
+      "tests/services/persister.test.ts"
     ]
   }
 }
