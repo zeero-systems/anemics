@@ -11,7 +11,7 @@ export class PatchAnnotation implements AnnotationInterface, HttpAnnotationInter
   onAttach(artifact: ArtifactType, decorator: DecoratorType): any{
     if (decorator.decoration.kind == DecoratorKindEnum.METHOD) {
       const consumer = new ConsumerAnnotation()
-      Decorator.attach(artifact, { name: consumer.name, target: consumer }, decorator.decoration)
+      Decorator.attach(artifact, { name: 'ConsumerAnnotation', target: consumer }, decorator.decoration)
       return artifact.target;
     }
     

@@ -10,10 +10,13 @@ export type ControllerType = {
   path: string
 }
 
+export type MethodProviderType = { parameter: string, provider: string  }
+
 export type MethodType = {
   method: MethodEnum
   key: string
   path: string
+  providers: Array<MethodProviderType>
   decorators: Array<DecoratorType>
 }
 

@@ -1,7 +1,7 @@
-import { ArtifactType, Decorator, DecoratorMetadata, Text } from '@zeero/commons';
+import { ArtifactType, ConsumerAnnotation, Decorator, DecoratorMetadata, Factory, Text } from '@zeero/commons';
 
 import type { RouterInterface } from '~/controller/interfaces.ts';
-import type { RouteType, ControllerType, MethodType } from '~/controller/types.ts';
+import type { RouteType, ControllerType, MethodType, MethodProviderType } from '~/controller/types.ts';
 
 import MethodEnum from '~/network/enums/method.enum.ts';
 import ControllerAnnotation from '~/controller/annotations/controller.annotation.ts';
@@ -35,15 +35,38 @@ export class Router implements RouterInterface {
 
         for (let index = 0; index < methodDecorators.length; index++) {
           const decorator = methodDecorators[index];
+          const propertyName = String(decorator.decoration.property)
           const method = String(decorator.annotation.target.name).toLowerCase()
-          const key = `${String(targetName)}:${String(decorator.decoration.property)}`
+          const key = `${String(targetName)}:${propertyName}`
           
           if (isMethod(decorator.annotation.target)) {
+
+            const providers: Array<MethodProviderType> = []
+            const decorators = DecoratorMetadata.filterByTargetPropertyKeys(artifact.target, [propertyName])
+            const consumers = DecoratorMetadata.filterByAnnotationInteroperableName(artifact.target, 'Consumer', propertyName)
+            const parameterNames = Factory.getParameterNames(artifact.target, propertyName)
+
+            for (const parameterName of parameterNames) {
+              let provider = parameterName
+
+              for (const decorator of consumers) {
+                const annotation = decorator.annotation.target as ConsumerAnnotation
+                if (annotation.provider && annotation.propertyKey == parameterName) {
+                  if (annotation.provider) {
+                    provider = annotation.provider
+                  }
+                }
+              }
+
+              providers.push({ parameter: parameterName, provider })
+            }
+
             const action = {
               key: String(decorator.decoration.property),
               path: decorator.annotation.target.path || '',
               method: method,
-              decorators: DecoratorMetadata.filterByTargetPropertyKeys(artifact.target, [String(decorator.decoration.property)])
+              providers: providers,
+              decorators: decorators
             } as MethodType
             
             const pathname = `${controller.path}${action.path}`
