@@ -7,7 +7,7 @@ import isMiddleware from '~/controller/guards/is-middleware.guard.ts';
 import EventEnum from '~/controller/enums/event.enum.ts';
 
 export class Middler implements MiddlerInterface {
-  static events = Object.values(EventEnum);
+  static events: Array<EventEnum> = Object.values(EventEnum);
 
   public middlewares: { [key: string]: { [key in EventEnum]: Array<MiddlewareInterface> } } = {};
 
@@ -21,7 +21,7 @@ export class Middler implements MiddlerInterface {
 
       let constructorMiddlewareDecorators: Array<DecoratorType> = [];
       if (constructorDecorators) {
-        constructorMiddlewareDecorators = constructorDecorators.filter((decorator) =>
+        constructorMiddlewareDecorators = constructorDecorators.filter((decorator: DecoratorType) =>
           isMiddleware(decorator.annotation.target)
         );
       }

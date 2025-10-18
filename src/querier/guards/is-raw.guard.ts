@@ -1,4 +1,3 @@
-
 import type { RawClauseInterface } from '~/querier/interfaces.ts';
 
 export const isRaw = (x: any): x is RawClauseInterface<any> => {

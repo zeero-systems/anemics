@@ -9,11 +9,6 @@ export type ControllerType = {
   path: string
 }
 
-export type EventType = {
-  key: string
-  namespace: string
-}
-
 export type MethodType = {
   method: MethodEnum
   key: string
@@ -22,17 +17,11 @@ export type MethodType = {
 
 export type RouteType = {
   key: string
-  action: MethodType | EventType
+  action: MethodType | { key: string; namespace: string }
   controller: ControllerType
   pattern?: URLPattern
   pathname?: string
 }
-
-export type OptionsType = {
-  event: EventType
-  weight: number
-} & { [key: string | symbol]: any }
-
 
 export type MiddlewareEventType = 'before' | 'middle' | 'after'
 

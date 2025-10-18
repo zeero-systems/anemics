@@ -1,67 +1,35 @@
-import type { NewableType } from '@zeero/commons';
-import type { BuilderOptionsType, QuerierOptionsType, QueryType } from '~/querier/types.ts';
-import type { JoinClauseInterface, OrderClauseInterface, PredicateClauseInterface, QuerierInterface, QueryInterface, RawClauseInterface, SelectClauseInterface, TableClauseInterface } from '~/querier/interfaces.ts';
+import type { QuerierOptionsType } from '~/querier/types.ts';
+import type { IndexQuerierInterface, QuerierInterface, QueryQuerierInterface, TableQuerierInterface } from '~/querier/interfaces.ts';
 
-import PostgreSqlQuery from '~/querier/postgresql/adapters/postgresql.query.ts'
+import Index from '~/querier/postgresql/queries/index.querier.ts';
+import Query from '~/querier/postgresql/queries/query.querier.ts';
+import Table from '~/querier/postgresql/queries/table.querier.ts';
 
-export class Querier implements QuerierInterface<QueryInterface> {
-  ref!: NewableType<any>
-  adapter: QueryInterface = {} as QueryInterface
-  
-  constructor(public options: QuerierOptionsType) {
-    if (options.syntax == 'mySQL') {
-      throw new Error("Adapter mySQL not implemented");
-      
+export class Querier implements QuerierInterface {
+  constructor(public options: QuerierOptionsType) {}
+
+  get query(): QueryQuerierInterface {
+    if (this.options.syntax == 'postgresql') {
+      return new Query({ args: [], text: '', placeholder: '$', placeholderType: 'counter', ...this.options });
     }
-    if (options.syntax == 'postgreSQL') {
-      this.ref = PostgreSqlQuery
-      this.adapter = new PostgreSqlQuery()
+
+    throw new Error('Query not implemented');
+  }
+
+  get index(): IndexQuerierInterface {
+    if (this.options.syntax == 'postgresql') {
+      return new Index({ args: [], text: '', placeholder: '$', placeholderType: 'counter', ...this.options });
     }
+
+    throw new Error('Index not implemented');
   }
 
-  get select(): SelectClauseInterface<QueryInterface> {
-    return this.adapter.select
-  }
-  get from(): TableClauseInterface<QueryInterface> {
-    return this.adapter.from
-  }
-  get where(): PredicateClauseInterface<QueryInterface> {
-    return this.adapter.where
-  }
-  get left(): JoinClauseInterface<QueryInterface> {
-    return this.adapter.left
-  }
-  get right(): JoinClauseInterface<QueryInterface> {
-    return this.adapter.right
-  }
-  get inner(): JoinClauseInterface<QueryInterface> {
-    return this.adapter.inner
-  }
-  get cross(): JoinClauseInterface<QueryInterface> {
-    return this.adapter.cross
-  }
-  get full(): JoinClauseInterface<QueryInterface> {
-    return this.adapter.full
-  }
-  get order(): OrderClauseInterface<QueryInterface> {
-    return this.adapter.order
-  }
-  get raw(): RawClauseInterface<QueryInterface> {
-    return this.adapter.raw
-  }
+  get table(): TableQuerierInterface {
+    if (this.options.syntax == 'postgresql') {
+      return new Table({ args: [], text: '', placeholder: '$', placeholderType: 'counter', ...this.options });
+    }
 
-  with(options: BuilderOptionsType): QueryInterface {
-    return this.adapter.with(options)
-  }
-
-  instantiate(): QueryInterface {
-    return this.adapter.instantiate()
-  }
-
-  toQuery(options: QueryType = { args: [], text: '' }): QueryType {
-    const query = this.adapter.toQuery(options)
-    this.adapter = new this.ref()
-    return query
+    throw new Error('Table not implemented');
   }
 }
 

@@ -1,4 +1,4 @@
-import type { ConstructorType, PackerInterface, PackInterface } from '@zeero/commons';
+import type { NewableType, PackerInterface, PackInterface } from '@zeero/commons';
 import type { ServerOptionsType } from '~/network/types.ts';
 import type { ServerInterface } from '~/network/interfaces.ts';
 import type { ApplicationInterface } from '~/entrypoint/interfaces.ts';
@@ -9,7 +9,7 @@ import { Packer } from '@zeero/commons';
 import Middler from '~/controller/services/middler.service.ts';
 import Router from '~/controller/services/router.service.ts';
 import Http from '~/network/services/http.service.ts';
-import Socket from '~/network/services/socket.service.ts';
+import Ws from '~/network/services/ws.service.ts';
 
 export class Application implements ApplicationInterface {
   public packer: PackerInterface
@@ -17,11 +17,11 @@ export class Application implements ApplicationInterface {
   public middler: MiddlerInterface
   public servers: Array<ServerInterface> = []
   
-  constructor(pack: ConstructorType<PackInterface>, options: {
+  constructor(pack: NewableType<new (...args: any[]) => PackInterface>, options: {
     http?: Array<ServerOptionsType> | ServerOptionsType, 
     socket?: Array<ServerOptionsType> | ServerOptionsType
   } = { http: { port: 3000 } }) {
-    this.packer = new Packer(pack)
+    this.packer = new Packer(pack as any)
     this.router = new Router(this.packer.artifacts())
     this.middler = new Middler(this.packer.artifacts())
     
@@ -48,7 +48,7 @@ export class Application implements ApplicationInterface {
             console.log(`Anemic Server Listening on 'wss://'${hostname}:${ port } `)
           }
         }
-        this.servers.push(new Socket(option))
+        this.servers.push(new Ws(option))
       }
     }
   }

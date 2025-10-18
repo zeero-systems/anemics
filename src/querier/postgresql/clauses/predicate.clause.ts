@@ -1,8 +1,7 @@
 import type { BuilderInterface, PredicateClauseInterface, RawClauseInterface } from '~/querier/interfaces.ts';
-import type { QueryType, PredicateType, TermType, OperatorType, QueryFunction } from '~/querier/types.ts';
+import type { OperatorType, PredicateType, QueryFunction, QueryType, TermType } from '~/querier/types.ts';
 
-import Builder from '~/querier/services/builder.services.ts';
-import Descriptor from '~/querier/decorations/descriptor.decoration.ts';
+import { Objector, Descriptor } from '@zeero/commons';
 
 import isExpression from '~/querier/guards/is-expression.guard.ts';
 import isMiddleOpeartor from '~/querier/guards/is-middle-operator.guard.ts';
@@ -13,9 +12,9 @@ import isRaw from '~/querier/guards/is-raw.guard.ts';
 import isLeftOperator from '~/querier/guards/is-left-operator.guard.ts';
 import isRightOperator from '~/querier/guards/is-right-operator.guard.ts';
 
-@Descriptor({ properties: { enumerable: false }})
-export class Predicate<T extends  BuilderInterface<T>> implements PredicateClauseInterface<T> {
-  public predicates: Array<PredicateType> = []
+@Descriptor({ properties: { enumerable: false } })
+export class Predicate<T extends BuilderInterface<T>> implements PredicateClauseInterface<T> {
+  public predicates: Array<PredicateType> = [];
 
   constructor(
     private _querier: T,
@@ -35,8 +34,8 @@ export class Predicate<T extends  BuilderInterface<T>> implements PredicateClaus
   public and(leftTerm: any, operator?: any, rightTerm?: any): this & T {
     const predicate: PredicateType = {
       type: 'and',
-      expression: { leftTerm, operator, rightTerm }
-    }
+      expression: { leftTerm, operator, rightTerm },
+    };
 
     if (isQueryFunction(leftTerm)) {
       predicate.expression = leftTerm(this._querier.instantiate());
@@ -61,7 +60,7 @@ export class Predicate<T extends  BuilderInterface<T>> implements PredicateClaus
 
     this.predicates.push(predicate);
 
-    return Builder.assign(this._querier, this);
+    return Objector.assign(this._querier, this);
   }
 
   public or(raw: RawClauseInterface<T>): this & T;
@@ -73,8 +72,8 @@ export class Predicate<T extends  BuilderInterface<T>> implements PredicateClaus
   public or(leftTerm: any, operator?: any, rightTerm?: any): this & T {
     const predicate: PredicateType = {
       type: 'or',
-      expression: { leftTerm, operator, rightTerm }
-    }
+      expression: { leftTerm, operator, rightTerm },
+    };
 
     if (isQueryFunction(leftTerm)) {
       predicate.expression = leftTerm(this._querier.instantiate());
@@ -99,15 +98,15 @@ export class Predicate<T extends  BuilderInterface<T>> implements PredicateClaus
 
     this.predicates.push(predicate);
 
-    return Builder.assign(this._querier, this);
+    return Objector.assign(this._querier, this);
   }
 
-  protected toNaturalOperator (operator: OperatorType): string {
-    if (operator == 'eq') return '='
-    if (operator == 'gt') return '>'
-    if (operator == 'lt') return '<'
+  protected toNaturalOperator(operator: OperatorType): string {
+    if (operator == 'eq') return '=';
+    if (operator == 'gt') return '>';
+    if (operator == 'lt') return '<';
 
-    return operator
+    return operator;
   }
 
   public query(options: QueryType): QueryType {
@@ -117,10 +116,10 @@ export class Predicate<T extends  BuilderInterface<T>> implements PredicateClaus
       text.push(this.key);
       text.push(
         ...this.predicates.map((predicate, index: number) => {
-          let text = ''
+          let text = '';
           const type = `${index != 0 ? `${predicate.type} ` : ''}`;
-           
-          const placeholder = `${options.placeholder ? options.placeholder : ''}`;
+
+          const placeholder = `${options?.placeholder ? options.placeholder : ''}`;
 
           if (isBuilder(predicate.expression)) {
             const query = predicate.expression.toQuery(options);
@@ -133,7 +132,7 @@ export class Predicate<T extends  BuilderInterface<T>> implements PredicateClaus
           }
 
           if (isExpression(predicate.expression)) {
-            const operator = this.toNaturalOperator(predicate.expression.operator).toUpperCase()
+            const operator = this.toNaturalOperator(predicate.expression.operator).toUpperCase();
             const leftTerm = predicate.expression.leftTerm ?? '';
 
             if (isBuilder(predicate.expression.rightTerm)) {
@@ -144,16 +143,16 @@ export class Predicate<T extends  BuilderInterface<T>> implements PredicateClaus
             if (!isBuilder(predicate.expression.rightTerm)) {
               if (isLeftOperator(predicate.expression.operator)) {
                 options.args.push(predicate.expression.rightTerm as any);
-                text = `${type}${operator} `;
+                text = `${type}${operator}`;
 
                 if (placeholder) {
                   if (options.placeholderType == 'counter') {
-                    text = `${text}${placeholder}${options.args.length}`;
+                    text = `${text} ${placeholder}${options.args.length}`;
                   } else {
-                    text = `${text}${placeholder}`;
+                    text = `${text} ${placeholder}`;
                   }
                 } else {
-                  text = `${text}${predicate.expression.rightTerm}`;
+                  text = `${text} ${predicate.expression.rightTerm}`;
                 }
               }
 
@@ -161,29 +160,31 @@ export class Predicate<T extends  BuilderInterface<T>> implements PredicateClaus
                 if (Array.isArray(predicate.expression.rightTerm)) {
                   if (predicate.expression.operator == 'between') {
                     options.args.push(...predicate.expression.rightTerm as any);
-    
-                    text = `${type}${leftTerm} ${operator} `;
-    
+
+                    text = `${type}${leftTerm} ${operator}`;
+
                     if (placeholder) {
                       if (options.placeholderType == 'counter') {
-                        text = `${text}${placeholder}${options.args.length - 1} AND ${placeholder}${options.args.length}`;
+                        text = `${text} ${placeholder}${
+                          options.args.length - 1
+                        } AND ${placeholder}${options.args.length}`;
                       } else {
-                        text = `${text}${placeholder} AND ${placeholder}`;
+                        text = `${text} ${placeholder} AND ${placeholder}`;
                       }
                     } else {
-                      text = `${text}${predicate.expression.rightTerm[0]} AND ${predicate.expression.rightTerm[1]}`;
+                      text = `${text} ${predicate.expression.rightTerm[0]} AND ${predicate.expression.rightTerm[1]}`;
                     }
                   }
                   if (
-                      predicate.expression.operator == 'in' ||
-                      predicate.expression.operator == 'not in'
-                    ) {
-                      text = `${type}${leftTerm} ${operator} (${
+                    predicate.expression.operator == 'in' ||
+                    predicate.expression.operator == 'not in'
+                  ) {
+                    text = `${type}${leftTerm} ${operator} (${
                       predicate.expression.rightTerm.map((term) => {
                         options.args.push(term as any);
                         if (placeholder) {
                           if (options.placeholderType == 'counter') {
-                            return `${placeholder}${options.args.length }`;
+                            return `${placeholder}${options.args.length}`;
                           } else {
                             return `${placeholder}`;
                           }
@@ -194,17 +195,17 @@ export class Predicate<T extends  BuilderInterface<T>> implements PredicateClaus
                   }
                 } else {
                   options.args.push(predicate.expression.rightTerm as any);
-                  text = `${type}${leftTerm} ${operator} `;
-    
+                  text = `${type}${leftTerm} ${operator}`;
+
                   if (placeholder) {
                     if (options.placeholderType == 'counter') {
-                      text = `${text}${placeholder}${options.args.length}`;
+                      text = `${text} ${placeholder}${options.args.length}`;
                     } else {
-                      text = `${text}${placeholder}`;
+                      text = `${text} ${placeholder}`;
                     }
                   } else {
-                    text = `${text}${predicate.expression.rightTerm}`;
-                  }  
+                    text = `${text} ${predicate.expression.rightTerm}`;
+                  }
                 }
               }
 
@@ -214,16 +215,17 @@ export class Predicate<T extends  BuilderInterface<T>> implements PredicateClaus
             }
           }
 
-          return text
-        })
+          return text;
+        }),
       );
     }
 
     return {
-      args: [],
+      ...options,
+      args: options.args,
       text: text.filter((s) => !!s).join(' '),
     };
   }
 }
 
-export default Predicate
+export default Predicate;

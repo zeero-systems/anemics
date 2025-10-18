@@ -1,33 +1,32 @@
-import type { QuerierOptionsType } from '~/querier/types.ts';
-import type { RepositoryInterface, TableInterface } from '~/persister/interfaces.ts';
-import type { ExecuteResultType } from '~/storer/types.ts';
+import type { QueryType } from '~/querier/types.ts';
+import type { RepositoryInterface, RepositoryTableInterface } from '~/persister/interfaces.ts';
+import type { ExecuteResultType } from '~/persister/types.ts';
 import type { NewableType } from '@zeero/commons';
 
 import { DecoratorMetadata, isClass } from '@zeero/commons';
 
-import SchemaAnnotation from '~/storer/annotations/schema.annotation.ts';
-import isRelation from '../../storer/guards/is-foreign-key.guard.ts';
+import SchemaAnnotation from '~/persister/annotations/schema.annotation.ts';
+import isRelation from '../../persister/guards/is-foreign-key.guard.ts';
 
-class Table<T extends NewableType<T>> implements TableInterface<T> {
+class Table<T extends NewableType<T>> implements RepositoryTableInterface<T> {
   constructor(public repository: RepositoryInterface<T>) { }
 
-  public createQuery(): Array<QuerierOptionsType> {
+  public createQuery(): Array<QueryType> {
     const queriers = []
 
     if (this.repository.annotation) {
       const localTable = this.repository.annotation.table
 
       const queryTable = this.repository.querier
-        .table.create.name(localTable).ifNotExists()
+        .table.create.name(localTable).notExists()
     
       for (const decoration of this.repository.annotation.columns) {
-        const column = queryTable.column.name(this.repository.options.toTableNaming(decoration.key))
-          [decoration.annotation.name.toLowerCase()](decoration.annotation.type, decoration.annotation.options)
+        const column = queryTable.column.name(this.repository.options.toTableNaming(decoration.key)) as any
+
+        column[decoration.annotation.name.toLowerCase()](decoration.annotation.type, decoration.annotation.options)
       
-        if (decoration.annotation.options?.primary) column.primary()
-        if (decoration.annotation.options?.default) column.default(decoration.annotation.options.default)
-        if (decoration.annotation.options?.collation) column.collation(decoration.annotation.options.collation)
-        if (decoration.annotation.options?.nullable) column.nullable(decoration.annotation.options.nullable)
+        if (decoration.annotation.options?.primary) column.primaryKey()
+        if (decoration.annotation.options?.nullable === false) column.notNull()
         if (decoration.annotation.options?.unique) column.unique()
       }
 
@@ -56,9 +55,9 @@ class Table<T extends NewableType<T>> implements TableInterface<T> {
             foreignKey = this.repository.options.toTableNaming(decoration.key)
           }
 
-          const constraint = queryTable.constraint.name(name).foreingKey(foreignKey)
+          const constraint = queryTable.constraint.name(name).foreignKey(foreignKey)
 
-          constraint.references(referenceTable, { field: decoration.annotation.options.referenceKey })
+          constraint.references(referenceTable, { column: decoration.annotation.options.referenceKey })
 
           if (decoration.annotation.options.onUpdate) {
             constraint.onUpdate(decoration.annotation.options.onUpdate)
@@ -109,14 +108,14 @@ class Table<T extends NewableType<T>> implements TableInterface<T> {
     })
   }
 
-  public dropQuery(action?: 'cascade' | 'restrict'): Array<QuerierOptionsType> {
+  public dropQuery(action?: 'cascade' | 'restrict'): Array<QueryType> {
     const query = this.repository.querier.table
+    const drop = query.drop
 
     if (this.repository.annotation) {
-      query.drop.name(this.repository.annotation.table).ifExists()
+      drop.name(this.repository.annotation.table).exists()
 
-      if (action == 'cascade') query.cascade()
-      if (action == 'restrict') query.restrict()
+      if (action == 'cascade') drop.cascade()
     }
 
     return [query.toQuery()]

@@ -21,7 +21,7 @@ jobs:
 
       - name: Run Deno tests
         run: deno test --allow-read --allow-net --allow-env
-
+  
   publish:
     runs-on: ubuntu-latest
 

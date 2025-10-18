@@ -76,7 +76,6 @@ export class Anemic implements AnemicInterface {
   }
 
   private async socketHandler(socket: WebSocket, server: ServerOptionsType): Promise<Response> {
-    // @TODO implement
     throw new Error('Not implemented')    
   }
   
@@ -88,15 +87,15 @@ export class Anemic implements AnemicInterface {
     }, lastNext)
   }
   
-  public async boot() {
+  public async boot(): Promise<void> {
     return this.dispatcher.dispatch('boot', this.application)
   }
 
-  public async start() {
+  public async start(): Promise<void> {
     return this.dispatcher.dispatch('start', this.application)
   }
 
-  public async stop() {
+  public async stop(): Promise<void> {
     return this.dispatcher.dispatch('stop', this.application)
   }
 }

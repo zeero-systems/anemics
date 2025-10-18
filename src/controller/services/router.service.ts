@@ -1,7 +1,7 @@
 import { ArtifactType, DecoratorMetadata, Text } from '@zeero/commons';
 
 import type { RouterInterface } from '~/controller/interfaces.ts';
-import type { RouteType, ControllerType, EventType, MethodType } from '~/controller/types.ts';
+import type { RouteType, ControllerType, MethodType } from '~/controller/types.ts';
 
 import MethodEnum from '~/network/enums/method.enum.ts';
 import ControllerAnnotation from '~/controller/annotations/controller.annotation.ts';
@@ -10,7 +10,7 @@ import isMethod from '~/controller/guards/is-http.guard.ts';
 import isSocket from '~/controller/guards/is-socket.guard.ts';
 
 export class Router implements RouterInterface {
-  static actions = Object.values(MethodEnum)
+  static actions: Array<MethodEnum> = Object.values(MethodEnum)
   
   public routes: { [key in MethodEnum]: Array<RouteType> } = Router.actions
     .reduce((prev, curr: any) => { prev[curr] = []; return prev }, {} as any)
@@ -56,7 +56,7 @@ export class Router implements RouterInterface {
             const action = {
               key: String(decorator.decoration.property),
               namespace: decorator.annotation.target.namespace || '',
-            } as EventType
+            } as any
 
             const pathname = `${controller.path}${action.namespace}`
 

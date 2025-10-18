@@ -1,10 +1,10 @@
 
 export enum ForeingActionEnum {
-  "NO ACTION" = "no action",
-  "SET NULL" = "set null",
-  "SET DEFAULT" = "set default",
-  RESTRICT = "restrict",
-  CASCADE = "cascade",
+  "no action" = "no action",
+  "set null" = "set null",
+  "set default" = "set default",
+  restrict = "restrict",
+  cascade = "cascade",
 }
 
 export default ForeingActionEnum
