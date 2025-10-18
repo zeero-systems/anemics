@@ -1,9 +1,11 @@
 import { describe, it } from '@std/bdd';
 import { expect } from '@std/expect';
 
-import Index from '~/querier/postgresql/adapters/index.adapter.ts';
-import Query from '~/querier/postgresql/adapters/query.adapter.ts';
-import Table from '~/querier/postgresql/adapters/table.adapter.ts';
+import Index from '~/querier/postgresql/queries/index.querier.ts';
+import Query from '~/querier/postgresql/queries/query.querier.ts';
+import Table from '~/querier/postgresql/queries/table.querier.ts';
+import { QueryFunction } from '@zeero-systems/anemics';
+import { QueryQuerierInterface } from '~/querier/interfaces.ts';
 
 describe('querier', () => {
   it('basic query', () => {
@@ -34,8 +36,8 @@ describe('querier', () => {
 
     query
       .select.column('*')
-      .from.table('u', (bracket) => {
-        return bracket.select.column('*').from.table('users');
+      .from.table('u', (query: QueryQuerierInterface) => {
+        return query.select.column('*').from.table('users');
       })
       .where.and('u.id', 'eq', 10)
       .order.desc('u.name');
