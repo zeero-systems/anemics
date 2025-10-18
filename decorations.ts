@@ -26,7 +26,7 @@ import Schema from '~/persister/decorations/schema.decoration.ts';
 import Structure from '~/persister/decorations/structure.decoration.ts';
 
 export { default as Connect } from '~/controller/decorations/connect.decoration.ts';
-export { default as Controller } from '~/controller/decorations/connect.decoration.ts';
+export { default as Controller } from '~/controller/decorations/controller.decoration.ts';
 export { default as Delete } from '~/controller/decorations/delete.decoration.ts';
 export { default as Get } from '~/controller/decorations/get.decoration.ts';
 export { default as Head } from '~/controller/decorations/head.decoration.ts';

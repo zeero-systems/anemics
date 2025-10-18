@@ -12,6 +12,7 @@ import Get from '~/controller/decorations/get.decoration.ts';
 import { ApplicationInterface } from '~/entrypoint/interfaces.ts';
 import { ResponseInterface } from '~/network/interfaces.ts';
 import { Pack, PackInterface } from '@zeero/commons';
+import { ServerOptionsType } from '~/network/types.ts';
 
 describe('entrypoint', () => {
   
@@ -153,12 +154,21 @@ describe('entrypoint', () => {
     }
   }
 
+  @Controller('/health')
+  class HealthController {
+    @Get('/status')
+    public getStatus(response: ResponseInterface, server: ServerOptionsType) {
+      response.setHeader('Content-Type', 'application/json')
+      response.setBody(JSON.stringify({ status: 'OK', server: server.hostname }))
+    }
+  }
+
   describe('simple server', () => {
     let bootText = ''
     
     @Pack({ 
       providers: [], 
-      consumers: [ControllerTest]
+      consumers: [ControllerTest, HealthController]
     })
     class App implements PackInterface {
       onBoot(application: ApplicationInterface): void {
@@ -176,11 +186,11 @@ describe('entrypoint', () => {
 
     it('fetch', async () => {
       await anemic.start()
-      const response = await fetch('http://0.0.0.0:3000/test', { method: 'get' });
+      const response = await fetch('http://0.0.0.0:3000/health/status', { method: 'get' });
       const responseText = await response.text();
       await anemic.stop()
   
-      expect(responseText).toEqual('reached getTest');
+      expect(responseText).toEqual('{"status":"OK"}');
     })
 
     it('stop start again', async () => {

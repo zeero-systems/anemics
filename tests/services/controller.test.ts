@@ -8,6 +8,7 @@ import Put from '~/controller/decorations/put.decoration.ts';
 import Delete from '~/controller/decorations/delete.decoration.ts';
 import Options from '~/controller/decorations/options.decoration.ts';
 import Router from '~/controller/services/router.service.ts';
+import Get from '~/controller/decorations/get.decoration.ts';
 
 describe('controller', () => {
 
@@ -16,6 +17,9 @@ describe('controller', () => {
     
     @Post()
     createUser() {}
+
+    @Get()
+    getUser() {}
 
     @Patch()
     updateUser() {}
@@ -34,6 +38,12 @@ describe('controller', () => {
 
   it('should have post routes', () => {
     const routes = router.routes.post
+
+    expect(routes.length).toEqual(1)
+  });
+
+  it('should have get routes', () => {
+    const routes = router.routes.get
 
     expect(routes.length).toEqual(1)
   });
