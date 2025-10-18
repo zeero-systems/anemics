@@ -2,7 +2,7 @@ import type { NewableType, PackerInterface, PackInterface } from '@zeero/commons
 import type { ServerOptionsType } from '~/network/types.ts';
 import type { ServerInterface } from '~/network/interfaces.ts';
 import type { ApplicationInterface } from '~/entrypoint/interfaces.ts';
-import type { MiddlerInterface, RouterInterface } from '~/controller/interfaces.ts';
+import type { MiddlerInterface, MiddlewareInterface, RouterInterface } from '~/controller/interfaces.ts';
 
 import { Packer } from '@zeero/commons';
 
@@ -19,7 +19,8 @@ export class Application implements ApplicationInterface {
   
   constructor(pack: NewableType<new (...args: any[]) => PackInterface>, options: {
     http?: Array<ServerOptionsType> | ServerOptionsType, 
-    socket?: Array<ServerOptionsType> | ServerOptionsType
+    socket?: Array<ServerOptionsType> | ServerOptionsType,
+    middlewares?: Array<MiddlewareInterface>
   } = { http: { port: 3000 } }) {
     this.packer = new Packer(pack as any)
     this.router = new Router(this.packer.artifacts())
@@ -49,6 +50,18 @@ export class Application implements ApplicationInterface {
           }
         }
         this.servers.push(new Ws(option))
+      }
+    }
+
+    if (options.middlewares) {
+      for (const route of Object.values(this.middler.middlewares)) {
+        for (const middleware of options.middlewares) {
+          const alreadyExists = route[middleware.event].find((m: MiddlewareInterface) => m.name === middleware.name)
+
+          if (!alreadyExists) {
+            route[middleware.event].push(middleware)
+          }
+        }
       }
     }
   }

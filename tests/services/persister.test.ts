@@ -1,8 +1,8 @@
-import type { CommonOptionsType, FilterPredicateType} from '~/persister/types.ts';
-import type { FilterType } from '~/persister/types.ts';
-
 import { describe, it } from '@std/bdd';
 import { expect } from '@std/expect';
+
+import type { CommonOptionsType, FilterPredicateType} from '~/persister/types.ts';
+import type { FilterType } from '~/persister/types.ts';
 
 import { Factory } from '@zeero/commons';
 import Schema from '~/persister/decorations/schema.decoration.ts';

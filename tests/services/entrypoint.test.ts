@@ -38,6 +38,8 @@ describe('entrypoint', () => {
     getTest(response: ResponseInterface) {
       response.setHeader('Content-Type', 'application/json')
       response.setBody('reached getTest')
+
+      return 'reached getTestMiddleware'
     }
   }
 
@@ -96,7 +98,7 @@ describe('entrypoint', () => {
     })
   })
 
-  describe('server with middlewares', () => {
+  describe('server with controller middlewares', () => {
     
     @Pack({ 
       providers: [], 
@@ -109,6 +111,28 @@ describe('entrypoint', () => {
     it('fetch', async () => {
       await anemic.start()
       const response = await fetch('http://0.0.0.0:3001/test', { method: 'get' });
+      const responseText = await response.text();
+      
+      expect(responseText).toEqual('reached getTestMiddleware');
+      await anemic.stop()
+    })
+  })
+
+  describe('server with global middlewares', () => {
+    
+    @Pack({ 
+      providers: [], 
+      consumers: [ControllerTest]
+    })
+    class App implements PackInterface {}
+
+    const anemic = new Anemic(new Application(App, { http: { port: 3002 }, middlewares: [
+      new ResponseParserAnnotation()
+    ] }))
+      
+    it('fetch', async () => {
+      await anemic.start()
+      const response = await fetch('http://0.0.0.0:3002/test', { method: 'get' });
       const responseText = await response.text();
       
       expect(responseText).toEqual('reached getTestMiddleware');
