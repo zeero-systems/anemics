@@ -34,9 +34,8 @@ export type ContextType = {
   requester?: RequesterInterface | undefined
   responser?: ResponserInterface | undefined
   socket?: WebSocket | undefined
-  current: {
+  handler: {
     attempts: number;
-    result: any | undefined;
     error: any | undefined;
   }; 
 }

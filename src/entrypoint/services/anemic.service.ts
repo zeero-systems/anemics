@@ -59,12 +59,12 @@ export class Anemic implements AnemicInterface {
       { name: 'Url', target: url },
     ], 'provider');
 
-    const current = { attempts: 1, result: undefined, error: undefined }
-    const context: ContextType = { requester, responser, container, route, server, url, current };
+    const handler = { attempts: 1, error: undefined }
+    const context: ContextType = { requester, responser, container, route, server, url, handler };
 
     await this.execute(key, context)
 
-    return new Response(responser.body, {
+    return new Response(responser.parsed || responser.body, {
       status: responser.status,
       statusText: responser.statusText,
       headers: responser.headers,
@@ -72,7 +72,7 @@ export class Anemic implements AnemicInterface {
   }
 
   private async execute(key: string, context: ContextType): Promise<void> {
-    const attempts = context.current.attempts
+    const attempts = context.handler.attempts
 
     try {
       let next: NextFunctionType = async () => {};
@@ -93,7 +93,7 @@ export class Anemic implements AnemicInterface {
     } catch (error: any) {
       let next: NextFunctionType = async () => {};
 
-      context.current.error = error
+      context.handler.error = error
 
       if (this.application.middler.middlewares[key][EventEnum.EXCEPTION]) {
         next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.EXCEPTION], next);
@@ -102,7 +102,7 @@ export class Anemic implements AnemicInterface {
       await next();
     }
 
-    if (context.current.attempts !== attempts) {
+    if (context.handler.attempts !== attempts) {
       return this.execute(key, context)
     }
   }
