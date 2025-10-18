@@ -11,7 +11,7 @@ import Controller from '~/controller/decorations/controller.decoration.ts';
 import Get from '~/controller/decorations/get.decoration.ts';
 import { ApplicationInterface } from '~/entrypoint/interfaces.ts';
 import { ResponseInterface } from '~/network/interfaces.ts';
-import { Pack, PackInterface } from '@zeero/commons';
+import { AnnotationInterface, Pack, PackInterface, ArtifactType, DecoratorType, Decorator } from '@zeero/commons';
 import { ServerOptionsType } from '~/network/types.ts';
 
 describe('entrypoint', () => {
@@ -125,7 +125,8 @@ describe('entrypoint', () => {
   // });
 
   
-  class ResponseParser implements MiddlewareInterface {
+  class ResponseParserAnnotation implements MiddlewareInterface, AnnotationInterface {
+    name: string = 'Response'
     event: MiddlewareEventType = 'after'
     async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
       if (context.result && context.response) {
@@ -134,7 +135,11 @@ describe('entrypoint', () => {
 
       await next()
     }
+    onAttach(artifact: ArtifactType, decorator: DecoratorType) { }
+    onInitialize(artifact: ArtifactType, decorator: DecoratorType) { }
   }
+
+  const ResponseParser = Decorator.create(ResponseParserAnnotation)
 
   @Controller('/test')
   class ControllerTest {
@@ -145,12 +150,13 @@ describe('entrypoint', () => {
     }
   }
 
+  @ResponseParser()
   @Controller()
   class ControllerMiddlewareTest {
     @Get('/test')
     getTest(response: ResponseInterface) {
       response.setHeader('Content-Type', 'application/json')
-      response.setBody('reached getTestMiddleware')
+      return 'reached getTestMiddleware'
     }
   }
 
@@ -202,7 +208,7 @@ describe('entrypoint', () => {
   describe('server with middlewares', () => {
     
     @Pack({ 
-      providers: [ResponseParser], 
+      providers: [], 
       consumers: [ControllerMiddlewareTest]
     })
     class App implements PackInterface {}

@@ -54,17 +54,17 @@ export class Anemic implements AnemicInterface {
     let next: NextFunctionType = async () => {}
     const context = { request, response, container, route, server, url }
 
-    if (this.application.middler.middlewares[key][EventEnum.BEFORE]) {
-      next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.BEFORE], next)     
+    if (this.application.middler.middlewares[key][EventEnum.AFTER]) {
+      next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.AFTER], next)
     }
 
     if (this.application.middler.middlewares[key][EventEnum.MIDDLE]) {
       next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.MIDDLE], next)     
     }
-    
-    if (this.application.middler.middlewares[key][EventEnum.AFTER]) {
-      next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.AFTER], next)
-    }
+
+    if (this.application.middler.middlewares[key][EventEnum.BEFORE]) {
+      next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.BEFORE], next)     
+    }    
       
     await next()
 
