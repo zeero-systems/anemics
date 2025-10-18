@@ -34,7 +34,11 @@ export type ContextType = {
   request?: RequestInterface | undefined
   response?: ResponseInterface | undefined
   socket?: WebSocket | undefined
-  result?: any | undefined
+  current: {
+    attempts: number;
+    result: any | undefined;
+    error: any | undefined;
+  }; 
 }
 
 export type NextFunctionType = () => Promise<void>

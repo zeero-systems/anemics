@@ -12,7 +12,7 @@ export class ControllerAnnotation implements AnnotationInterface, HttpAnnotation
   constructor(public path: string = '') {}
 
   async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
-    context.result = await (context.container.construct<ControllerInterface>(context.route.controller.key) as any)[context.route.action.key]()
+    context.current.result = await (context.container.construct<ControllerInterface>(context.route.controller.key) as any)[context.route.action.key]()
 
     next()
   }

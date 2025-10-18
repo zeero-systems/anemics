@@ -15,13 +15,13 @@ import { AnnotationInterface, Pack, PackInterface, ArtifactType, DecoratorType, 
 import { ServerOptionsType } from '~/network/types.ts';
 
 describe('entrypoint', () => {
-    
+
   class ResponseParserAnnotation implements MiddlewareInterface, AnnotationInterface {
     name: string = 'Response'
     event: EventType = 'after'
     async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
-      if (context.result && context.response) {
-        context.response.body = context.result
+      if (context.current.result && context.response) {
+        context.response.body = context.current.result
       }
 
       await next()

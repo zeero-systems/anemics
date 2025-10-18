@@ -54,7 +54,20 @@ export class Anemic implements AnemicInterface {
       { name: 'Url', target: url },
     ], 'provider');
 
-    const context = { request, response, container, route, server, url };
+    const current = { attempts: 1, result: undefined, error: undefined }
+    const context: ContextType = { request, response, container, route, server, url, current };
+
+    await this.execute(key, context)
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    });
+  }
+
+  private async execute(key: string, context: ContextType): Promise<void> {
+    const attempts = context.current.attempts
 
     try {
       let next: NextFunctionType = async () => {};
@@ -72,8 +85,10 @@ export class Anemic implements AnemicInterface {
       }
 
       await next();
-    } catch {
+    } catch (error: any) {
       let next: NextFunctionType = async () => {};
+
+      context.current.error = error
 
       if (this.application.middler.middlewares[key][EventEnum.EXCEPTION]) {
         next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.EXCEPTION], next);
@@ -82,11 +97,9 @@ export class Anemic implements AnemicInterface {
       await next();
     }
 
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers,
-    });
+    if (context.current.attempts !== attempts) {
+      return this.execute(key, context)
+    }
   }
 
   private async socketHandler(socket: WebSocket, server: ServerOptionsType): Promise<Response> {
