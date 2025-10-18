@@ -1,34 +1,44 @@
-import type { KeyType } from '@zxxxro/commons';
-import type { MethodType } from '~/bootstraper/types.ts';
+import type { ContainerInterface, KeyableType } from '@zeero/commons';
+import type { ServerOptionsType } from '~/network/types.ts';
+import type { RequestInterface, ResponseInterface } from '~/network/interfaces.ts';
 
-export type ParameterType = ('request' | 'response' | 'query' | 'params' | 'formData') & string
+import MethodEnum from '~/network/enums/method.enum.ts';
 
 export type ControllerType = {
+  key: KeyableType
   path: string
-  targetName: KeyType
 }
 
-export type HandlerType = {
+export type MethodType = {
+  method: MethodEnum
+  key: string
   path: string
-  method: MethodType
-  pattern: URLPattern
-  propertyKey: string
-  parameterNames: Array<ParameterType>
-  paremeterValues: Array<any>
 }
 
-export type EndpointType = {
+export type RouteType = {
+  key: string
+  action: MethodType | { key: string; namespace: string }
   controller: ControllerType
-  handler: HandlerType
+  pattern?: URLPattern
+  pathname?: string
 }
 
-export type EventType = 'then' | 'catch' | 'finally';
+export type MiddlewareEventType = 'before' | 'middle' | 'after'
 
-export type ActionType = 'first' | 'last';
+export type ContextType = {
+  url: URLPatternResult
+  route: RouteType
+  container: ContainerInterface
+  server: ServerOptionsType
+  request?: RequestInterface | undefined
+  response?: ResponseInterface | undefined
+  socket?: WebSocket | undefined
+  result?: any | undefined
+}
 
-export type OptionsType = {
-  event: EventType
-  weight: number
-} & { [key: string | symbol]: any }
+export type NextFunctionType = () => Promise<void>
+
+export type HttpMiddlewareHandlerType = (request: RequestInterface, response: ResponseInterface, url: URLPatternResult) => Promise<void>
+export type SocketMiddlewareHandlerType = (socket: WebSocket, url: URLPatternResult) => Promise<void>
 
 export default {}

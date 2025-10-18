@@ -1,65 +1,139 @@
-import { PredicateInterface, QuerierInterface, RawInterface, TableInterface } from '~/querier/interfaces.ts';
-import OperatorEnum from './enums/operator.enum.ts';
+import type { BuilderInterface, ConstraintClauseInterface, QueryQuerierInterface, RawClauseInterface } from '~/querier/interfaces.ts';
 
-export type SubQueryType = QuerierInterface
-export type RawQueryType = RawInterface
-export type BracketFunction<T> = (bracket: SubQueryType) => T;
-export type OperatorType = keyof typeof OperatorEnum;
-export type BasicTerm = string | number | boolean | Array<string | number | boolean>;
-export type FirstTermType = BasicTerm
-export type SecondTermType = BasicTerm | SubQueryType | undefined
-export type TableKeyType = 'FROM' | 'INNER JOIN' | 'LEFT JOIN' | 'RIGHT JOIN' | 'CROSS JOIN'
-export type PredicateKeyType = 'ON' | 'USING' | 'WHERE'
-export type JoinKeyType = 'INNER' | 'LEFT' | 'RIGHT' | 'FULL' | 'CROSS'
+import ForeingActionEnum from '~/querier/enums/foreign-action.enum.ts';
+import { SyntaxType } from '../persister/types.ts';
 
-export type ExpressionType = {
-  firstTerm: FirstTermType;
-  secondTerm: SecondTermType;
-  operator: OperatorEnum;
+export type BuilderOptionsType = Partial<QueryType> & {
+  grouping?: 'parentheses' | 'brackets' | 'braces';
 };
 
-export type PredicateType<P> = {
-  type: P
-  expression: ExpressionType | SubQueryType | RawQueryType;
-};
-
-export type QuerierOptionType = {
-  placeholder?: string
-  placeholderType?: 'counter' | 'static'
-}
-
-export type QueryOptionType = QuerierOptionType & {
-  args: Array<string | number>;
-  counter: number
-}
-
-export type QueryType = QueryOptionType & {
-  text: string;
-};
-
-export type SelectType = {
-  name: string;
-  alias?: string | SubQueryType | RawQueryType;
-};
+export type ValueType = string | QueryQuerierInterface | RawClauseInterface<any>;
 
 export type TableType = {
-  name?: string | SubQueryType | RawQueryType;
+  name?: ValueType;
   alias?: string;
 };
 
-export type EventHanderType = 'onTable'
+export type AliasColumnType = {
+  name: string | RawClauseInterface<any>;
+  alias?: ValueType
+};
 
-export type QueryEventHanderType = (type: EventHanderType, table: TableType) => void
+export type ValueColumnType = {
+  name?: ValueType;
+  value?: string | number | boolean;
+};
 
-export type JoinType = {
-  table: TableInterface
-  join: JoinKeyType
-  predicate: PredicateInterface
-}
+export type QueryType = {
+  args: Array<string | number>;
+  text: string;
+  returns: Array<string>,
+  placeholder?: string;
+  placeholderType?: 'counter' | 'static';
+};
+
+export type ClauseType = { name: string; target: any };
+
+export type OperatorType =
+  | 'eq'
+  | 'lt'
+  | 'gt'
+  | 'like'
+  | 'between'
+  | 'in'
+  | 'not in'
+  | 'is null'
+  | 'is not null'
+  | 'exists';
+
+export type TermType = string | number | boolean | Array<string | number | boolean>;
+
+export type ExpressionType = {
+  leftTerm: TermType;
+  rightTerm: TermType;
+  operator: OperatorType;
+};
+
+export type PredicateType = {
+  type: 'and' | 'or';
+  expression: ExpressionType;
+};
 
 export type OrderType = {
-  key: 'ASC' | 'DESC';
-  name: string | RawQueryType,
-}
+  key: 'asc' | 'desc';
+  column: string;
+};
+
+export type QueryFunction<T extends BuilderInterface<T>> = (query: T) => T;
+
+export type CharacterType = 'char' | 'varchar' | 'text' | 'tsquery' | 'tsvector';
+export type DateType = 'date' | 'interval' | 'time' | 'timez' | 'timestamp' | 'timestampz';
+export type GeometricType = 'point' | 'line' | 'lseg' | 'box' | 'path' | 'polygon' | 'circle';
+export type LanguageType = 'json' | 'jsonb' | 'jsonpath' | 'uuid' | 'xml';
+export type NetworkType = 'cidr' | 'inet' | 'macaddr' | 'macaddr8';
+export type NumericType =
+  | 'bigint'
+  | 'bigserial'
+  | 'integer'
+  | 'decimal'
+  | 'double precision'
+  | 'money'
+  | 'numeric'
+  | 'real'
+  | 'serial'
+  | 'smallint'
+  | 'smallserial';
+export type RangeType = 'daterange' | 'tsrange' | 'tstzrange' | 'bigintrange' | 'integerrange' | 'numrange';
+export type StructureType = 'boolean' | 'bit' | 'bytea' | 'enum' | 'bool' | 'varbit' | 'foreign';
+
+export type ColumnType<T extends BuilderInterface<T>> = {
+  type:
+    | CharacterType
+    | DateType
+    | GeometricType
+    | LanguageType
+    | NetworkType
+    | NumericType
+    | RangeType
+    | StructureType;
+  name: string;
+  notNull?: boolean;
+  collation?: string;
+  length?: number;
+  scale?: number;
+  precision?: number;
+  enums?: any[];
+  constraints: Array<ConstraintClauseInterface<T>>;
+};
+
+export type ConstraintType = {
+  name: string;
+  default?: string | number | Array<string | number>;
+  primaryKey?: Array<string> | boolean;
+  check?: string;
+  unique?: Array<string> | boolean;
+  foreignKey?: Array<string>;
+  references?: {
+    table: string;
+    column: Array<string>;
+  };
+  onUpdate?: ForeingActionEnum;
+  onDelete?: ForeingActionEnum;
+};
+
+export type DropType = {
+  exists?: boolean;
+  cascade?: boolean;
+};
+
+export type CreateType = {
+  exists?: boolean;
+};
+
+export type QuerierOptionsType = {
+  syntax: SyntaxType
+  placeholder?: string;
+  placeholderType?: 'counter' | 'static';
+} 
 
 export default {};

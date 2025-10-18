@@ -1,39 +1,34 @@
-import type { 
-  AnnotationInterface, 
-  ArtifactType, 
-  DecorationType, 
-  DecoratorFunctionType 
-} from '@zxxxro/commons';
+import type { AnnotationInterface, ArtifactType, DecoratorType } from '@zeero/commons';
+import type { ContextType, MiddlewareEventType, NextFunctionType } from '~/controller/types.ts';
+import type { ControllerInterface, HttpAnnotationInterface, MiddlewareInterface } from '~/controller/interfaces.ts';
 
-import { 
-  AnnotationException, 
-  Consumer, 
-  Decorator, 
-  DecoratorKindEnum, 
-  Mixin, 
-  Scope,
-  ScopeEnum 
-} from '@zxxxro/commons';
+import { AnnotationException, DecoratorKindEnum } from '@zeero/commons';
 
-import Endpoint from '~/controller/annotations/endpoint.annotation.ts';
+export class ControllerAnnotation implements AnnotationInterface, HttpAnnotationInterface, MiddlewareInterface {
+  name: string = 'Controller';
+  event: MiddlewareEventType = 'middle'
+  static readonly metadata: unique symbol = Symbol('Controller.metadata');
 
-export class Controller implements AnnotationInterface {
-  static readonly tag: unique symbol = Symbol('Controller.tag')
+  constructor(public path: string = '') {}
 
-  onAttach<P>(artifact: ArtifactType, decoration: DecorationType<P & { path?: string | undefined, scope: ScopeEnum }>): any {
-    if (decoration.kind == DecoratorKindEnum.CLASS) {
-      return Mixin([
-        Consumer(), 
-        Scope(decoration.parameters?.scope),
-        Endpoint(decoration.parameters?.path)
-      ])(artifact.target, decoration.context);
+  async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
+    context.result = await (context.container.construct<ControllerInterface>(context.route.controller.key) as any)[context.route.action.key]()
+
+    next()
+  }
+
+  onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
+    if (decorator.decoration.kind == DecoratorKindEnum.CLASS) {
+      return artifact.target
     }
 
     throw new AnnotationException('Method not implemented for {name} on {kind}.', {
       key: 'NOT_IMPLEMENTED',
-      context: { name: artifact.name, kind: decoration.kind },
+      context: { name: artifact.name, kind: decorator.decoration.kind },
     });
   }
+
+  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default (path?: string | undefined, scope: ScopeEnum = ScopeEnum.Transient): DecoratorFunctionType => Decorator.apply(Controller, { path, scope });
+export default ControllerAnnotation;

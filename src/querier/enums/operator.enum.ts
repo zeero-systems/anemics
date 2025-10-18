@@ -1,15 +1,15 @@
 
 export enum OperatorEnum {
-  EQ = "EQ",
-  LT = "LT",
-  GT = "GT",
-  LIKE = "LIKE",
-  BETWEEN = "BETWEEN",
-  IN = "IN",
-  NOT_IN = "NOT IN",
-  IS_NULL = "IS NULL",
-  IS_NOT_NULL = "IS NOT NULL",
-  EXISTS = "EXISTS",
+  EQ = "eq",
+  LT = "lt",
+  GT = "gt",
+  LIKE = "like",
+  BETWEEN = "between",
+  IN = "in",
+  "NOT IN" = "not in",
+  "IS NULL" = "is null",
+  "IS NOT NULL" = "is not null",
+  EXISTS = "exists",
 }
 
 export default OperatorEnum
