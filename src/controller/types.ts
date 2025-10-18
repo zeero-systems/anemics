@@ -3,6 +3,7 @@ import type { ServerOptionsType } from '~/network/types.ts';
 import type { RequestInterface, ResponseInterface } from '~/network/interfaces.ts';
 
 import MethodEnum from '~/network/enums/method.enum.ts';
+import EventEnum from './enums/event.enum.ts';
 
 export type ControllerType = {
   key: KeyableType
@@ -23,7 +24,7 @@ export type RouteType = {
   pathname?: string
 }
 
-export type MiddlewareEventType = 'before' | 'middle' | 'after'
+export type EventType = `${EventEnum}`
 
 export type ContextType = {
   url: URLPatternResult

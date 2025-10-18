@@ -1,12 +1,12 @@
 import type { AnnotationInterface, ArtifactType, DecoratorType } from '@zeero/commons';
-import type { ContextType, MiddlewareEventType, NextFunctionType } from '~/controller/types.ts';
+import type { ContextType, EventType, NextFunctionType } from '~/controller/types.ts';
 import type { ControllerInterface, HttpAnnotationInterface, MiddlewareInterface } from '~/controller/interfaces.ts';
 
 import { AnnotationException, DecoratorKindEnum } from '@zeero/commons';
 
 export class ControllerAnnotation implements AnnotationInterface, HttpAnnotationInterface, MiddlewareInterface {
   name: string = 'Controller';
-  event: MiddlewareEventType = 'middle'
+  event: EventType = 'middle'
   static readonly metadata: unique symbol = Symbol('Controller.metadata');
 
   constructor(public path: string = '') {}

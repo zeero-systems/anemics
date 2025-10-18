@@ -51,22 +51,36 @@ export class Anemic implements AnemicInterface {
       { name: 'Url', target: url },
     ], 'provider')
 
-    let next: NextFunctionType = async () => {}
     const context = { request, response, container, route, server, url }
-
-    if (this.application.middler.middlewares[key][EventEnum.AFTER]) {
-      next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.AFTER], next)
-    }
-
-    if (this.application.middler.middlewares[key][EventEnum.MIDDLE]) {
-      next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.MIDDLE], next)     
-    }
-
-    if (this.application.middler.middlewares[key][EventEnum.BEFORE]) {
-      next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.BEFORE], next)     
-    }    
+    
+    try {
       
-    await next()
+      let next: NextFunctionType = async () => {}
+
+      if (this.application.middler.middlewares[key][EventEnum.AFTER]) {
+        next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.AFTER], next)
+      }
+  
+      if (this.application.middler.middlewares[key][EventEnum.MIDDLE]) {
+        next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.MIDDLE], next)
+      }
+  
+      if (this.application.middler.middlewares[key][EventEnum.BEFORE]) {
+        next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.BEFORE], next)
+      }    
+        
+      await next()
+
+    } catch {
+
+      let next: NextFunctionType = async () => {}
+
+      if (this.application.middler.middlewares[key][EventEnum.EXCEPTION]) {
+        next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.EXCEPTION], next)
+      }
+
+      await next()
+    }
 
     return new Response(response.body, {
       status: response.status,
