@@ -15,12 +15,12 @@ import Controller from '~/controller/decorations/controller.decoration.ts';
 import Get from '~/controller/decorations/get.decoration.ts';
 
 describe('entrypoint', () => {
-  class ResponseParserAnnotation implements MiddlewareInterface, AnnotationInterface {
+  class JsonResponseAnnotation implements MiddlewareInterface, AnnotationInterface {
     name: string = 'Response';
     event: EventType = 'after';
     async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
-      if (context.current.result && context.responser) {
-        context.responser.body = context.current.result;
+      if (context.responser && typeof context.responser.body !== 'string') {
+        context.responser.parsed = JSON.stringify(context.responser.body);
       }
 
       await next();
@@ -29,7 +29,7 @@ describe('entrypoint', () => {
     onInitialize(artifact: ArtifactType, decorator: DecoratorType) {}
   }
 
-  const ResponseParser = Decorator.create(ResponseParserAnnotation);
+  const ResponseParser = Decorator.create(JsonResponseAnnotation);
 
   @Controller('/test')
   class ControllerTest {
@@ -127,7 +127,7 @@ describe('entrypoint', () => {
       new Application(App, {
         http: { port: 3002 },
         middlewares: [
-          new ResponseParserAnnotation(),
+          new JsonResponseAnnotation(),
         ],
       }),
     );
