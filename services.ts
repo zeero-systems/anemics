@@ -6,7 +6,7 @@ import Application from '~/entrypoint/services/application.service.ts';
 
 import Ws from '~/network/services/ws.service.ts';
 import Http from '~/network/services/http.service.ts';
-import Response from '~/network/services/response.service.ts';
+import Response from '~/network/services/responser.service.ts';
 
 import Filter from '~/persister/services/filter.service.ts';
 import Persister from '~/persister/services/persister.service.ts';
@@ -25,7 +25,7 @@ export { default as Application } from '~/entrypoint/services/application.servic
 
 export { default as Ws } from '~/network/services/ws.service.ts';
 export { default as Http } from '~/network/services/http.service.ts';
-export { default as Response } from '~/network/services/response.service.ts';
+export { default as Response } from '~/network/services/responser.service.ts';
 
 export { default as Filter } from '~/persister/services/filter.service.ts';
 export { default as Persister } from '~/persister/services/persister.service.ts';

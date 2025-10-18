@@ -12,10 +12,10 @@ import type {
 import Column from '~/querier/postgresql/clauses/column.clause.ts';
 import Constraint from '~/querier/postgresql/clauses/constraint.clause.ts';
 import Drop from '~/querier/postgresql/clauses/drop.clause.ts';
-import Raw from '../../services/raw.clause.ts';
-import Return from '../../services/return.clause.ts';
-import Builder from '../../services/builder.services.ts';
-import Create from '../clauses/create.clause.ts';
+import Raw from '~/querier/services/raw.clause.ts';
+import Return from '~/querier/services/return.clause.ts';
+import Builder from '~/querier/services/builder.services.ts';
+import Create from '~/querier/postgresql/clauses/create.clause.ts';
 
 export class TableQuerier implements TableQuerierInterface {
   public clauses: Array<{ previous?: ClauseType; current: ClauseType }> = [];

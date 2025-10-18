@@ -1,21 +1,21 @@
-import type { ResponseInterface } from '~/network/interfaces.ts';
+import type { ResponserInterface } from '~/network/interfaces.ts';
 
 import HttpStatusEnum from '~/network/enums/http-status.enum.ts';
 
-export class Response implements ResponseInterface {
+export class Responser implements ResponserInterface {
 
-  raw: any;
   body: BodyInit | undefined | null 
+  parsed: BodyInit | null | undefined;
   headers: Headers | undefined
   status: HttpStatusEnum | undefined
   statusText: string | undefined
   metadata: Record<string | symbol, any> = {}
   
-  setRaw(raw: any) {
-    this.raw = raw
+  setParsed(value: BodyInit | undefined | null) {
+    this.parsed = value
   }
-  setBody(body: BodyInit | undefined | null) {
-    this.body = body
+  setBody(value: BodyInit | undefined | null) {
+    this.body = value
   }
 
   addMetadata(key: string | symbol, value: any): void {
@@ -39,4 +39,4 @@ export class Response implements ResponseInterface {
   }
 }
 
-export default Response
+export default Responser

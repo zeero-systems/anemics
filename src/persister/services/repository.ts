@@ -7,7 +7,7 @@ import type { DatabaseInterface, PersisterInterface, SchemaInterface, Repository
 import { DecoratorMetadata, Text } from '@zeero/commons';
 import Query from '~/persister/services/query.service.ts';
 import Table from '~/persister/services/table.service.ts';
-import Querier from '../../querier/services/querier.service.ts';
+import Querier from '~/querier/services/querier.service.ts';
 
 export class Repository<T extends NewableType<T>> implements RepositoryInterface<T> {
   public types: string[] = [

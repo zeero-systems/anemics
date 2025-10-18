@@ -19,7 +19,7 @@ export class Http implements ServerInterface {
   constructor(public options: ServerOptionsType) {}
 
   async start(handler: HttpHandlerType): Promise<void> {
-    this.server = Deno.serve(this.options, handler);
+    this.server = Deno.serve(this.options, handler as any);
   }
 
   async stop(): Promise<void> {

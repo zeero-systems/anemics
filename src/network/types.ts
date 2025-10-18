@@ -1,4 +1,4 @@
-import { RequestInterface } from './interfaces.ts';
+import { RequesterInterface } from '~/network/interfaces.ts';
 
 export type RequestCacheType =
   | "default"
@@ -62,7 +62,7 @@ export type ServerOptionsType = {
   onListen?: (options: ServerOptionsAddr) => void;
 }
 
-export type HttpHandlerType = (request: RequestInterface) => Promise<Response>
-export type SocketHandlerType = (socket: WebSocket) => Promise<Response>
+export type HttpHandlerType = (request: RequesterInterface) => Promise<Response>
+export type SocketHandlerType = (request: RequesterInterface, socket: WebSocket) => Promise<Response>
 
 export default {}

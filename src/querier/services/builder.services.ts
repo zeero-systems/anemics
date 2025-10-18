@@ -1,4 +1,4 @@
-import { ClauseType } from '../types.ts';
+import { ClauseType } from '~/querier/types.ts';
 
 export class Builder {
   public static sorter(

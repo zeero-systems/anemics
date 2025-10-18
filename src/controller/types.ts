@@ -1,9 +1,9 @@
 import type { ContainerInterface, KeyableType } from '@zeero/commons';
 import type { ServerOptionsType } from '~/network/types.ts';
-import type { RequestInterface, ResponseInterface } from '~/network/interfaces.ts';
+import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
 
 import MethodEnum from '~/network/enums/method.enum.ts';
-import EventEnum from './enums/event.enum.ts';
+import EventEnum from '~/controller/enums/event.enum.ts';
 
 export type ControllerType = {
   key: KeyableType
@@ -31,8 +31,8 @@ export type ContextType = {
   route: RouteType
   container: ContainerInterface
   server: ServerOptionsType
-  request?: RequestInterface | undefined
-  response?: ResponseInterface | undefined
+  requester?: RequesterInterface | undefined
+  responser?: ResponserInterface | undefined
   socket?: WebSocket | undefined
   current: {
     attempts: number;
@@ -43,7 +43,7 @@ export type ContextType = {
 
 export type NextFunctionType = () => Promise<void>
 
-export type HttpMiddlewareHandlerType = (request: RequestInterface, response: ResponseInterface, url: URLPatternResult) => Promise<void>
+export type HttpMiddlewareHandlerType = (request: RequesterInterface, response: ResponserInterface, url: URLPatternResult) => Promise<void>
 export type SocketMiddlewareHandlerType = (socket: WebSocket, url: URLPatternResult) => Promise<void>
 
 export default {}

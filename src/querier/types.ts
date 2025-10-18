@@ -1,7 +1,7 @@
 import type { BuilderInterface, ConstraintClauseInterface, QueryQuerierInterface, RawClauseInterface } from '~/querier/interfaces.ts';
 
 import ForeingActionEnum from '~/querier/enums/foreign-action.enum.ts';
-import { SyntaxType } from '../persister/types.ts';
+import { SyntaxType } from '~/persister/types.ts';
 
 export type BuilderOptionsType = Partial<QueryType> & {
   grouping?: 'parentheses' | 'brackets' | 'braces';

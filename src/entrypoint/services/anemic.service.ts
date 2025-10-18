@@ -2,14 +2,16 @@ import type { PackInterface } from '@zeero/commons';
 import type { ServerOptionsType } from '~/network/types.ts';
 import type { AnemicInterface, ApplicationInterface } from '~/entrypoint/interfaces.ts';
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
-import type { RequestInterface } from '~/network/interfaces.ts';
+import type { RequesterInterface } from '~/network/interfaces.ts';
 import type { ContextType, NextFunctionType } from '~/controller/types.ts';
 
 import { Dispatcher } from '@zeero/commons';
 
-import Responser from '~/network/services/response.service.ts';
+import Responser from '~/network/services/responser.service.ts';
+import Requester from '~/network/services/requester.service.ts';
 import MethodEnum from '~/network/enums/method.enum.ts';
 import EventEnum from '~/controller/enums/event.enum.ts';
+import { ResponserInterface } from '@zeero-systems/anemics';
 
 export class Anemic implements AnemicInterface {
   private dispatcher = new Dispatcher<{
@@ -21,9 +23,13 @@ export class Anemic implements AnemicInterface {
   constructor(public application: ApplicationInterface) {
     for (const server of this.application.servers) {
       if (server.accepts.includes(MethodEnum.SOCKET)) {
-        this.dispatcher.subscribe('start', () => server.start((socket) => this.socketHandler(socket, server.options)));
+        this.dispatcher.subscribe('start', () => server.start((request, socket) => {
+          return this.socketHandler(new Requester(request), socket, new Responser(), server.options)
+        }))
       } else {
-        this.dispatcher.subscribe('start', () => server.start((request) => this.httpHandler(request, server.options)));
+        this.dispatcher.subscribe('start', () => server.start((request) => {
+          return this.httpHandler(new Requester(request), new Responser(), server.options)
+        }))
       }
       this.dispatcher.subscribe('stop', () => server.stop());
     }
@@ -37,32 +43,31 @@ export class Anemic implements AnemicInterface {
     }
   }
 
-  private async httpHandler(request: RequestInterface, server: ServerOptionsType): Promise<Response> {
-    const route = this.application.router.find(request.url, request.method.toLowerCase() as any);
+  private async httpHandler(requester: RequesterInterface, responser: ResponserInterface, server: ServerOptionsType): Promise<Response> {
+    const route = this.application.router.find(requester.url, requester.method.toLowerCase() as any);
 
     if (!route) return new Response(null, { status: 404 });
 
-    const url = route.pattern?.exec(request.url) as URLPatternResult;
+    const url = route.pattern?.exec(requester.url) as URLPatternResult;
     const key = `${String(route.controller.key)}:${route.action.key}`;
     const container = this.application.packer.container.duplicate();
-    const response = new Responser();
 
     container.add([
-      { name: 'Request', target: request },
-      { name: 'Response', target: response },
+      { name: 'Requester', target: requester },
+      { name: 'Responser', target: responser },
       { name: 'Server', target: server },
       { name: 'Url', target: url },
     ], 'provider');
 
     const current = { attempts: 1, result: undefined, error: undefined }
-    const context: ContextType = { request, response, container, route, server, url, current };
+    const context: ContextType = { requester, responser, container, route, server, url, current };
 
     await this.execute(key, context)
 
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers,
+    return new Response(responser.body, {
+      status: responser.status,
+      statusText: responser.statusText,
+      headers: responser.headers,
     });
   }
 
@@ -102,7 +107,7 @@ export class Anemic implements AnemicInterface {
     }
   }
 
-  private async socketHandler(socket: WebSocket, server: ServerOptionsType): Promise<Response> {
+  private async socketHandler(request: RequesterInterface, socket: WebSocket, response: ResponserInterface, server: ServerOptionsType): Promise<Response> {
     throw new Error('Not implemented');
   }
 

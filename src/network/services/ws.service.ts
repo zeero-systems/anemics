@@ -9,14 +9,14 @@ export class Ws implements ServerInterface {
   constructor(public options: ServerOptionsType) {}
 
   async start(handler: SocketHandlerType): Promise<void> {
-    this.server = await Deno.serve(this.options, (request: Request): Promise<Response> => {
+    this.server = await Deno.serve(this.options, (request: any): Promise<Response> => {
       if (request.headers.get("upgrade") != "websocket") {
         return Promise.resolve(new Response(null, { status: 426 }))
       }
 
       const { socket, response } = Deno.upgradeWebSocket(request);
 
-      handler(socket)
+      handler(request, socket)
 
       return Promise.resolve(response);
     });

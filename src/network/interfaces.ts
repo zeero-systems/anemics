@@ -9,17 +9,19 @@ export interface ServerInterface {
   stop(): Promise<void>
 }
 
-export interface RequestInterface extends Request {}
+export interface RequesterInterface extends Request {
+  parsed: BodyInit | undefined | null
+}
 
-export interface ResponseInterface {
-  raw: any
+export interface ResponserInterface {
   body: BodyInit | undefined | null
+  parsed: BodyInit | undefined | null
   headers: Headers | undefined
   status: HttpStatusEnum | undefined
   statusText: string | undefined
   metadata: Record<string | symbol, any>
-  setRaw(raw: any): void
-  setBody(body: BodyInit | undefined | null): void
+  setBody(value: BodyInit | undefined | null): void
+  setParsed(value: BodyInit | undefined | null): void
   setHeaders(headers: Headers): void
   setHeader(name: string, value: string): void
   setStatus(status: HttpStatusEnum): void

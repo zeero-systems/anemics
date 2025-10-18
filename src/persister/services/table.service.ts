@@ -6,7 +6,7 @@ import type { NewableType } from '@zeero/commons';
 import { DecoratorMetadata, isClass } from '@zeero/commons';
 
 import SchemaAnnotation from '~/persister/annotations/schema.annotation.ts';
-import isRelation from '../../persister/guards/is-foreign-key.guard.ts';
+import isRelation from '~/persister/guards/is-foreign-key.guard.ts';
 
 class Table<T extends NewableType<T>> implements RepositoryTableInterface<T> {
   constructor(public repository: RepositoryInterface<T>) { }

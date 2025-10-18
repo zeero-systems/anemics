@@ -1,12 +1,12 @@
 import { describe, it } from '@std/bdd';
 import { expect } from '@std/expect';
 
-import type { RequestInterface } from '~/network/interfaces.ts';
+import type { RequesterInterface } from '~/network/interfaces.ts';
 import Http from '~/network/services/http.service.ts';
 
 describe('server', () => {
 
-  const debugHandler = (_request: RequestInterface) => {
+  const debugHandler = (_requester: RequesterInterface) => {
     return Promise.resolve(new Response('42'))
   }
 
