@@ -1,4 +1,4 @@
-import type { ContainerInterface, KeyableType } from '@zeero/commons';
+import type { ContainerInterface, DecoratorType, KeyableType } from '@zeero/commons';
 import type { ServerOptionsType } from '~/network/types.ts';
 import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
 
@@ -14,6 +14,7 @@ export type MethodType = {
   method: MethodEnum
   key: string
   path: string
+  decorators: Array<DecoratorType>
 }
 
 export type RouteType = {

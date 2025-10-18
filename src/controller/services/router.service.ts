@@ -1,4 +1,4 @@
-import { ArtifactType, DecoratorMetadata, Text } from '@zeero/commons';
+import { ArtifactType, Decorator, DecoratorMetadata, Text } from '@zeero/commons';
 
 import type { RouterInterface } from '~/controller/interfaces.ts';
 import type { RouteType, ControllerType, MethodType } from '~/controller/types.ts';
@@ -41,8 +41,9 @@ export class Router implements RouterInterface {
           if (isMethod(decorator.annotation.target)) {
             const action = {
               key: String(decorator.decoration.property),
-              method: method,
               path: decorator.annotation.target.path || '',
+              method: method,
+              decorators: DecoratorMetadata.filterByTargetPropertyKeys(artifact.target, [String(decorator.decoration.property)])
             } as MethodType
             
             const pathname = `${controller.path}${action.path}`
