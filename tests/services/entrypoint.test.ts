@@ -50,7 +50,9 @@ describe('entrypoint', () => {
 
   const ResponseParser = Decorator.create(JsonResponseAnnotation);
 
-  class Test extends Entity {}
+  class Test extends Entity {
+    name!: string
+  }
 
   @Controller('/test')
   class ControllerTest {
