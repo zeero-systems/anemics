@@ -2,8 +2,8 @@ import type { PackInterface } from '@zeero/commons';
 import type { ServerOptionsType } from '~/network/types.ts';
 import type { AnemicInterface, ApplicationInterface } from '~/entrypoint/interfaces.ts';
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
-import type { RequesterInterface } from '~/network/interfaces.ts';
-import type { ContextType, NextFunctionType } from '~/controller/types.ts';
+import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
+import type { ContextType, MiddlerType, NextFunctionType } from '~/controller/types.ts';
 
 import { Dispatcher } from '@zeero/commons';
 
@@ -11,7 +11,7 @@ import Responser from '~/network/services/responser.service.ts';
 import Requester from '~/network/services/requester.service.ts';
 import MethodEnum from '~/network/enums/method.enum.ts';
 import EventEnum from '~/controller/enums/event.enum.ts';
-import { ResponserInterface } from '@zeero-systems/anemics';
+
 
 export class Anemic implements AnemicInterface {
   private dispatcher = new Dispatcher<{
@@ -21,16 +21,18 @@ export class Anemic implements AnemicInterface {
   }>();
 
   constructor(public application: ApplicationInterface) {
-    for (const server of this.application.servers) {  
+    for (const server of this.application.servers) {
       // @TODO optmize middlewares caching this.execute for each route before find
       if (server.accepts.includes(MethodEnum.SOCKET)) {
-        this.dispatcher.subscribe('start', () => server.start((request, socket) => {
-          return this.socketHandler(new Requester(request), socket, new Responser(), server.options)
-        }))
+        this.dispatcher.subscribe('start', () =>
+          server.start((request, socket) => {
+            return this.socketHandler(new Requester(request), socket, new Responser(), server.options);
+          }));
       } else {
-        this.dispatcher.subscribe('start', () => server.start((request) => {
-          return this.httpHandler(new Requester(request), new Responser(), server.options)
-        }))
+        this.dispatcher.subscribe('start', () =>
+          server.start((request) => {
+            return this.httpHandler(new Requester(request), new Responser(), server.options);
+          }));
       }
       this.dispatcher.subscribe('stop', () => server.stop());
     }
@@ -44,7 +46,11 @@ export class Anemic implements AnemicInterface {
     }
   }
 
-  private async httpHandler(requester: RequesterInterface, responser: ResponserInterface, server: ServerOptionsType): Promise<Response> {
+  private async httpHandler(
+    requester: RequesterInterface,
+    responser: ResponserInterface,
+    server: ServerOptionsType,
+  ): Promise<Response> {
     const route = this.application.router.find(requester.url, requester.method.toLowerCase() as any);
 
     if (!route) return new Response(null, { status: 404 });
@@ -60,10 +66,19 @@ export class Anemic implements AnemicInterface {
       { name: 'Url', target: url },
     ], 'provider');
 
-    const handler = { attempts: 1, event: EventEnum.BEFORE, error: undefined }
-    const context: ContextType = { requester, responser, container, route, server, url, handler };
+    const handler = { attempts: 1, error: undefined };
+    const context: ContextType = {
+      event: EventEnum.BEFORE,
+      requester,
+      responser,
+      container,
+      route,
+      server,
+      url,
+      handler,
+    };
 
-    await this.execute(key, context)
+    await this.execute(key, context);
 
     return new Response(responser.parsed || responser.body, {
       status: responser.status,
@@ -73,57 +88,59 @@ export class Anemic implements AnemicInterface {
   }
 
   private async execute(key: string, context: ContextType): Promise<void> {
-    const attempts = context.handler.attempts
+    const attempts = context.handler.attempts;
 
     try {
       let next: NextFunctionType = async () => {};
 
       if (this.application.middler.middlewares[key][EventEnum.AFTER]) {
-        context.handler.event = EventEnum.AFTER
-        next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.AFTER], next);
+        next = this.nextMiddleware(EventEnum.AFTER, context, this.application.middler.middlewares[key], next);
       }
 
       if (this.application.middler.middlewares[key][EventEnum.MIDDLE]) {
-        context.handler.event = EventEnum.MIDDLE
-        next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.MIDDLE], next);
+        next = this.nextMiddleware(EventEnum.MIDDLE, context, this.application.middler.middlewares[key], next);
       }
 
       if (this.application.middler.middlewares[key][EventEnum.BEFORE]) {
-        context.handler.event = EventEnum.BEFORE
-        next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.BEFORE], next);
+        next = this.nextMiddleware(EventEnum.BEFORE, context, this.application.middler.middlewares[key], next);
       }
 
       await next();
     } catch (error: any) {
       let next: NextFunctionType = async () => {};
 
-      context.handler.error = error
+      context.handler.error = error;
 
       if (this.application.middler.middlewares[key][EventEnum.EXCEPTION]) {
-        context.handler.event = EventEnum.EXCEPTION
-        next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.EXCEPTION], next);
+        next = this.nextMiddleware(EventEnum.EXCEPTION, context, this.application.middler.middlewares[key], next);
       }
 
       await next();
     }
 
     if (context.handler.attempts !== attempts) {
-      return this.execute(key, context)
+      return this.execute(key, context);
     }
   }
 
-  private async socketHandler(request: RequesterInterface, socket: WebSocket, response: ResponserInterface, server: ServerOptionsType): Promise<Response> {
+  private async socketHandler(
+    request: RequesterInterface,
+    socket: WebSocket,
+    response: ResponserInterface,
+    server: ServerOptionsType,
+  ): Promise<Response> {
     throw new Error('Not implemented');
   }
 
   private nextMiddleware(
+    event: EventEnum,
     context: ContextType,
-    middlewares: MiddlewareInterface[],
+    middlewares: MiddlerType,
     lastNext: NextFunctionType,
   ): NextFunctionType {
-    return middlewares.reduce((a: NextFunctionType, b: MiddlewareInterface) => {
+    return middlewares[event].reduce((a: NextFunctionType, b: MiddlewareInterface) => {
       return (async (): Promise<void> => {
-        return await b.onUse(context, a);
+        return await b.onUse({ ...context, event }, a);
       }) as NextFunctionType;
     }, lastNext);
   }

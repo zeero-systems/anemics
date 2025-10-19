@@ -1,10 +1,11 @@
 import type { ContainerInterface, DecoratorType, EntityInterface, KeyableType, NewableType } from '@zeero/commons';
 import type { ServerOptionsType } from '~/network/types.ts';
 import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
+import type { FilterType } from '~/persister/types.ts';
+import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 
 import MethodEnum from '~/network/enums/method.enum.ts';
 import EventEnum from '~/controller/enums/event.enum.ts';
-import { FilterType } from '../persister/types.ts';
 
 export type ControllerType = {
   key: KeyableType
@@ -23,6 +24,8 @@ export type MethodType = ActionType & {
   path: string
   method: MethodEnum
 }
+
+export type MiddlerType = { [key in EventType]: Array<MiddlewareInterface> }
 
 export type DuplexType = ActionType & { 
   key: string; 
@@ -48,8 +51,8 @@ export type ContextType = {
   requester?: RequesterInterface | undefined
   responser?: ResponserInterface | undefined
   socket?: WebSocket | undefined
+  event: `${EventEnum}`
   handler: {
-    event: `${EventEnum}`
     attempts: number;
     error: any | undefined;
   }; 

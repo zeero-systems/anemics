@@ -1,5 +1,5 @@
 import type { FilterType } from '~/persister/types.ts';
-import type { RouteType, ContextType, NextFunctionType, EventType } from '~/controller/types.ts';
+import type { RouteType, ContextType, NextFunctionType, EventType, MiddlerType } from '~/controller/types.ts';
 
 import MethodEnum from '~/network/enums/method.enum.ts';
 import EventEnum from '~/controller/enums/event.enum.ts';
@@ -20,7 +20,7 @@ export interface MiddlewareInterface {
 }
 
 export interface MiddlerInterface {
-  middlewares: { [key: string]: { [key in EventType]: Array<MiddlewareInterface> } }
+  middlewares: { [key: string]: MiddlerType }
   
   filter(event: EventEnum, key: string): Array<MiddlewareInterface>
 }
