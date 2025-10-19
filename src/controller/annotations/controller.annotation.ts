@@ -6,7 +6,7 @@ import { AnnotationException, DecoratorKindEnum } from '@zeero/commons';
 
 export class ControllerAnnotation implements AnnotationInterface, HttpAnnotationInterface, MiddlewareInterface {
   name: string = 'Controller';
-  event: EventType = 'middle'
+  events: Array<EventType> = ['middle']
   static readonly metadata: unique symbol = Symbol('Controller.metadata');
 
   constructor(public path: string = '') {}

@@ -18,7 +18,7 @@ import Post from '~/controller/decorations/post.decoration.ts';
 describe('entrypoint', () => {
   class JsonRequestMiddleware implements MiddlewareInterface {
     name: string = 'Response';
-    event: EventType = 'after';
+    events: Array<EventType> = ['after'];
     async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
       if (context.requester) {
         const hasContentType = context.requester.headers?.get('Content-Type');
@@ -36,7 +36,7 @@ describe('entrypoint', () => {
 
   class JsonResponseAnnotation implements MiddlewareInterface, AnnotationInterface {
     name: string = 'Response';
-    event: EventType = 'after';
+    events: Array<EventType> = ['after'];
     async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
       if (context.responser && typeof context.responser.body !== 'string') {
         context.responser.parsed = JSON.stringify(context.responser.body);

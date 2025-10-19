@@ -56,10 +56,12 @@ export class Application implements ApplicationInterface {
     if (options.middlewares) {
       for (const route of Object.values(this.middler.middlewares)) {
         for (const middleware of options.middlewares) {
-          const alreadyExists = route[middleware.event].find((m: MiddlewareInterface) => m.name === middleware.name)
-
-          if (!alreadyExists) {
-            route[middleware.event].unshift(middleware)
+          for (const event of middleware.events) {
+            const alreadyExists = route[event].find((m: MiddlewareInterface) => m.name === middleware.name)
+            
+            if (!alreadyExists) {
+              route[event].unshift(middleware)
+            }
           }
         }
       }

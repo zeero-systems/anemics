@@ -42,14 +42,19 @@ export class Middler implements MiddlerInterface {
             }, {} as any);
 
             for (const middleware of constructorMiddlewares) {
-              this.middlewares[key][middleware.event || 'before'].push(middleware);
+              for (const event of middleware.events) {
+                this.middlewares[key][event].push(middleware);
+              }
             }
           }
 
           for (const decorator of decorators) {
             if (isMiddleware(decorator.annotation.target)) {
               const middleware = decorator.annotation.target;
-              this.middlewares[key][middleware.event || 'before'].push(middleware);
+
+              for (const event of middleware.events) {
+                this.middlewares[key][event].push(middleware);
+              }
             }
           }
         }

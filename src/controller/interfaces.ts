@@ -15,7 +15,7 @@ export interface RouterInterface {
 
 export interface MiddlewareInterface {
   name: string
-  event: EventType
+  events: Array<EventType>
   onUse(context: ContextType, next: NextFunctionType): Promise<void>
 }
 
