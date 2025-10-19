@@ -1,7 +1,9 @@
+import type { FilterType } from '~/persister/types.ts';
 import type { RouteType, ContextType, NextFunctionType, EventType } from '~/controller/types.ts';
 
 import MethodEnum from '~/network/enums/method.enum.ts';
 import EventEnum from '~/controller/enums/event.enum.ts';
+import { EntityInterface, NewableType } from '@zeero/commons';
 
 export interface ControllerInterface {}
 
@@ -25,10 +27,14 @@ export interface MiddlerInterface {
 
 export interface HttpAnnotationInterface {
   path?: string
+  filter?: FilterType
+  entity?: NewableType<new (...args: any[]) => EntityInterface>
 } 
 
 export interface SocketAnnotationInterface {
   namespace?: string
+  filter?: FilterType
+  entity?: NewableType<new (...args: any[]) => EntityInterface>
 }
 
 

@@ -5,14 +5,15 @@ import type { AnnotationInterface, ArtifactType, DecoratorType, PackInterface } 
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 import type { ContextType, EventType, NextFunctionType } from '~/controller/types.ts';
 import type { ApplicationInterface } from '~/entrypoint/interfaces.ts';
-import type { ResponserInterface } from '~/network/interfaces.ts';
+import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
 import type { ServerOptionsType } from '~/network/types.ts';
 
-import { Decorator, Pack } from '@zeero/commons';
+import { Decorator, Entity, Pack } from '@zeero/commons';
 import Application from '~/entrypoint/services/application.service.ts';
 import Anemic from '~/entrypoint/services/anemic.service.ts';
 import Controller from '~/controller/decorations/controller.decoration.ts';
 import Get from '~/controller/decorations/get.decoration.ts';
+import Post from '~/controller/decorations/post.decoration.ts';
 
 describe('entrypoint', () => {
   class JsonRequestMiddleware implements MiddlewareInterface {
@@ -49,6 +50,8 @@ describe('entrypoint', () => {
 
   const ResponseParser = Decorator.create(JsonResponseAnnotation);
 
+  class Test extends Entity {}
+
   @Controller('/test')
   class ControllerTest {
     @Get()
@@ -57,6 +60,11 @@ describe('entrypoint', () => {
       responser.setBody('reached getTest');
 
       return 'reached getTestMiddleware';
+    }
+
+    @Post('', Test)
+    postTest(requester: RequesterInterface<Test>) {
+      return 'ops'
     }
   }
 

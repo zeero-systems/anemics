@@ -1,12 +1,12 @@
 import { ArtifactType, ConsumerAnnotation, Decorator, DecoratorMetadata, Factory, Text } from '@zeero/commons';
 
 import type { RouterInterface } from '~/controller/interfaces.ts';
-import type { RouteType, ControllerType, MethodType, MethodProviderType } from '~/controller/types.ts';
+import type { RouteType, ControllerType, MethodType, MethodProviderType, DuplexType } from '~/controller/types.ts';
 
 import MethodEnum from '~/network/enums/method.enum.ts';
 import ControllerAnnotation from '~/controller/annotations/controller.annotation.ts';
 
-import isMethod from '~/controller/guards/is-http.guard.ts';
+import isHttp from '~/controller/guards/is-http.guard.ts';
 import isSocket from '~/controller/guards/is-socket.guard.ts';
 
 export class Router implements RouterInterface {
@@ -38,53 +38,48 @@ export class Router implements RouterInterface {
           const propertyName = String(decorator.decoration.property)
           const method = String(decorator.annotation.target.name).toLowerCase()
           const key = `${String(targetName)}:${propertyName}`
+          const decorators = DecoratorMetadata.filterByTargetPropertyKeys(artifact.target, [propertyName])
           
-          if (isMethod(decorator.annotation.target)) {
-
-            const providers: Array<MethodProviderType> = []
-            const decorators = DecoratorMetadata.filterByTargetPropertyKeys(artifact.target, [propertyName])
-            const consumers = DecoratorMetadata.filterByAnnotationInteroperableName(artifact.target, 'Consumer', propertyName)
-            const parameterNames = Factory.getParameterNames(artifact.target, propertyName)
-
-            for (const parameterName of parameterNames) {
-              let provider = parameterName
-
-              for (const decorator of consumers) {
-                const annotation = decorator.annotation.target as ConsumerAnnotation
-                if (annotation.provider && annotation.propertyKey == parameterName) {
-                  if (annotation.provider) {
-                    provider = annotation.provider
-                  }
-                }
-              }
-
-              providers.push({ parameter: parameterName, provider })
-            }
-
+          if (isHttp(decorator.annotation.target)) {
             const action = {
               key: String(decorator.decoration.property),
               path: decorator.annotation.target.path || '',
               method: method,
-              providers: providers,
-              decorators: decorators
+              entity: decorator.annotation.target.entity,
+              filter: decorator.annotation.target.filter,
             } as MethodType
             
             const pathname = `${controller.path}${action.path}`
 
             const pattern = new URLPattern({ pathname });
 
-            this.routes[action.method].push({ key, action, controller, pattern, pathname });
+            this.routes[action.method].push({ 
+              key, 
+              action, 
+              controller, 
+              pattern, 
+              pathname,
+              decorators
+            });
           }
 
           if (isSocket(decorator.annotation.target)) {
             const action = {
               key: String(decorator.decoration.property),
               namespace: decorator.annotation.target.namespace || '',
-            } as any
+              entity: decorator.annotation.target.entity,
+              filter: decorator.annotation.target.filter,
+            } as DuplexType
 
             const pathname = `${controller.path}${action.namespace}`
 
-            this.routes[MethodEnum.SOCKET].push({ key, action, controller, pathname });
+            this.routes[MethodEnum.SOCKET].push({ 
+              key, 
+              action, 
+              controller, 
+              pathname,
+              decorators
+            });
           }
         }
       }

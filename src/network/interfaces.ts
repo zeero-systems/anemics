@@ -9,8 +9,8 @@ export interface ServerInterface {
   stop(): Promise<void>
 }
 
-export interface RequesterInterface extends Request {
-  parsed: BodyInit | undefined | null
+export interface RequesterInterface<T = BodyInit> extends Request {
+  parsed: T | undefined | null
 }
 
 export interface ResponserInterface {

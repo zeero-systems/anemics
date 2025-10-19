@@ -1,9 +1,10 @@
-import type { ContainerInterface, DecoratorType, KeyableType } from '@zeero/commons';
+import type { ContainerInterface, DecoratorType, EntityInterface, KeyableType, NewableType } from '@zeero/commons';
 import type { ServerOptionsType } from '~/network/types.ts';
 import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
 
 import MethodEnum from '~/network/enums/method.enum.ts';
 import EventEnum from '~/controller/enums/event.enum.ts';
+import { FilterType } from '../persister/types.ts';
 
 export type ControllerType = {
   key: KeyableType
@@ -12,20 +13,29 @@ export type ControllerType = {
 
 export type MethodProviderType = { parameter: string, provider: string  }
 
-export type MethodType = {
-  method: MethodEnum
+export type ActionType = {
+  entity?: NewableType<new (...args: any[]) => EntityInterface>,
+  filter?: FilterType,
+}
+
+export type MethodType = ActionType & {
   key: string
   path: string
-  providers: Array<MethodProviderType>
-  decorators: Array<DecoratorType>
+  method: MethodEnum
+}
+
+export type DuplexType = ActionType & { 
+  key: string; 
+  namespace: string 
 }
 
 export type RouteType = {
   key: string
-  action: MethodType | { key: string; namespace: string }
+  action: MethodType | DuplexType
   controller: ControllerType
   pattern?: URLPattern
   pathname?: string
+  decorators: Array<DecoratorType>
 }
 
 export type EventType = `${EventEnum}`
