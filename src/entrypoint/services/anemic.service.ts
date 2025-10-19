@@ -60,7 +60,7 @@ export class Anemic implements AnemicInterface {
       { name: 'Url', target: url },
     ], 'provider');
 
-    const handler = { attempts: 1, error: undefined }
+    const handler = { attempts: 1, event: EventEnum.BEFORE, error: undefined }
     const context: ContextType = { requester, responser, container, route, server, url, handler };
 
     await this.execute(key, context)
@@ -79,14 +79,17 @@ export class Anemic implements AnemicInterface {
       let next: NextFunctionType = async () => {};
 
       if (this.application.middler.middlewares[key][EventEnum.AFTER]) {
+        context.handler.event = EventEnum.AFTER
         next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.AFTER], next);
       }
 
       if (this.application.middler.middlewares[key][EventEnum.MIDDLE]) {
+        context.handler.event = EventEnum.MIDDLE
         next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.MIDDLE], next);
       }
 
       if (this.application.middler.middlewares[key][EventEnum.BEFORE]) {
+        context.handler.event = EventEnum.BEFORE
         next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.BEFORE], next);
       }
 
@@ -97,6 +100,7 @@ export class Anemic implements AnemicInterface {
       context.handler.error = error
 
       if (this.application.middler.middlewares[key][EventEnum.EXCEPTION]) {
+        context.handler.event = EventEnum.EXCEPTION
         next = this.nextMiddleware(context, this.application.middler.middlewares[key][EventEnum.EXCEPTION], next);
       }
 

@@ -49,6 +49,7 @@ export type ContextType = {
   responser?: ResponserInterface | undefined
   socket?: WebSocket | undefined
   handler: {
+    event: `${EventEnum}`
     attempts: number;
     error: any | undefined;
   }; 

@@ -1,6 +1,6 @@
 {
   "name": "@zeero-systems/anemics",
-  "version": "0.17.4",
+  "version": "0.17.5",
   "license": "GPL-3.0",
   "exports": {
     ".": "./index.ts",
