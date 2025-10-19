@@ -1,4 +1,4 @@
-import type { NewableType, PackerInterface, PackInterface } from '@zeero/commons';
+import type { KeyableType, NewableType, PackerInterface, PackInterface } from '@zeero/commons';
 import type { ServerOptionsType } from '~/network/types.ts';
 import type { ServerInterface } from '~/network/interfaces.ts';
 import type { ApplicationInterface } from '~/entrypoint/interfaces.ts';
@@ -20,7 +20,7 @@ export class Application implements ApplicationInterface {
   constructor(pack: NewableType<new (...args: any[]) => PackInterface>, options: {
     http?: Array<ServerOptionsType> | ServerOptionsType, 
     socket?: Array<ServerOptionsType> | ServerOptionsType,
-    middlewares?: Array<MiddlewareInterface>
+    middlewares?: Array<KeyableType>
   } = { http: { port: 3000 } }) {
     this.packer = new Packer(pack as any)
     this.router = new Router(this.packer.artifacts())
@@ -55,12 +55,15 @@ export class Application implements ApplicationInterface {
 
     if (options.middlewares) {
       for (const route of Object.values(this.middler.middlewares)) {
-        for (const middleware of options.middlewares) {
-          for (const event of middleware.events) {
-            const alreadyExists = route[event].find((m: MiddlewareInterface) => m.name === middleware.name)
-            
-            if (!alreadyExists) {
-              route[event].unshift(middleware)
+        for (const key of options.middlewares) {
+          const middleware = this.packer.container.construct<MiddlewareInterface>(key)
+          if (middleware) {
+            for (const event of middleware.events) {
+              const alreadyExists = route[event].find((m: MiddlewareInterface) => m.name === key)
+              
+              if (!alreadyExists) {
+                route[event].unshift(middleware)
+              }
             }
           }
         }

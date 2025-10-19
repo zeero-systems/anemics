@@ -8,7 +8,7 @@ import type { ApplicationInterface } from '~/entrypoint/interfaces.ts';
 import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
 import type { ServerOptionsType } from '~/network/types.ts';
 
-import { Decorator, Entity, Pack } from '@zeero/commons';
+import { Decorator, Entity, Factory, Pack } from '@zeero/commons';
 import Application from '~/entrypoint/services/application.service.ts';
 import Anemic from '~/entrypoint/services/anemic.service.ts';
 import Controller from '~/controller/decorations/controller.decoration.ts';
@@ -16,25 +16,31 @@ import Get from '~/controller/decorations/get.decoration.ts';
 import Post from '~/controller/decorations/post.decoration.ts';
 
 describe('entrypoint', () => {
-  class JsonRequestMiddleware implements MiddlewareInterface {
-    name: string = 'Response';
-    events: Array<EventType> = ['after'];
+  class Request implements MiddlewareInterface {
+    name: string = 'Request';
+    events: Array<EventType> = ['before'];
     async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
       if (context.requester) {
+        const hasContent = context.requester.headers?.get('Content-Length');
         const hasContentType = context.requester.headers?.get('Content-Type');
 
         if (!hasContentType || hasContentType == 'application/json') {
-          if (context.requester.body && !context.requester.bodyUsed) {
+          if (hasContent && Number(hasContent) > 0 && !context.requester.bodyUsed) {
             context.requester.parsed = await context.requester.json();
           }
         }
 
-        await next();
+        if (context.route.action.entity) {
+          const properties = context.requester.parsed ?? {};
+          context.requester.parsed = Factory.construct(context.route.action.entity, { properties }) as any;
+        }
       }
+      
+      await next();
     }
   }
 
-  class JsonResponseAnnotation implements MiddlewareInterface, AnnotationInterface {
+  class Response implements MiddlewareInterface {
     name: string = 'Response';
     events: Array<EventType> = ['after'];
     async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
@@ -44,14 +50,12 @@ describe('entrypoint', () => {
 
       await next();
     }
-    onAttach(artifact: ArtifactType, decorator: DecoratorType) {}
-    onInitialize(artifact: ArtifactType, decorator: DecoratorType) {}
   }
 
-  const ResponseParser = Decorator.create(JsonResponseAnnotation);
+  const ResponseParser = Decorator.create(Response);
 
   class Test extends Entity {
-    name!: string
+    name!: string;
   }
 
   @Controller('/test')
@@ -64,9 +68,9 @@ describe('entrypoint', () => {
       return 'reached getTestMiddleware';
     }
 
-    @Post('', Test)
+    @Post('/create', Test)
     postTest(requester: RequesterInterface<Test>) {
-      return 'ops'
+      return requester.parsed;
     }
   }
 
@@ -147,7 +151,7 @@ describe('entrypoint', () => {
   describe('server with global middlewares', () => {
     @Pack({
       providers: [],
-      consumers: [ControllerTest],
+      consumers: [Request, Response, ControllerTest],
     })
     class App implements PackInterface {}
 
@@ -155,7 +159,8 @@ describe('entrypoint', () => {
       new Application(App, {
         http: { port: 3002 },
         middlewares: [
-          new JsonRequestMiddleware(),
+          'Request',
+          'Response',
         ],
       }),
     );
@@ -166,6 +171,16 @@ describe('entrypoint', () => {
       const responseText = await response.text();
 
       expect(responseText).toEqual('reached getTestMiddleware');
+
+      const response2 = await fetch('http://0.0.0.0:3002/test/create', {
+        method: 'post',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'Eduardo' }),
+      });
+      const responseText2 = await response2.json();
+
+      expect(responseText2.name).toEqual('Eduardo');
+ 
       await anemic.stop();
     });
   });
