@@ -1,10 +1,9 @@
 import type { AnnotationInterface, ArtifactType, DecoratorType, EntityInterface, NewableType } from '@zeero/commons';
 import { AnnotationException, ConsumerAnnotation, Decorator, DecoratorKindEnum } from '@zeero/commons';
 import { HttpAnnotationInterface } from '~/controller/interfaces.ts';
-import ActionEnum from '~/network/enums/method.enum.ts';
 
 export class PatchAnnotation implements AnnotationInterface, HttpAnnotationInterface {
-  name: string = ActionEnum.PATCH
+  name: string = 'Patch'
 
   constructor(public path?: string, public entity?: NewableType<new (...args: any[]) => EntityInterface>) {}
 

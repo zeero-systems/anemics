@@ -1,10 +1,9 @@
 import type { AnnotationInterface, ArtifactType, DecoratorType } from '@zeero/commons';
 import { AnnotationException, ConsumerAnnotation, Decorator, DecoratorKindEnum } from '@zeero/commons';
 import { SocketAnnotationInterface } from '~/controller/interfaces.ts';
-import ActionEnum from '~/network/enums/method.enum.ts';
 
 export class SocketAnnotation implements AnnotationInterface, SocketAnnotationInterface {
-  name: string = ActionEnum.SOCKET
+  name: string = 'Socket'
 
   constructor(public namespace?: string) {}
 

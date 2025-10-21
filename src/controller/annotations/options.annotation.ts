@@ -1,10 +1,9 @@
 import type { AnnotationInterface, ArtifactType, DecoratorType } from '@zeero/commons';
 import { AnnotationException, ConsumerAnnotation, Decorator, DecoratorKindEnum } from '@zeero/commons';
 import { HttpAnnotationInterface } from '~/controller/interfaces.ts';
-import ActionEnum from '~/network/enums/method.enum.ts';
 
 export class OptionsAnnotation implements AnnotationInterface, HttpAnnotationInterface {
-  name: string = ActionEnum.OPTIONS
+  name: string = 'Options'
 
   constructor(public path?: string) {}
 

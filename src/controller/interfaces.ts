@@ -1,9 +1,8 @@
 import type { FilterType } from '~/persister/types.ts';
-import type { RouteType, ContextType, NextFunctionType, EventType, MiddlerType } from '~/controller/types.ts';
+import type { RouteType, EventType, MiddlerType, ContextType, NextFunctionType } from '~/controller/types.ts';
 
 import MethodEnum from '~/network/enums/method.enum.ts';
-import EventEnum from '~/controller/enums/event.enum.ts';
-import { EntityInterface, NewableType } from '@zeero/commons';
+import { ArtifactType, EntityInterface, NewableType } from '@zeero/commons';
 
 export interface ControllerInterface {}
 
@@ -14,15 +13,14 @@ export interface RouterInterface {
 }
 
 export interface MiddlewareInterface {
-  name: string
   events: Array<EventType>
   onUse(context: ContextType, next: NextFunctionType): Promise<void>
 }
 
 export interface MiddlerInterface {
   middlewares: { [key: string]: MiddlerType }
-  
-  filter(event: EventEnum, key: string): Array<MiddlewareInterface>
+
+  add(artifacts: Array<ArtifactType>): void
 }
 
 export interface HttpAnnotationInterface {

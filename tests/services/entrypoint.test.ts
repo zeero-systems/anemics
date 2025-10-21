@@ -1,10 +1,9 @@
 import { describe, it } from '@std/bdd';
 import { expect } from '@std/expect';
 
-import type { AnnotationInterface, ArtifactType, DecoratorType, PackInterface } from '@zeero/commons';
+import type { AnnotationInterface, ArtifactType, ContainerInterface, DecoratorType, PackInterface } from '@zeero/commons';
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 import type { ContextType, EventType, NextFunctionType } from '~/controller/types.ts';
-import type { ApplicationInterface } from '~/entrypoint/interfaces.ts';
 import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
 import type { ServerOptionsType } from '~/network/types.ts';
 
@@ -14,58 +13,70 @@ import Anemic from '~/entrypoint/services/anemic.service.ts';
 import Controller from '~/controller/decorations/controller.decoration.ts';
 import Get from '~/controller/decorations/get.decoration.ts';
 import Post from '~/controller/decorations/post.decoration.ts';
+import GatewayMiddleware from '~/controller/middlewares/gateway.middleware.ts';
 
 describe('entrypoint', () => {
-  class Request implements MiddlewareInterface {
-    name: string = 'Request';
-    events: Array<EventType> = ['before'];
-    async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
-      if (context.requester) {
-        const hasContent = context.requester.headers?.get('Content-Length');
-        const hasContentType = context.requester.headers?.get('Content-Type');
 
-        if (!hasContentType || hasContentType == 'application/json') {
-          if (hasContent && Number(hasContent) > 0 && !context.requester.bodyUsed) {
-            context.requester.parsed = await context.requester.json();
-          }
+  class RequestMiddleware implements MiddlewareInterface, AnnotationInterface {
+    name: string = 'Middleware';
+    events: Array<EventType> = ['before']
+
+    async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
+      const hasContent = context.requester.headers?.get('Content-Length');
+      const hasContentType = context.requester.headers?.get('Content-Type');
+
+      if (!hasContentType || hasContentType == 'application/json') {
+        if (hasContent && Number(hasContent) > 0 && !context.requester.bodyUsed) {
+          context.requester.parsed = await context.requester.json();
         }
 
-        if (context.route.action.entity) {
-          const properties = context.requester.parsed ?? {};
-          context.requester.parsed = Factory.construct(context.route.action.entity, { properties }) as any;
+      }
+
+      if (context.route.action.entity) {
+        const properties = context.requester.parsed ?? {};
+        context.requester.parsed = Factory.construct(context.route.action.entity, { properties }) as any;
+      }
+
+      return next();
+    }
+
+    onAttach(artifact: ArtifactType, decorator: DecoratorType): any { }
+    onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  }
+
+  class ResponseMiddleware implements MiddlewareInterface, AnnotationInterface {
+    readonly name: string = 'Middleware'
+    events: Array<EventType> = ['after']
+
+    onUse(context: ContextType, next: NextFunctionType): Promise<void> {
+      if (context.responser && context.responser.body) {
+        if (typeof context.responser.body !== 'string') {
+          context.responser.parsed = JSON.stringify(context.responser.body);
         }
       }
-      
-      await next();
+
+      return next();
     }
+
+    onAttach(artifact: ArtifactType, decorator: DecoratorType): any { }
+    onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
   }
 
-  class Response implements MiddlewareInterface {
-    name: string = 'Response';
-    events: Array<EventType> = ['after'];
-    async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
-      if (context.responser && typeof context.responser.body !== 'string') {
-        context.responser.parsed = JSON.stringify(context.responser.body);
-      }
-
-      await next();
-    }
-  }
-
-  const ResponseParser = Decorator.create(Response);
+  const ResponseParser = Decorator.create(ResponseMiddleware);
 
   class Test extends Entity {
     name!: string;
   }
 
+  @ResponseParser()
   @Controller('/test')
   class ControllerTest {
     @Get()
     getTest(responser: ResponserInterface) {
       responser.setHeader('Content-Type', 'application/json');
-      responser.setBody('reached getTest');
+      responser.setBody('reached ???');
 
-      return 'reached getTestMiddleware';
+      return 'reached getTest';
     }
 
     @Post('/create', Test)
@@ -74,10 +85,10 @@ describe('entrypoint', () => {
     }
   }
 
-  @ResponseParser()
   @Controller()
   class ControllerMiddlewareTest {
     @Get('/test')
+    @ResponseParser()
     getTest(responser: ResponserInterface) {
       responser.setHeader('Content-Type', 'application/json');
       return 'reached getTestMiddleware';
@@ -96,17 +107,31 @@ describe('entrypoint', () => {
   describe('simple server', () => {
     let bootText = '';
 
+    @Pack()
+    class Sub implements PackInterface {
+      constructor(container: ContainerInterface) {
+        container.add([{ name: 'TRACE', target: { transport: 'CONSOLE' } }], 'provider')
+      }
+
+      onBoot(): void {}
+    }
+
     @Pack({
       providers: [],
-      consumers: [ControllerTest, HealthController],
+      consumers: [HealthController],
+      packs: [Sub]
     })
     class App implements PackInterface {
-      onBoot(application: ApplicationInterface): void {
+      constructor(container: ContainerInterface) {
+        container.add([{ name: 'TRACE', target: { transport: 'TRAILS' } }], 'provider')
+      }
+
+      onBoot(): void {
         bootText = 'onBoot reached';
       }
     }
 
-    const anemic = new Anemic(new Application(App, { http: { port: 3000 } }));
+    const anemic = new Anemic(new Application(App, { http: { port: 3000 }, middlewares: [GatewayMiddleware, ResponseMiddleware]  }));
 
     it('boot', async () => {
       await anemic.boot();
@@ -136,7 +161,7 @@ describe('entrypoint', () => {
     })
     class App implements PackInterface {}
 
-    const anemic = new Anemic(new Application(App, { http: { port: 3001 } }));
+    const anemic = new Anemic(new Application(App, { http: { port: 3001 }, middlewares: [GatewayMiddleware, ResponseMiddleware] }));
 
     it('fetch', async () => {
       await anemic.start();
@@ -151,7 +176,7 @@ describe('entrypoint', () => {
   describe('server with global middlewares', () => {
     @Pack({
       providers: [],
-      consumers: [Request, Response, ControllerTest],
+      consumers: [ControllerTest],
     })
     class App implements PackInterface {}
 
@@ -159,19 +184,21 @@ describe('entrypoint', () => {
       new Application(App, {
         http: { port: 3002 },
         middlewares: [
-          'Request',
-          'Response',
+          RequestMiddleware, 
+          GatewayMiddleware
         ],
       }),
     );
 
-    it('fetch', async () => {
+    it('fetch test', async () => {
       await anemic.start();
       const response = await fetch('http://0.0.0.0:3002/test', { method: 'get' });
       const responseText = await response.text();
 
-      expect(responseText).toEqual('reached getTestMiddleware');
+      expect(responseText).toEqual('reached getTest');
+    });
 
+    it('fetch test with entity', async () => {
       const response2 = await fetch('http://0.0.0.0:3002/test/create', {
         method: 'post',
         headers: { 'Content-Type': 'application/json' },

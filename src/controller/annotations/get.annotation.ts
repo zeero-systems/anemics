@@ -3,10 +3,9 @@ import type { AnnotationInterface, ArtifactType, DecoratorType } from '@zeero/co
 import type { HttpAnnotationInterface } from '~/controller/interfaces.ts';
 
 import { AnnotationException, ConsumerAnnotation, Decorator, DecoratorKindEnum } from '@zeero/commons';
-import ActionEnum from '~/network/enums/method.enum.ts';
 
 export class GetAnnotation implements AnnotationInterface, HttpAnnotationInterface {
-  name: string = ActionEnum.GET
+  name: string = 'Get'
 
   constructor(public path?: string, public filter?: FilterType) {}
 

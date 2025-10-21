@@ -1,14 +1,14 @@
-import type { KeyableType, NewableType, PackerInterface, PackInterface } from '@zeero/commons';
+import type { AnnotationType, DecorationType, NewableType, PackerInterface, PackInterface } from '@zeero/commons';
 import type { ServerOptionsType } from '~/network/types.ts';
 import type { ServerInterface } from '~/network/interfaces.ts';
 import type { ApplicationInterface } from '~/entrypoint/interfaces.ts';
 import type { MiddlerInterface, MiddlewareInterface, RouterInterface } from '~/controller/interfaces.ts';
 
-import { Packer } from '@zeero/commons';
+import { Decorator, DecoratorMetadata, Metadata, Packer } from '@zeero/commons';
 
+import Http from '~/network/services/http.service.ts';
 import Middler from '~/controller/services/middler.service.ts';
 import Router from '~/controller/services/router.service.ts';
-import Http from '~/network/services/http.service.ts';
 import Ws from '~/network/services/ws.service.ts';
 
 export class Application implements ApplicationInterface {
@@ -20,13 +20,10 @@ export class Application implements ApplicationInterface {
   constructor(pack: NewableType<new (...args: any[]) => PackInterface>, options: {
     http?: Array<ServerOptionsType> | ServerOptionsType, 
     socket?: Array<ServerOptionsType> | ServerOptionsType,
-    middlewares?: Array<KeyableType>
+    middlewares?: Array<NewableType<new (...args: any[]) => MiddlewareInterface>>
   } = { http: { port: 3000 } }) {
-    this.packer = new Packer(pack as any)
-    this.router = new Router(this.packer.artifacts())
-    this.middler = new Middler(this.packer.artifacts())
-    
-    if (options.http) {
+
+     if (options.http) {
       if (!Array.isArray(options.http)) options.http = [options.http]
 
       for (const option of options.http) {
@@ -53,22 +50,50 @@ export class Application implements ApplicationInterface {
       }
     }
 
-    if (options.middlewares) {
-      for (const route of Object.values(this.middler.middlewares)) {
-        for (const key of options.middlewares) {
-          const middleware = this.packer.container.construct<MiddlewareInterface>(key)
-          if (middleware) {
-            for (const event of middleware.events) {
-              const alreadyExists = route[event].find((m: MiddlewareInterface) => m.name === key)
-              
-              if (!alreadyExists) {
-                route[event].unshift(middleware)
+    this.packer = new Packer(pack)
+
+    if (options?.middlewares) {
+      this.packer.container.collection.forEach((value) => {      
+        const decorator = DecoratorMetadata.findByAnnotationInteroperableName(value.artifact.target, 'Controller')
+        if (decorator) {
+          for (const middleware of options.middlewares || []) {
+            
+            if (!Metadata.has(value.artifact.target)) {
+              Metadata.set(value.artifact.target)
+            }
+
+            const annotation: AnnotationType = {
+              name: middleware.name,
+              target: new middleware() as any
+            }
+
+            const decoration: DecorationType = {
+              kind: 'class',
+              property: 'construct',
+              context: {
+                name: 'construct',
+                metadata: Metadata.get(value.artifact.target) as any,
+                kind: 'class',
+                addInitializer: () => {}
               }
             }
+
+            
+            Decorator.attach(value.artifact.target, annotation, decoration)
           }
         }
-      }
+      })
     }
+
+    this.router = new Router(this.packer.artifacts())
+    this.middler = new Middler(this.packer.artifacts())
+          
+    this.packer.container.add([
+      { name: 'Servers', target: { http: options.http, socket: options.socket } },
+      { name: 'Packer', target: this.packer },
+      { name: 'Router', target: this.router },
+      { name: 'Middler', target: this.middler },
+    ], 'provider');
   }
 }
 

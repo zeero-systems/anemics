@@ -2,9 +2,10 @@ import type { ArtifactType, DecoratorType } from '@zeero/commons';
 import type { MiddlerInterface, MiddlewareInterface } from '~/controller/interfaces.ts';
 
 import { DecoratorMetadata } from '@zeero/commons';
+import EventEnum from '~/controller/enums/event.enum.ts';
 
 import isMiddleware from '~/controller/guards/is-middleware.guard.ts';
-import EventEnum from '~/controller/enums/event.enum.ts';
+import isController from '~/controller/guards/is-controller.guard.ts';
 
 export class Middler implements MiddlerInterface {
   static events: Array<EventEnum> = Object.values(EventEnum);
@@ -12,48 +13,49 @@ export class Middler implements MiddlerInterface {
   public middlewares: { [key: string]: { [key in EventEnum]: Array<MiddlewareInterface> } } = {};
 
   constructor(artifacts: Array<ArtifactType>) {
+    this.add(artifacts)
+  }
+
+  public add(artifacts: Array<ArtifactType>) {
     for (let index = 0; index < artifacts.length; index++) {
       const artifact = artifacts[index];
       const targetName = artifact.name;
-
+      
       const decoratorMap = DecoratorMetadata.get(artifact.target);
-      const constructorDecorators = decoratorMap.get('construct');
-
-      let constructorMiddlewareDecorators: Array<DecoratorType> = [];
-      if (constructorDecorators) {
-        constructorMiddlewareDecorators = constructorDecorators.filter((decorator: DecoratorType) =>
-          isMiddleware(decorator.annotation.target)
-        );
-      }
-
       const constructorKey = String(targetName);
-      const constructorMiddlewares = constructorMiddlewareDecorators.map((decorator: DecoratorType) => {
-        return decorator.annotation.target as unknown as MiddlewareInterface;
-      });
+      const constructorDecorators = decoratorMap.get('construct') || []
 
-      for (const [targetPropertyKey, decorators] of decoratorMap) {
-        if (targetPropertyKey != 'construct') {
-          const key = `${constructorKey}:${String(targetPropertyKey)}`;
-
-          if (constructorMiddlewares.length > 0) {
+      const controller: DecoratorType | undefined = constructorDecorators.find((decorator: DecoratorType) =>
+        isController(decorator.annotation.target)
+      )
+      const decorators = constructorDecorators.filter((decorator: DecoratorType) =>
+        isMiddleware(decorator.annotation.target)
+      ) as unknown as { annotation: { target: MiddlewareInterface } }[]
+      
+      if (controller) {
+        for (const [targetPropertyKey] of decoratorMap) {
+          if (targetPropertyKey != 'construct') {
+            const key = `${constructorKey}:${String(targetPropertyKey)}`;
+            
             this.middlewares[key] = Middler.events.reduce((prev, curr: any) => {
               prev[curr] = [];
               return prev;
             }, {} as any);
-
-            for (const middleware of constructorMiddlewares) {
-              for (const event of middleware.events) {
-                this.middlewares[key][event].push(middleware);
+  
+            for (const decorator of decorators) {
+              for (const event of decorator.annotation.target.events) {
+                this.middlewares[key][event].push(decorator.annotation.target);
               }
             }
-          }
 
-          for (const decorator of decorators) {
-            if (isMiddleware(decorator.annotation.target)) {
-              const middleware = decorator.annotation.target;
+            const methodDecorators = DecoratorMetadata.filterByTargetPropertyKeys(artifact.target, [targetPropertyKey])
+              .filter((decorator: DecoratorType) => {
+                return isMiddleware(decorator.annotation.target)
+              }) as unknown as { annotation: { target: MiddlewareInterface } }[]
 
-              for (const event of middleware.events) {
-                this.middlewares[key][event].push(middleware);
+            for (const decorator of methodDecorators) {
+              for (const event of decorator.annotation.target.events) {
+                this.middlewares[key][event].push(decorator.annotation.target);
               }
             }
           }
@@ -62,13 +64,15 @@ export class Middler implements MiddlerInterface {
     }
   }
 
-  filter(event: EventEnum, key: string): Array<MiddlewareInterface> {
-    if (this.middlewares[key] && this.middlewares[key][event]) {
-      return this.middlewares[key][event];
-    }
 
-    return [];
-  }
+
+  // public filter(event: EventEnum, key: string): Array<KeyableType> {
+  //   if (this.middlewares[key] && this.middlewares[key][event]) {
+  //     return this.middlewares[key][event];
+  //   }
+
+  //   return [];
+  // }
 }
 
 export default Middler;

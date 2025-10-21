@@ -3,7 +3,8 @@ import type { ServerOptionsType } from '~/network/types.ts';
 import type { AnemicInterface, ApplicationInterface } from '~/entrypoint/interfaces.ts';
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
-import type { ContextType, MiddlerType, NextFunctionType } from '~/controller/types.ts';
+import type { ContextType, MiddlerType, NextFunctionType, RouteType } from '~/controller/types.ts';
+import type { HandlerType } from '~/entrypoint/types.ts';
 
 import { Dispatcher } from '@zeero/commons';
 
@@ -12,17 +13,11 @@ import Requester from '~/network/services/requester.service.ts';
 import MethodEnum from '~/network/enums/method.enum.ts';
 import EventEnum from '~/controller/enums/event.enum.ts';
 
-
 export class Anemic implements AnemicInterface {
-  private dispatcher = new Dispatcher<{
-    boot: [ApplicationInterface];
-    start: [ApplicationInterface];
-    stop: [ApplicationInterface];
-  }>();
+  private dispatcher = new Dispatcher<{ boot: []; start: []; stop: [] }>();
 
   constructor(public application: ApplicationInterface) {
     for (const server of this.application.servers) {
-      // @TODO optmize middlewares caching this.execute for each route before find
       if (server.accepts.includes(MethodEnum.SOCKET)) {
         this.dispatcher.subscribe('start', () =>
           server.start((request, socket) => {
@@ -44,6 +39,30 @@ export class Anemic implements AnemicInterface {
       if (pack?.onStart) this.dispatcher.subscribe('start', pack?.onStart);
       if (pack?.onStop) this.dispatcher.subscribe('stop', pack?.onStop);
     }
+
+    for (const [_method, routes] of Object.entries(this.application.router.routes)) {
+      for (const route of routes) {
+        this.applyWire(`${String(route.controller.key)}:${route.action.key}`, route)
+      }
+    }
+  }
+
+  private applyWire(key: string, route: RouteType) {
+    if (this.application.middler.middlewares[key][EventEnum.AFTER]) {
+      route.wired.try = this.nextMiddleware(EventEnum.AFTER, this.application.middler.middlewares[key], async function next(_context?: ContextType) {});
+    }
+
+    if (this.application.middler.middlewares[key][EventEnum.MIDDLE]) {
+      route.wired.try = this.nextMiddleware(EventEnum.MIDDLE, this.application.middler.middlewares[key], route.wired.try);
+    }
+
+    if (this.application.middler.middlewares[key][EventEnum.BEFORE]) {
+      route.wired.try = this.nextMiddleware(EventEnum.BEFORE, this.application.middler.middlewares[key], route.wired.try);
+    }
+
+    if (this.application.middler.middlewares[key][EventEnum.EXCEPTION]) {
+      route.wired.catch = this.nextMiddleware(EventEnum.EXCEPTION, this.application.middler.middlewares[key], async function next(_context?: ContextType) {});
+    }
   }
 
   private async httpHandler(
@@ -52,33 +71,39 @@ export class Anemic implements AnemicInterface {
     server: ServerOptionsType,
   ): Promise<Response> {
     const route = this.application.router.find(requester.url, requester.method.toLowerCase() as any);
-
+  
     if (!route) return new Response(null, { status: 404 });
 
     const url = route.pattern?.exec(requester.url) as URLPatternResult;
     const key = `${String(route.controller.key)}:${route.action.key}`;
     const container = this.application.packer.container.duplicate();
 
-    container.add([
-      { name: 'Requester', target: requester },
-      { name: 'Responser', target: responser },
-      { name: 'Server', target: server },
-      { name: 'Url', target: url },
-    ], 'provider');
-
-    const handler = { attempts: 1, error: undefined };
-    const context: ContextType = {
-      event: EventEnum.BEFORE,
+    const handler: HandlerType = {
+      event: EventEnum.BEFORE, 
+      attempts: 1, 
+      error: undefined,
+    }
+    const context: ContextType = { 
+      handler,
       requester,
       responser,
       container,
       route,
       server,
       url,
-      handler,
-    };
+    }
 
-    await this.execute(key, context);
+    container.add([
+      { name: 'Container', target: container },
+      { name: 'Handler', target: handler },
+      { name: 'Requester', target: requester },
+      { name: 'Responser', target: responser },
+      { name: 'Route', target: route },
+      { name: 'Server', target: server },
+      { name: 'Url', target: url },
+    ], 'provider');
+
+    await this.execute(key, route, context)
 
     return new Response(responser.parsed || responser.body, {
       status: responser.status,
@@ -86,75 +111,53 @@ export class Anemic implements AnemicInterface {
       headers: responser.headers,
     });
   }
-
-  private async execute(key: string, context: ContextType): Promise<void> {
+  
+  private async execute(key: string, route: RouteType, context: ContextType): Promise<void> {
     const attempts = context.handler.attempts;
 
     try {
-      let next: NextFunctionType = async () => {};
-
-      if (this.application.middler.middlewares[key][EventEnum.AFTER]) {
-        next = this.nextMiddleware(EventEnum.AFTER, context, this.application.middler.middlewares[key], next);
-      }
-
-      if (this.application.middler.middlewares[key][EventEnum.MIDDLE]) {
-        next = this.nextMiddleware(EventEnum.MIDDLE, context, this.application.middler.middlewares[key], next);
-      }
-
-      if (this.application.middler.middlewares[key][EventEnum.BEFORE]) {
-        next = this.nextMiddleware(EventEnum.BEFORE, context, this.application.middler.middlewares[key], next);
-      }
-
-      await next();
-    } catch (error: any) {
-      let next: NextFunctionType = async () => {};
-
-      context.handler.error = error;
-
-      if (this.application.middler.middlewares[key][EventEnum.EXCEPTION]) {
-        next = this.nextMiddleware(EventEnum.EXCEPTION, context, this.application.middler.middlewares[key], next);
-      }
-
-      await next();
+      await route.wired.try(context)
+    } catch (error) {
+      context.handler.error = error
+      await route.wired.catch(context)
     }
 
     if (context.handler.attempts !== attempts) {
-      return this.execute(key, context);
+      return this.execute(key, route, context);
     }
   }
 
   private async socketHandler(
-    request: RequesterInterface,
-    socket: WebSocket,
-    response: ResponserInterface,
-    server: ServerOptionsType,
+    _request: RequesterInterface,
+    _socket: WebSocket,
+    _response: ResponserInterface,
+    _server: ServerOptionsType,
   ): Promise<Response> {
     throw new Error('Not implemented');
   }
 
   private nextMiddleware(
     event: EventEnum,
-    context: ContextType,
     middlewares: MiddlerType,
     lastNext: NextFunctionType,
   ): NextFunctionType {
     return middlewares[event].reduce((a: NextFunctionType, b: MiddlewareInterface) => {
-      return (async (): Promise<void> => {
-        return await b.onUse({ ...context, event }, a);
+      return (function next(context: ContextType): Promise<void> {
+        return b.onUse(context, () => a(context))
       }) as NextFunctionType;
     }, lastNext);
   }
 
-  public async boot(): Promise<void> {
-    return this.dispatcher.dispatch('boot', this.application);
+  public boot(): Promise<void> {
+    return this.dispatcher.dispatch('boot');
   }
 
-  public async start(): Promise<void> {
-    return this.dispatcher.dispatch('start', this.application);
+  public start(): Promise<void> {
+    return this.dispatcher.dispatch('start');
   }
 
-  public async stop(): Promise<void> {
-    return this.dispatcher.dispatch('stop', this.application);
+  public stop(): Promise<void> {
+    return this.dispatcher.dispatch('stop');
   }
 }
 

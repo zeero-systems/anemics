@@ -1,10 +1,9 @@
 import type { AnnotationInterface, ArtifactType, DecoratorType, EntityInterface, NewableType } from '@zeero/commons';
 import { AnnotationException, ConsumerAnnotation, Decorator, DecoratorKindEnum } from '@zeero/commons';
 import { HttpAnnotationInterface } from '~/controller/interfaces.ts';
-import ActionEnum from '~/network/enums/method.enum.ts';
 
 export class PutAnnotation implements AnnotationInterface, HttpAnnotationInterface {
-  name: string = ActionEnum.PUT
+  name: string = 'Put'
 
   constructor(public path?: string, public entity?: NewableType<new (...args: any[]) => EntityInterface>) {}
 

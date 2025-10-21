@@ -1,8 +1,9 @@
 import type { ContainerInterface, DecoratorType, EntityInterface, KeyableType, NewableType } from '@zeero/commons';
-import type { ServerOptionsType } from '~/network/types.ts';
 import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
 import type { FilterType } from '~/persister/types.ts';
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
+import type { ServerOptionsType } from '~/network/types.ts';
+import type { HandlerType } from '~/entrypoint/types.ts';
 
 import MethodEnum from '~/network/enums/method.enum.ts';
 import EventEnum from '~/controller/enums/event.enum.ts';
@@ -34,6 +35,7 @@ export type DuplexType = ActionType & {
 
 export type RouteType = {
   key: string
+  wired: { try: NextFunctionType, catch: NextFunctionType }
   action: MethodType | DuplexType
   controller: ControllerType
   pattern?: URLPattern
@@ -44,23 +46,15 @@ export type RouteType = {
 export type EventType = `${EventEnum}`
 
 export type ContextType = {
-  url: URLPatternResult
-  route: RouteType
+  handler: HandlerType
+  requester: RequesterInterface
+  responser: ResponserInterface
   container: ContainerInterface
+  route: RouteType
   server: ServerOptionsType
-  requester?: RequesterInterface | undefined
-  responser?: ResponserInterface | undefined
-  socket?: WebSocket | undefined
-  event: `${EventEnum}`
-  handler: {
-    attempts: number;
-    error: any | undefined;
-  }; 
+  url: URLPatternResult
 }
 
-export type NextFunctionType = () => Promise<void>
-
-export type HttpMiddlewareHandlerType = (request: RequesterInterface, response: ResponserInterface, url: URLPatternResult) => Promise<void>
-export type SocketMiddlewareHandlerType = (socket: WebSocket, url: URLPatternResult) => Promise<void>
+export type NextFunctionType = (context?: ContextType) => Promise<void>
 
 export default {}

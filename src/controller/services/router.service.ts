@@ -1,7 +1,7 @@
 import { ArtifactType, ConsumerAnnotation, Decorator, DecoratorMetadata, Factory, Text } from '@zeero/commons';
 
 import type { RouterInterface } from '~/controller/interfaces.ts';
-import type { RouteType, ControllerType, MethodType, MethodProviderType, DuplexType } from '~/controller/types.ts';
+import type { RouteType, ControllerType, MethodType, MethodProviderType, DuplexType, ContextType } from '~/controller/types.ts';
 
 import MethodEnum from '~/network/enums/method.enum.ts';
 import ControllerAnnotation from '~/controller/annotations/controller.annotation.ts';
@@ -53,13 +53,16 @@ export class Router implements RouterInterface {
 
             const pattern = new URLPattern({ pathname });
 
+            const wired = { try: async (_context?: ContextType) => {}, catch: async (_context?: ContextType) => {} }
+
             this.routes[action.method].push({ 
               key, 
               action, 
               controller, 
               pattern, 
               pathname,
-              decorators
+              decorators,
+              wired
             });
           }
 
@@ -73,12 +76,15 @@ export class Router implements RouterInterface {
 
             const pathname = `${controller.path}${action.namespace}`
 
+            const wired = { try: async (_context?: ContextType) => {}, catch: async (_context?: ContextType) => {} }
+
             this.routes[MethodEnum.SOCKET].push({ 
               key, 
               action, 
               controller, 
               pathname,
-              decorators
+              decorators,
+              wired
             });
           }
         }
