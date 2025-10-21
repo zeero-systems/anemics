@@ -1,6 +1,6 @@
 {
   "name": "@zeero-systems/anemics",
-  "version": "0.18.0",
+  "version": "0.18.1",
   "license": "GPL-3.0",
   "exports": {
     ".": "./index.ts",
@@ -9,6 +9,7 @@
     "./enums": "./enums.ts",
     "./exceptions": "./exceptions.ts",
     "./guards": "./guards.ts",
+    "./middlewares": "./middlewares.ts",
     "./services": "./services.ts"
   },
   "imports": {
@@ -30,6 +31,7 @@
       "enums.ts",
       "exceptions.ts",
       "guards.ts",
+      "middlewares.ts",
       "services.ts",
       "README.md", 
       "src/**/*.ts"
@@ -65,6 +67,7 @@
         "enums.ts",
         "exceptions.ts",
         "guards.ts",
+        "middlewares.ts",
         "services.ts",
         "src/**/*.ts", 
         "test/**/*.ts"
