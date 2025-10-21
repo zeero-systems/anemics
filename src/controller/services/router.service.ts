@@ -33,8 +33,8 @@ export class Router implements RouterInterface {
         const controllerAnnotation = controllerDecorator.annotation.target as ControllerAnnotation;
         const controller: ControllerType = { path: controllerAnnotation.path, key: targetName };
 
-        for (let index = 0; index < methodDecorators.length; index++) {
-          const decorator = methodDecorators[index];
+        for (let jindex = 0; jindex < methodDecorators.length; jindex++) {
+          const decorator = methodDecorators[jindex];
           const propertyName = String(decorator.decoration.property)
           const method = String(decorator.annotation.target.name).toLowerCase()
           const key = `${String(targetName)}:${propertyName}`

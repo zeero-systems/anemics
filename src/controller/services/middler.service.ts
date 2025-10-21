@@ -36,7 +36,6 @@ export class Middler implements MiddlerInterface {
         for (const [targetPropertyKey] of decoratorMap) {
           if (targetPropertyKey != 'construct') {
             const key = `${constructorKey}:${String(targetPropertyKey)}`;
-            
             this.middlewares[key] = Middler.events.reduce((prev, curr: any) => {
               prev[curr] = [];
               return prev;
@@ -63,16 +62,6 @@ export class Middler implements MiddlerInterface {
       }
     }
   }
-
-
-
-  // public filter(event: EventEnum, key: string): Array<KeyableType> {
-  //   if (this.middlewares[key] && this.middlewares[key][event]) {
-  //     return this.middlewares[key][event];
-  //   }
-
-  //   return [];
-  // }
 }
 
 export default Middler;

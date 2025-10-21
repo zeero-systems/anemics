@@ -16,6 +16,21 @@ import Post from '~/controller/decorations/post.decoration.ts';
 import GatewayMiddleware from '~/controller/middlewares/gateway.middleware.ts';
 
 describe('entrypoint', () => {
+  class ExceptionMiddleware implements MiddlewareInterface, AnnotationInterface {
+    name: string = 'Middleware';
+    events: Array<EventType> = ['exception']
+
+    async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
+      if (context.handler.error) {
+        context.responser.body = 'Internal Server Error'
+      }
+
+      return next();
+    }
+
+    onAttach(artifact: ArtifactType, decorator: DecoratorType): any { }
+    onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  }
 
   class RequestMiddleware implements MiddlewareInterface, AnnotationInterface {
     name: string = 'Middleware';
@@ -77,6 +92,11 @@ describe('entrypoint', () => {
       responser.setBody('reached ???');
 
       return 'reached getTest';
+    }
+
+    @Get('/error')
+    getTestToThrow(responser: ResponserInterface) {
+      throw new Error('A throw test')
     }
 
     @Post('/create', Test)
@@ -185,7 +205,8 @@ describe('entrypoint', () => {
         http: { port: 3002 },
         middlewares: [
           RequestMiddleware, 
-          GatewayMiddleware
+          GatewayMiddleware,
+          ExceptionMiddleware
         ],
       }),
     );
@@ -207,8 +228,16 @@ describe('entrypoint', () => {
       const responseText2 = await response2.json();
 
       expect(responseText2.name).toEqual('Eduardo');
- 
-      await anemic.stop();
     });
+
+    it('fetch test with throw', async () => {
+      const response = await fetch('http://0.0.0.0:3002/test/error', { method: 'get' })
+
+      const error = await response.text()
+
+      expect(error).toBe('Internal Server Error')
+
+      await anemic.stop();
+    })
   });
 });

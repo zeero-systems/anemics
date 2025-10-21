@@ -48,8 +48,10 @@ export class Anemic implements AnemicInterface {
   }
 
   private applyWire(key: string, route: RouteType) {
+    route.wired.try = async function next(_context?: ContextType) {}
+
     if (this.application.middler.middlewares[key][EventEnum.AFTER]) {
-      route.wired.try = this.nextMiddleware(EventEnum.AFTER, this.application.middler.middlewares[key], async function next(_context?: ContextType) {});
+      route.wired.try = this.nextMiddleware(EventEnum.AFTER, this.application.middler.middlewares[key], route.wired.try);
     }
 
     if (this.application.middler.middlewares[key][EventEnum.MIDDLE]) {
@@ -60,8 +62,10 @@ export class Anemic implements AnemicInterface {
       route.wired.try = this.nextMiddleware(EventEnum.BEFORE, this.application.middler.middlewares[key], route.wired.try);
     }
 
+    route.wired.catch = async function next(_context?: ContextType) {}
+
     if (this.application.middler.middlewares[key][EventEnum.EXCEPTION]) {
-      route.wired.catch = this.nextMiddleware(EventEnum.EXCEPTION, this.application.middler.middlewares[key], async function next(_context?: ContextType) {});
+      route.wired.catch = this.nextMiddleware(EventEnum.EXCEPTION, this.application.middler.middlewares[key], route.wired.catch);
     }
   }
 
@@ -115,13 +119,11 @@ export class Anemic implements AnemicInterface {
   private async execute(key: string, route: RouteType, context: ContextType): Promise<void> {
     const attempts = context.handler.attempts;
 
-    try {
-      await route.wired.try(context)
-    } catch (error) {
+    await route.wired.try(context).catch((error) => {
       context.handler.error = error
-      await route.wired.catch(context)
-    }
-
+      return route.wired.catch(context)
+    })
+    
     if (context.handler.attempts !== attempts) {
       return this.execute(key, route, context);
     }

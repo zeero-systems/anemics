@@ -56,8 +56,9 @@ export class Application implements ApplicationInterface {
       this.packer.container.collection.forEach((value) => {      
         const decorator = DecoratorMetadata.findByAnnotationInteroperableName(value.artifact.target, 'Controller')
         if (decorator) {
+
           for (const middleware of options.middlewares || []) {
-            
+
             if (!Metadata.has(value.artifact.target)) {
               Metadata.set(value.artifact.target)
             }
@@ -85,8 +86,10 @@ export class Application implements ApplicationInterface {
       })
     }
 
-    this.router = new Router(this.packer.artifacts())
-    this.middler = new Middler(this.packer.artifacts())
+    const artifacts = this.packer.artifacts()
+
+    this.router = new Router(artifacts)
+    this.middler = new Middler(artifacts)
           
     this.packer.container.add([
       { name: 'Servers', target: { http: options.http, socket: options.socket } },
