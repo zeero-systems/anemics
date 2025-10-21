@@ -146,6 +146,7 @@ export class Anemic implements AnemicInterface {
   ): NextFunctionType {
     return middlewares[event].reduce((a: NextFunctionType, b: MiddlewareInterface) => {
       return (function next(context: ContextType): Promise<void> {
+        context.handler.event = event
         return b.onUse(context, () => a(context))
       }) as NextFunctionType;
     }, lastNext);
