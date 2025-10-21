@@ -1,10 +1,10 @@
-import type { AnnotationType, DecorationType, NewableType, PackerInterface, PackInterface } from '@zeero/commons';
+import type { AnnotationType, DecorationType, NewableType, PackerInterface, PackInterface, TimerInterface } from '@zeero/commons';
 import type { ServerOptionsType } from '~/network/types.ts';
 import type { ServerInterface } from '~/network/interfaces.ts';
 import type { ApplicationInterface } from '~/entrypoint/interfaces.ts';
 import type { MiddlerInterface, MiddlewareInterface, RouterInterface } from '~/controller/interfaces.ts';
 
-import { Decorator, DecoratorMetadata, Metadata, Packer } from '@zeero/commons';
+import { Decorator, DecoratorMetadata, Metadata, Packer, Timer } from '@zeero/commons';
 
 import Http from '~/network/services/http.service.ts';
 import Middler from '~/controller/services/middler.service.ts';
@@ -15,6 +15,7 @@ export class Application implements ApplicationInterface {
   public packer: PackerInterface
   public router: RouterInterface
   public middler: MiddlerInterface
+  public timer: TimerInterface
   public servers: Array<ServerInterface> = []
   
   constructor(pack: NewableType<new (...args: any[]) => PackInterface>, options: {
@@ -90,12 +91,14 @@ export class Application implements ApplicationInterface {
 
     this.router = new Router(artifacts)
     this.middler = new Middler(artifacts)
+    this.timer = new Timer()
           
     this.packer.container.add([
       { name: 'Servers', target: { http: options.http, socket: options.socket } },
       { name: 'Packer', target: this.packer },
       { name: 'Router', target: this.router },
       { name: 'Middler', target: this.middler },
+      { name: 'Timer', target: this.timer }
     ], 'provider');
   }
 }

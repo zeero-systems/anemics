@@ -94,6 +94,7 @@ export class Anemic implements AnemicInterface {
       container,
       route,
       server,
+      timer: this.application.timer,
       url,
     }
 

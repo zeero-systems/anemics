@@ -1,4 +1,4 @@
-import type { ContainerInterface, DecoratorType, EntityInterface, KeyableType, NewableType } from '@zeero/commons';
+import type { ContainerInterface, DecoratorType, EntityInterface, KeyableType, NewableType, TimerInterface } from '@zeero/commons';
 import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
 import type { FilterType } from '~/persister/types.ts';
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
@@ -50,6 +50,7 @@ export type ContextType = {
   requester: RequesterInterface
   responser: ResponserInterface
   container: ContainerInterface
+  timer: TimerInterface
   route: RouteType
   server: ServerOptionsType
   url: URLPatternResult

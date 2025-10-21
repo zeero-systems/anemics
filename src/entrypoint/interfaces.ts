@@ -1,4 +1,4 @@
-import type { PackerInterface } from '@zeero/commons';
+import type { PackerInterface, TimerInterface } from '@zeero/commons';
 import type { MiddlerInterface, RouterInterface } from '~/controller/interfaces.ts';
 
 import { ServerInterface } from '~/network/interfaces.ts';
@@ -10,6 +10,7 @@ export interface AnemicInterface {
 }
 
 export interface ApplicationInterface {
+  timer: TimerInterface
   packer: PackerInterface
   router: RouterInterface
   middler: MiddlerInterface
