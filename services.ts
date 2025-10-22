@@ -17,6 +17,9 @@ import Table from '~/persister/services/table.service.ts';
 import Builder from '~/querier/services/builder.services.ts';
 import Querier from '~/querier/services/querier.service.ts';
 
+import Tracer from '~/tracer/services/tracer.service.ts';
+import ConsoleTransport from '~/tracer/transports/console.transport.ts';
+
 export { default as Middler } from '~/controller/services/middler.service.ts';
 export { default as Router } from '~/controller/services/router.service.ts';
 
@@ -36,6 +39,9 @@ export { default as Table } from '~/persister/services/table.service.ts';
 export { default as Builder } from '~/querier/services/builder.services.ts';
 export { default as Querier } from '~/querier/services/querier.service.ts';
 
+export { default as Tracer } from '~/tracer/services/tracer.service.ts';
+export { default as ConsoleTransport } from '~/tracer/transports/console.transport.ts';
+
 export default {
   Middler,
   Router,
@@ -51,4 +57,6 @@ export default {
   Table,
   Builder,
   Querier,
+  Tracer,
+  ConsoleTransport,
 }
