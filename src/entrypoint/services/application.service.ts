@@ -54,6 +54,9 @@ export class Application implements ApplicationInterface {
     this.packer = new Packer(pack)
 
     if (options?.middlewares) {
+      
+      this.packer.container.add(options.middlewares.map((target) => ({ name: target.name, target })), 'consumer')
+      
       this.packer.container.collection.forEach((value) => {      
         const decorator = DecoratorMetadata.findByAnnotationInteroperableName(value.artifact.target, 'Controller')
         if (decorator) {
@@ -66,7 +69,7 @@ export class Application implements ApplicationInterface {
 
             const annotation: AnnotationType = {
               name: middleware.name,
-              target: new middleware() as any
+              target: this.packer.container.construct(middleware.name) as any
             }
 
             const decoration: DecorationType = {
