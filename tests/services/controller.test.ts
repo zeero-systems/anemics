@@ -34,7 +34,9 @@ describe('controller', () => {
     optionsUser() {}
   }
 
-  const router = new Router([{ name: 'UserController', target: UserController }])
+  const router = new Router()
+
+  router.routerify([{ name: 'UserController', target: UserController }])
 
   it('should have post routes', () => {
     const routes = router.routes.post

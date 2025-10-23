@@ -4,8 +4,6 @@ import { expect } from '@std/expect';
 import type { AnnotationInterface, ArtifactType, ContainerInterface, DecoratorType, PackInterface } from '@zeero/commons';
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 import type { ContextType, EventType, NextFunctionType } from '~/controller/types.ts';
-import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
-import type { ServerOptionsType } from '~/network/types.ts';
 
 import { Decorator, Entity, Factory, Pack } from '@zeero/commons';
 import Application from '~/entrypoint/services/application.service.ts';
@@ -20,7 +18,7 @@ describe('entrypoint', () => {
     name: string = 'Middleware';
     events: Array<EventType> = ['exception']
 
-    async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
+    onUse(context: ContextType, next: NextFunctionType): Promise<void> {
       if (context.handler.error) {
         context.responser.body = 'Internal Server Error'
       }
@@ -28,7 +26,7 @@ describe('entrypoint', () => {
       return next();
     }
 
-    onAttach(artifact: ArtifactType, decorator: DecoratorType): any { }
+    onAttach(_artifact: ArtifactType, _decorator: DecoratorType): any { }
     onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
   }
 
@@ -55,7 +53,7 @@ describe('entrypoint', () => {
       return next();
     }
 
-    onAttach(artifact: ArtifactType, decorator: DecoratorType): any { }
+    onAttach(_artifact: ArtifactType, _decorator: DecoratorType): any { }
     onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
   }
 
@@ -73,7 +71,7 @@ describe('entrypoint', () => {
       return next();
     }
 
-    onAttach(artifact: ArtifactType, decorator: DecoratorType): any { }
+    onAttach(_artifact: ArtifactType, _decorator: DecoratorType): any { }
     onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
   }
 
@@ -87,21 +85,21 @@ describe('entrypoint', () => {
   @Controller('/test')
   class ControllerTest {
     @Get()
-    getTest(responser: ResponserInterface) {
-      responser.setHeader('Content-Type', 'application/json');
-      responser.setBody('reached ???');
+    getTest(context: ContextType) {
+      context.responser.setHeader('Content-Type', 'application/json');
+      context.responser.setBody('reached ???');
 
       return 'reached getTest';
     }
 
     @Get('/error')
-    getTestToThrow(responser: ResponserInterface) {
+    getTestToThrow(_context: ContextType) {
       throw new Error('A throw test')
     }
 
     @Post('/create', Test)
-    postTest(requester: RequesterInterface<Test>) {
-      return requester.parsed;
+    postTest(context: ContextType<Test>) {
+      return context.requester.parsed;
     }
   }
 
@@ -109,8 +107,8 @@ describe('entrypoint', () => {
   class ControllerMiddlewareTest {
     @Get('/test')
     @ResponseParser()
-    getTest(responser: ResponserInterface) {
-      responser.setHeader('Content-Type', 'application/json');
+    getTest(context: ContextType) {
+      context.responser.setHeader('Content-Type', 'application/json');
       return 'reached getTestMiddleware';
     }
   }
@@ -118,9 +116,9 @@ describe('entrypoint', () => {
   @Controller('/health')
   class HealthController {
     @Get('/status')
-    public getStatus(responser: ResponserInterface, server: ServerOptionsType) {
-      responser.setHeader('Content-Type', 'application/json');
-      responser.setBody(JSON.stringify({ status: 'OK', server: server.hostname }));
+    public getStatus(context: ContextType) {
+      context.responser.setHeader('Content-Type', 'application/json');
+      context.responser.setBody(JSON.stringify({ status: 'OK', server: context.server.hostname }));
     }
   }
 
@@ -151,7 +149,7 @@ describe('entrypoint', () => {
       }
     }
 
-    const anemic = new Anemic(new Application(App, { http: { port: 3000 }, middlewares: [GatewayMiddleware, ResponseMiddleware]  }));
+    const anemic = new Anemic(new Application(App, { http: { name: 'Joey', port: 3000 }, middlewares: [GatewayMiddleware, ResponseMiddleware]  }));
 
     it('boot', async () => {
       await anemic.boot();
@@ -181,7 +179,7 @@ describe('entrypoint', () => {
     })
     class App implements PackInterface {}
 
-    const anemic = new Anemic(new Application(App, { http: { port: 3001 }, middlewares: [GatewayMiddleware, ResponseMiddleware] }));
+    const anemic = new Anemic(new Application(App, { http: { name: 'Chandler', port: 3001 }, middlewares: [GatewayMiddleware, ResponseMiddleware] }));
 
     it('fetch', async () => {
       await anemic.start();
@@ -202,7 +200,7 @@ describe('entrypoint', () => {
 
     const anemic = new Anemic(
       new Application(App, {
-        http: { port: 3002 },
+        http: { name: 'Ross', port: 3002 },
         middlewares: [
           RequestMiddleware, 
           GatewayMiddleware,

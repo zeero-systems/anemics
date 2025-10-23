@@ -1,7 +1,7 @@
-import { ArtifactType, ConsumerAnnotation, Decorator, DecoratorMetadata, Factory, Text } from '@zeero/commons';
+import { ArtifactType, DecoratorMetadata, Dispatcher, DispatcherInterface, Text } from '@zeero/commons';
 
 import type { RouterInterface } from '~/controller/interfaces.ts';
-import type { RouteType, ControllerType, MethodType, MethodProviderType, DuplexType, ContextType } from '~/controller/types.ts';
+import type { RouteType, ControllerType, ContextType, ActionType } from '~/controller/types.ts';
 
 import MethodEnum from '~/network/enums/method.enum.ts';
 import ControllerAnnotation from '~/controller/annotations/controller.annotation.ts';
@@ -11,14 +11,17 @@ import isSocket from '~/controller/guards/is-socket.guard.ts';
 
 export class Router implements RouterInterface {
   static actions: Array<MethodEnum> = Object.values(MethodEnum)
+  size: number = 0
   
-  public routes: { [key in MethodEnum]: Array<RouteType> } = Router.actions
+  public dispatcher: DispatcherInterface<{ routed: [RouteType] }> = new Dispatcher<{ routed: [RouteType] }>();
+
+  public routes: { [key in MethodEnum | string]: Array<RouteType> } = Router.actions
     .reduce((prev, curr: any) => { prev[curr] = []; return prev }, {} as any)
 
-  constructor(artifacts: Array<ArtifactType>) {
-    for (let index = 0; index < artifacts.length; index++) {
-      const artifact = artifacts[index];
+  constructor() {}
 
+  public routerify(artifacts: Array<ArtifactType>): void {
+    for (const artifact of artifacts) {
       const controllerDecorator = DecoratorMetadata.findByAnnotationInteroperableName(
         artifact.target,
         'Controller',
@@ -41,21 +44,21 @@ export class Router implements RouterInterface {
           const decorators = DecoratorMetadata.filterByTargetPropertyKeys(artifact.target, [propertyName])
           
           if (isHttp(decorator.annotation.target)) {
-            const action = {
+            const action: ActionType = {
               key: String(decorator.decoration.property),
               path: decorator.annotation.target.path || '',
               method: method,
+              namespace: '',
               entity: decorator.annotation.target.entity,
               filter: decorator.annotation.target.filter,
-            } as MethodType
+            } as RouteType['action']
             
             const pathname = `${controller.path}${action.path}`
 
             const pattern = new URLPattern({ pathname });
 
             const wired = { try: async (_context?: ContextType) => {}, catch: async (_context?: ContextType) => {} }
-
-            this.routes[action.method].push({ 
+            const route = { 
               key, 
               action, 
               controller, 
@@ -63,29 +66,39 @@ export class Router implements RouterInterface {
               pathname,
               decorators,
               wired
-            });
+            }
+
+            this.size++
+            this.routes[action.method].push(route);
+            this.dispatcher.dispatch('routed', route)
           }
 
           if (isSocket(decorator.annotation.target)) {
-            const action = {
+            const action: ActionType = {
               key: String(decorator.decoration.property),
+              path: '',
+              method: '',
               namespace: decorator.annotation.target.namespace || '',
               entity: decorator.annotation.target.entity,
               filter: decorator.annotation.target.filter,
-            } as DuplexType
+            }
 
             const pathname = `${controller.path}${action.namespace}`
 
             const wired = { try: async (_context?: ContextType) => {}, catch: async (_context?: ContextType) => {} }
 
-            this.routes[MethodEnum.SOCKET].push({ 
+            const route = { 
               key, 
               action, 
               controller, 
               pathname,
               decorators,
               wired
-            });
+            }
+
+            this.size++
+            this.routes[MethodEnum.SOCKET].push(route);
+            this.dispatcher.dispatch('routed', route)
           }
         }
       }

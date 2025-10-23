@@ -55,6 +55,7 @@ export type ServerOptionsAddr = {
 }
 
 export type ServerOptionsType = {
+  name: string
   port?: number
   hostname?: string
   signal?: AbortSignal;

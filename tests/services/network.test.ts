@@ -11,7 +11,7 @@ describe('server', () => {
   }
 
   it('http server', async () => {
-    const httpServer = new Http({ port: 3000, hostname: '0.0.0.0' })
+    const httpServer = new Http({ name: 'Rachel', port: 3000, hostname: '0.0.0.0' })
 
     await httpServer.start(debugHandler)
 

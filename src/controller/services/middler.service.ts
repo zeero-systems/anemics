@@ -1,4 +1,7 @@
-import type { ArtifactType, DecoratorType } from '@zeero/commons';
+import type {
+  ArtifactType,
+  DecoratorType,
+} from '@zeero/commons';
 import type { MiddlerInterface, MiddlewareInterface } from '~/controller/interfaces.ts';
 
 import { DecoratorMetadata } from '@zeero/commons';
@@ -12,26 +15,23 @@ export class Middler implements MiddlerInterface {
 
   public middlewares: { [key: string]: { [key in EventEnum]: Array<MiddlewareInterface> } } = {};
 
-  constructor(artifacts: Array<ArtifactType>) {
-    this.add(artifacts)
-  }
+  constructor() { }
 
-  public add(artifacts: Array<ArtifactType>) {
-    for (let index = 0; index < artifacts.length; index++) {
-      const artifact = artifacts[index];
+  public wirefy(artifacts: Array<ArtifactType>): void {
+    for (const artifact of artifacts) {
       const targetName = artifact.name;
-      
+
       const decoratorMap = DecoratorMetadata.get(artifact.target);
       const constructorKey = String(targetName);
-      const constructorDecorators = decoratorMap.get('construct') || []
+      const constructorDecorators = decoratorMap.get('construct') || [];
 
       const controller: DecoratorType | undefined = constructorDecorators.find((decorator: DecoratorType) =>
         isController(decorator.annotation.target)
-      )
+      );
       const decorators = constructorDecorators.filter((decorator: DecoratorType) =>
         isMiddleware(decorator.annotation.target)
-      ) as unknown as { annotation: { target: MiddlewareInterface } }[]
-      
+      ) as unknown as { annotation: { target: MiddlewareInterface } }[];
+
       if (controller) {
         for (const [targetPropertyKey] of decoratorMap) {
           if (targetPropertyKey != 'construct') {
@@ -40,7 +40,7 @@ export class Middler implements MiddlerInterface {
               prev[curr] = [];
               return prev;
             }, {} as any);
-  
+
             for (const decorator of decorators) {
               for (const event of decorator.annotation.target.events) {
                 this.middlewares[key][event].push(decorator.annotation.target);
@@ -49,8 +49,8 @@ export class Middler implements MiddlerInterface {
 
             const methodDecorators = DecoratorMetadata.filterByTargetPropertyKeys(artifact.target, [targetPropertyKey])
               .filter((decorator: DecoratorType) => {
-                return isMiddleware(decorator.annotation.target)
-              }) as unknown as { annotation: { target: MiddlewareInterface } }[]
+                return isMiddleware(decorator.annotation.target);
+              }) as unknown as { annotation: { target: MiddlewareInterface } }[];
 
             for (const decorator of methodDecorators) {
               for (const event of decorator.annotation.target.events) {

@@ -31,8 +31,6 @@ export * from '~/persister/interfaces.ts';
 export * from '~/persister/types.ts';
 export * from '~/querier/interfaces.ts';
 export * from '~/querier/types.ts';
-export * from '~/tracer/interfaces.ts';
-export * from '~/tracer/types.ts';
 
 export default {
   ...Annotations,

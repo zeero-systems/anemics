@@ -1,4 +1,4 @@
-import type { ContainerInterface, DecoratorType, EntityInterface, KeyableType, NewableType, TimerInterface } from '@zeero/commons';
+import type { ContainerInterface, DecoratorType, EntityInterface, KeyableType, NewableType } from '@zeero/commons';
 import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
 import type { FilterType } from '~/persister/types.ts';
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
@@ -16,27 +16,21 @@ export type ControllerType = {
 export type MethodProviderType = { parameter: string, provider: string  }
 
 export type ActionType = {
+  key: string
+  path: string
+  namespace: string 
+  method: MethodEnum | string
   entity?: NewableType<new (...args: any[]) => EntityInterface>,
   filter?: FilterType,
 }
 
-export type MethodType = ActionType & {
-  key: string
-  path: string
-  method: MethodEnum
-}
 
 export type MiddlerType = { [key in EventType]: Array<MiddlewareInterface> }
-
-export type DuplexType = ActionType & { 
-  key: string; 
-  namespace: string 
-}
 
 export type RouteType = {
   key: string
   wired: { try: NextFunctionType, catch: NextFunctionType }
-  action: MethodType | DuplexType
+  action: ActionType
   controller: ControllerType
   pattern?: URLPattern
   pathname?: string
@@ -45,15 +39,13 @@ export type RouteType = {
 
 export type EventType = `${EventEnum}`
 
-export type ContextType = {
+export type ContextType<T = BodyInit> = {
   handler: HandlerType
-  requester: RequesterInterface
+  requester: RequesterInterface<T>
   responser: ResponserInterface
   container: ContainerInterface
-  timer: TimerInterface
   route: RouteType
   server: ServerOptionsType
-  url: URLPatternResult
 }
 
 export type NextFunctionType = (context?: ContextType) => Promise<void>

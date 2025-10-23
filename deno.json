@@ -1,6 +1,6 @@
 {
   "name": "@zeero-systems/anemics",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "license": "GPL-3.0",
   "exports": {
     ".": "./index.ts",
@@ -20,7 +20,7 @@
     "@std/expect": "jsr:@std/expect@1.0.17",
     "@std/mock": "jsr:@std/testing@1.0.16/mock",
     "@deno/postgres": "jsr:@db/postgres@0.19.5",
-    "@zeero/commons": "jsr:@zeero-systems/commons@^0.38.2"
+    "@zeero/commons": "jsr:@zeero-systems/commons@^0.40.2"
   },
   "publish": {
     "include": [
