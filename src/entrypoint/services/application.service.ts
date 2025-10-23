@@ -44,13 +44,13 @@ export class Application implements ApplicationInterface {
     options: ApplicationOptionsType = { http: { name: 'Default', port: 3000 } },
   ) {
     this.container = new Container();
-    this.container.add([{ name: 'Container', target: this.container }], 'provider');    
+    this.container.add([{ name: 'Container', target: this.container }], 'provider');
 
     this.packer = new Packer(pack, this.container);
 
-    this.setLogger(options)
-    this.setPacks(pack)
-    this.setMiddlewares(options);    
+    this.setLogger(options);
+    this.setPacks(pack, options);
+    this.setMiddlewares(options);
     this.setRoutes(options);
     this.setServers(options);
 
@@ -61,21 +61,28 @@ export class Application implements ApplicationInterface {
     ], 'provider');
   }
 
-  private setLogger(_options: ApplicationOptionsType) {
-    if (!this.container.collection.get('Logger')) {
+  private setLogger(options: ApplicationOptionsType) {
+    const name = options.tracer?.name || 'Tracer';
+
+    if (!this.container.collection.get(name)) {
       const logger = {
-        name: 'Logger',
-        target: new Tracer({ level: LogLevelEnum.DEBUG, transports: [new ConsoleTransport()], namespaces: ['Anemic'] }),
+        name,
+        target: new Tracer({
+          level: options.tracer?.level || LogLevelEnum.DEBUG,
+          transports: [new ConsoleTransport()],
+          namespaces: ['Anemic'],
+        }),
       };
       this.packer.container.add([logger], 'provider');
       this.packer.container.add([logger], 'consumer');
     }
   }
 
-  private setPacks(pack: PackNewableType): void {
-    this.packer = new Packer(pack, this.container);
+  private setPacks(pack: PackNewableType, options: ApplicationOptionsType): void {
+    const name = options.tracer?.name || 'Tracer';
 
-    this.tracer = this.packer.container.construct<TracerInterface>('Logger') as TracerInterface;
+    this.packer = new Packer(pack, this.container);
+    this.tracer = this.packer.container.construct<TracerInterface>(name) as TracerInterface;
 
     // @TODO better way to expose current package version
     this.tracer.info(`Anemic Framework v0.20.0`);
@@ -91,7 +98,6 @@ export class Application implements ApplicationInterface {
   }
 
   private setServers(options: ApplicationOptionsType): void {
-
     const serverTracer = this.tracer.child({ namespaces: ['Server'] });
 
     if (options.http) {
@@ -105,7 +111,7 @@ export class Application implements ApplicationInterface {
           };
         }
         this.servers.push(new Http(option));
-        serverTracer.info(`Http ${option.name} configured`)
+        serverTracer.info(`Http ${option.name} configured`);
       }
     }
 
@@ -119,14 +125,14 @@ export class Application implements ApplicationInterface {
           };
         }
         this.servers.push(new Ws(option));
-        serverTracer.info(`Socket ${option.name} configured`)
+        serverTracer.info(`Socket ${option.name} configured`);
       }
     }
   }
 
   private setMiddlewares(options: ApplicationOptionsType): void {
     const artifacts = this.packer.artifacts();
-    
+
     if (options.middlewares) {
       this.container.add(options.middlewares.map((target) => ({ name: target.name, target })), 'consumer');
 
@@ -159,10 +165,9 @@ export class Application implements ApplicationInterface {
         }
       }
     }
-        
-    
+
     this.middler = new Middler();
-    this.middler.wirefy(artifacts)
+    this.middler.wirefy(artifacts);
   }
 
   private setRoutes(_options: ApplicationOptionsType): void {
@@ -171,18 +176,20 @@ export class Application implements ApplicationInterface {
     this.router = new Router();
 
     const packerTracer = this.tracer.child({ namespaces: ['Router'] });
-    
-    this.router.dispatcher.subscribe('routed', (route: RouteType) => {
-      this.applyWire(`${String(route.controller.key)}:${route.action.key}`, route)
-      packerTracer.info(`${Text.toFirstLetterUppercase(route.action.method || route.action.namespace)} ${route.pathname} routed`);
-    })
 
-    this.router.routerify(artifacts)
+    this.router.dispatcher.subscribe('routed', (route: RouteType) => {
+      this.applyWire(`${String(route.controller.key)}:${route.action.key}`, route);
+      packerTracer.info(
+        `${Text.toFirstLetterUppercase(route.action.method || route.action.namespace)} ${route.pathname} routed`,
+      );
+    });
+
+    this.router.routerify(artifacts);
   }
 
   private applyWire(key: string, route: RouteType): void {
-    route.wired.try = async function next(_context?: ContextType) {}
-    
+    route.wired.try = async function next(_context?: ContextType) {};
+
     if (this.middler.middlewares[key][EventEnum.AFTER]) {
       route.wired.try = this.nextMiddleware(EventEnum.AFTER, this.middler.middlewares[key], route.wired.try);
     }
@@ -195,7 +202,7 @@ export class Application implements ApplicationInterface {
       route.wired.try = this.nextMiddleware(EventEnum.BEFORE, this.middler.middlewares[key], route.wired.try);
     }
 
-    route.wired.catch = async function next(_context?: ContextType) {}
+    route.wired.catch = async function next(_context?: ContextType) {};
 
     if (this.middler.middlewares[key][EventEnum.EXCEPTION]) {
       route.wired.catch = this.nextMiddleware(EventEnum.EXCEPTION, this.middler.middlewares[key], route.wired.catch);
@@ -209,8 +216,8 @@ export class Application implements ApplicationInterface {
   ): NextFunctionType {
     return middlewares[event].reduce((a: NextFunctionType, b: MiddlewareInterface) => {
       return (function next(context: ContextType): Promise<void> {
-        context.handler.event = event
-        return b.onUse(context, () => a(context))
+        context.handler.event = event;
+        return b.onUse(context, () => a(context));
       }) as NextFunctionType;
     }, lastNext);
   }
