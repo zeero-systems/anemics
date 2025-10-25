@@ -23,7 +23,8 @@ export class Http implements ServerInterface {
   }
 
   async stop(): Promise<void> {
-    return this.server.shutdown()
+    await this.server.shutdown();
+    await this.server.finished;
   }
 }
 

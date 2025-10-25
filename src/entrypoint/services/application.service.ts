@@ -4,6 +4,7 @@ import type {
   DecorationType,
   PackerInterface,
   PackNewableType,
+  SpanInterface,
   TracerInterface,
 } from '@zeero/commons';
 
@@ -18,9 +19,10 @@ import {
   Container,
   Decorator,
   DecoratorMetadata,
-  LogLevelEnum,
+  LogEnum,
   Metadata,
   Packer,
+  StatusEnum,
   Text,
   Tracer,
 } from '@zeero/commons';
@@ -30,6 +32,8 @@ import Middler from '~/controller/services/middler.service.ts';
 import Router from '~/controller/services/router.service.ts';
 import Ws from '~/network/services/ws.service.ts';
 import EventEnum from '~/controller/enums/event.enum.ts';
+import Resourcer from '~/resourcer/services/resourcer.service.ts';
+import { ResourcerInterface } from '../../resourcer/interfaces.ts';
 
 export class Application implements ApplicationInterface {
   public container!: ContainerInterface;
@@ -37,109 +41,119 @@ export class Application implements ApplicationInterface {
   public router!: RouterInterface;
   public middler!: MiddlerInterface;
   public tracer!: TracerInterface;
+  public resourcer!: ResourcerInterface;
   public servers: Array<ServerInterface> = [];
 
   constructor(
-    pack: PackNewableType,
-    options: ApplicationOptionsType = { http: { name: 'Default', port: 3000 } },
+    public pack: PackNewableType,
+    public options: ApplicationOptionsType = { http: { name: 'Default', port: 3000 } },
   ) {
+
     this.container = new Container();
     this.container.add([{ name: 'Container', target: this.container }], 'provider');
 
-    this.packer = new Packer(pack, this.container);
+    this.packer = new Packer(pack, this.container);    
+    this.packer.unpack(this.pack);
+    
+    if (!this.container.collection.get('Resourcer')) {
+      const resourcer = {
+        name: 'Resourcer',
+        target: new Resourcer({ service: { name: 'anemic', version: '0.20.0' } }),
+      };
+      this.packer.container.add([resourcer], 'provider');
+    }
 
-    this.setLogger(options);
-    this.setPacks(pack, options);
-    this.setMiddlewares(options);
-    this.setRoutes(options);
-    this.setServers(options);
+    this.resourcer = this.packer.container.construct<ResourcerInterface>('Resourcer') as ResourcerInterface;
+    if (!this.container.collection.get('Tracer')) {
+      const tracer = {
+        name: 'Tracer',
+        target: new Tracer({
+          name: 'Anemic',
+          transports: [new ConsoleTransport({ pretty: true })],
+        }),
+      };
+      this.packer.container.add([tracer], 'provider');
+      this.packer.container.add([tracer], 'consumer');
+    }
+
+    this.tracer = this.packer.container.construct<TracerInterface>('Tracer') as TracerInterface;
+    
+    const span = this.tracer.start({ name: 'application' })
+
+    // @TODO better way to expose current package version
+    this.tracer.info(`Anemic Framework v0.20.0`);
+    this.tracer.info(`Running Deno v${Deno.version.deno} & Typescript v${Deno.version.typescript}`);
+    
+    this.setServers(span);
+    this.setMiddlewares(span);
+    this.setRoutes(span);
 
     this.packer.container.add([
       { name: 'Packer', target: this.packer },
       { name: 'Router', target: this.router },
       { name: 'Middler', target: this.middler },
     ], 'provider');
-  }
-
-  private setLogger(options: ApplicationOptionsType) {
-    const name = options.tracer?.name || 'Tracer';
-
-    if (!this.container.collection.get(name)) {
-      const logger = {
-        name,
-        target: new Tracer({
-          level: options.tracer?.level || LogLevelEnum.DEBUG,
-          transports: [new ConsoleTransport()],
-          namespaces: ['Anemic'],
-        }),
-      };
-      this.packer.container.add([logger], 'provider');
-      this.packer.container.add([logger], 'consumer');
+    
+    const resources = this.resourcer.getResource();
+    if (resources) {
+      span.attributes(resources);
     }
+
+    span.status({ type: StatusEnum.RESOLVED });
+    span.end();
   }
 
-  private setPacks(pack: PackNewableType, options: ApplicationOptionsType): void {
-    const name = options.tracer?.name || 'Tracer';
+  private setServers(span: SpanInterface): void {
+    const child = span.child({ name: 'servers' })
 
-    this.packer = new Packer(pack, this.container);
-    this.tracer = this.packer.container.construct<TracerInterface>(name) as TracerInterface;
+    if (this.options.http) {
+      child.attributes({ http: this.options.http });
+      if (!Array.isArray(this.options.http)) this.options.http = [this.options.http];
 
-    // @TODO better way to expose current package version
-    this.tracer.info(`Anemic Framework v0.20.0`);
-    this.tracer.info(`Running Deno v${Deno.version.deno} & Typescript v${Deno.version.typescript}`);
-
-    const packerTracer = this.tracer.child({ namespaces: ['Packer'] });
-
-    this.packer.dispatcher.subscribe('unpacked', (pack: PackNewableType) => {
-      packerTracer.info(`${pack.name} dependencies unpacked`);
-    });
-
-    this.packer.unpack(pack);
-  }
-
-  private setServers(options: ApplicationOptionsType): void {
-    const serverTracer = this.tracer.child({ namespaces: ['Server'] });
-
-    if (options.http) {
-      if (!Array.isArray(options.http)) options.http = [options.http];
-
-      for (const option of options.http) {
+      for (const option of this.options.http) {
         if (!option.onListen) {
           option.onListen = ({ transport, hostname, port }) => {
             const t = transport == 'tcp' ? 'http://' : `${transport}:`;
-            serverTracer.info(`${option.name} start listening on ${t}${hostname}:${port} `);
+            child.info(`${option.name} start listening on ${t}${hostname}:${port} `);
           };
         }
         this.servers.push(new Http(option));
-        serverTracer.info(`Http ${option.name} configured`);
+        child.info(`${option.name} configured as http`);
       }
+      child.event({ name: 'http.configured', attributes: { count: this.options.http.length } });
     }
 
-    if (options.socket) {
-      if (!Array.isArray(options.socket)) options.socket = [options.socket];
+    if (this.options.socket) {
+      child.attributes({ socket: this.options.socket });
+      if (!Array.isArray(this.options.socket)) this.options.socket = [this.options.socket];
 
-      for (const option of options.socket) {
+      for (const option of this.options.socket) {
         if (!option.onListen) {
           option.onListen = ({ hostname, port }) => {
-            serverTracer.info(`${option.name} listening on 'wss://'${hostname}:${port} `);
+            child.info(`${option.name} listening on 'wss://'${hostname}:${port} `);
           };
         }
         this.servers.push(new Ws(option));
-        serverTracer.info(`Socket ${option.name} configured`);
+        child.info(`${option.name} configured as socket`);
       }
+      child.event({ name: 'socket.configured', attributes: { count: this.options.socket.length } });
     }
+
+    child.status({ type: StatusEnum.RESOLVED });
+    child.end();
   }
 
-  private setMiddlewares(options: ApplicationOptionsType): void {
+  private setMiddlewares(span: SpanInterface): void {
+    const child = span.child({ name: 'middlewares' })
     const artifacts = this.packer.artifacts();
 
-    if (options.middlewares) {
-      this.container.add(options.middlewares.map((target) => ({ name: target.name, target })), 'consumer');
+    if (this.options.middlewares) {
+      this.container.add(this.options.middlewares.map((target) => ({ name: target.name, target })), 'consumer');
 
       for (const artifact of artifacts) {
         const controller = DecoratorMetadata.findByAnnotationInteroperableName(artifact.target, 'Controller');
         if (controller) {
-          for (const middleware of options.middlewares) {
+          for (const middleware of this.options.middlewares) {
             if (!Metadata.has(artifact.target)) {
               Metadata.set(artifact.target);
             }
@@ -168,23 +182,32 @@ export class Application implements ApplicationInterface {
 
     this.middler = new Middler();
     this.middler.wirefy(artifacts);
+
+    child.info(`Global middlewares injected`);
+    child.event({ name: 'middlewares.injected', attributes: { count: Object.keys(this.middler.middlewares).length } });
+
+    child.status({ type: StatusEnum.RESOLVED });
+    child.end();
   }
 
-  private setRoutes(_options: ApplicationOptionsType): void {
+  private setRoutes(span: SpanInterface): void {
     const artifacts = this.packer.artifacts();
 
+    const child = span.child({ name: 'router' });
+
     this.router = new Router();
-
-    const packerTracer = this.tracer.child({ namespaces: ['Router'] });
-
-    this.router.dispatcher.subscribe('routed', (route: RouteType) => {
-      this.applyWire(`${String(route.controller.key)}:${route.action.key}`, route);
-      packerTracer.info(
-        `${Text.toFirstLetterUppercase(route.action.method || route.action.namespace)} ${route.pathname} routed`,
-      );
-    });
-
     this.router.routerify(artifacts);
+
+    for (const routes of Object.values(this.router.routes)) {
+      for (const route of routes) {
+        this.applyWire(`${String(route.controller.key)}:${route.action.key}`, route);
+        child.info(`${route.action.method || route.action.namespace} ${route.pathname} registered`);
+      }
+    }
+
+    child.event({ name: 'routes.routed', attributes: { count: this.router.size } });
+    child.status({ type: StatusEnum.RESOLVED });
+    child.end();
   }
 
   private applyWire(key: string, route: RouteType): void {

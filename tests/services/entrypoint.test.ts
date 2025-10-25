@@ -5,7 +5,7 @@ import type { AnnotationInterface, ArtifactType, ContainerInterface, DecoratorTy
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 import type { ContextType, EventType, NextFunctionType } from '~/controller/types.ts';
 
-import { Decorator, Entity, Factory, Pack } from '@zeero/commons';
+import { Console, ConsoleTransport, Decorator, Entity, Factory, Pack, Tracer } from '@zeero/commons';
 import Application from '~/entrypoint/services/application.service.ts';
 import Anemic from '~/entrypoint/services/anemic.service.ts';
 import Controller from '~/controller/decorations/controller.decoration.ts';
@@ -121,28 +121,32 @@ describe('entrypoint', () => {
       context.responser.setBody(JSON.stringify({ status: 'OK', server: context.server.hostname }));
     }
   }
+  
+  const mockTracer = {
+    name: 'Tracer',
+    target: new Tracer({
+      name: 'AnemicTest',
+      transports: [new ConsoleTransport({ pretty: true, span: false, log: false })],
+    }),
+  }
 
   describe('simple server', () => {
     let bootText = '';
 
     @Pack()
     class Sub implements PackInterface {
-      constructor(container: ContainerInterface) {
-        container.add([{ name: 'TRACE', target: { transport: 'CONSOLE' } }], 'provider')
-      }
+      constructor(container: ContainerInterface) { }
 
       onBoot(): void {}
     }
 
     @Pack({
-      providers: [],
+      providers: [mockTracer],
       consumers: [HealthController],
       packs: [Sub]
     })
     class App implements PackInterface {
-      constructor(container: ContainerInterface) {
-        container.add([{ name: 'TRACE', target: { transport: 'TRAILS' } }], 'provider')
-      }
+      constructor(container: ContainerInterface) {  }
 
       onBoot(): void {
         bootText = 'onBoot reached';
@@ -166,7 +170,7 @@ describe('entrypoint', () => {
       expect(responseText).toEqual('{"status":"OK"}');
     });
 
-    it('stop start again', async () => {
+    it('start stop again', async () => {
       await anemic.start();
       await anemic.stop();
     });
@@ -174,26 +178,26 @@ describe('entrypoint', () => {
 
   describe('server with controller middlewares', () => {
     @Pack({
-      providers: [],
+      providers: [mockTracer],
       consumers: [ControllerMiddlewareTest],
     })
     class App implements PackInterface {}
 
-    const anemic = new Anemic(new Application(App, { http: { name: 'Chandler', port: 3001 }, middlewares: [GatewayMiddleware, ResponseMiddleware] }));
+    const anemic2 = new Anemic(new Application(App, { http: { name: 'Chandler', port: 3001 }, middlewares: [GatewayMiddleware, ResponseMiddleware] }));
 
     it('fetch', async () => {
-      await anemic.start();
+      await anemic2.start();
       const response = await fetch('http://0.0.0.0:3001/test', { method: 'get' });
       const responseText = await response.text();
+      await anemic2.stop();
 
       expect(responseText).toEqual('reached getTestMiddleware');
-      await anemic.stop();
     });
   });
 
-  describe('server with global middlewares', () => {
+  it('server with global middlewares', async () => {
     @Pack({
-      providers: [],
+      providers: [mockTracer],
       consumers: [ControllerTest],
     })
     class App implements PackInterface {}
@@ -209,33 +213,27 @@ describe('entrypoint', () => {
       }),
     );
 
-    it('fetch test', async () => {
-      await anemic.start();
-      const response = await fetch('http://0.0.0.0:3002/test', { method: 'get' });
-      const responseText = await response.text();
+    await anemic.start();
 
-      expect(responseText).toEqual('reached getTest');
+    const response1 = await fetch('http://0.0.0.0:3002/test', { method: 'get' });
+    const response1Text = await response1.text();
+
+    expect(response1Text).toEqual('reached getTest');
+
+    const response2 = await fetch('http://0.0.0.0:3002/test/create', {
+      method: 'post',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Eduardo' }),
     });
+    const responseText2 = await response2.json();
 
-    it('fetch test with entity', async () => {
-      const response2 = await fetch('http://0.0.0.0:3002/test/create', {
-        method: 'post',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'Eduardo' }),
-      });
-      const responseText2 = await response2.json();
+    expect(responseText2.name).toEqual('Eduardo');
 
-      expect(responseText2.name).toEqual('Eduardo');
-    });
+    const response3 = await fetch('http://0.0.0.0:3002/test/error', { method: 'get' })
+    const error = await response3.text()
 
-    it('fetch test with throw', async () => {
-      const response = await fetch('http://0.0.0.0:3002/test/error', { method: 'get' })
-
-      const error = await response.text()
-
-      expect(error).toBe('Internal Server Error')
-
-      await anemic.stop();
-    })
+    expect(error).toBe('Internal Server Error')
+    
+    await anemic.stop();
   });
 });

@@ -1,4 +1,4 @@
-import type { ContainerInterface, DecoratorType, EntityInterface, KeyableType, NewableType } from '@zeero/commons';
+import type { ContainerInterface, DecoratorType, EntityInterface, KeyableType, NewableType, SpanInterface } from '@zeero/commons';
 import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
 import type { FilterType } from '~/persister/types.ts';
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
@@ -46,6 +46,7 @@ export type ContextType<T = BodyInit> = {
   container: ContainerInterface
   route: RouteType
   server: ServerOptionsType
+  span: SpanInterface
 }
 
 export type NextFunctionType = (context?: ContextType) => Promise<void>

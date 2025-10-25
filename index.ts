@@ -25,6 +25,7 @@ export { default as Services } from './services.ts'
 export * from '~/controller/interfaces.ts';
 export * from '~/controller/types.ts';
 export * from '~/entrypoint/interfaces.ts';
+export * from '~/entrypoint/types.ts';
 export * from '~/network/interfaces.ts';
 export * from '~/network/types.ts';
 export * from '~/persister/interfaces.ts';

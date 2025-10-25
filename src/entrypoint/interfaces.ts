@@ -1,7 +1,9 @@
-import type { PackerInterface, TracerInterface, ContainerInterface } from '@zeero/commons';
+import type { PackerInterface, TracerInterface, ContainerInterface, PackNewableType } from '@zeero/commons';
 import type { MiddlerInterface, RouterInterface } from '~/controller/interfaces.ts';
 
 import { ServerInterface } from '~/network/interfaces.ts';
+import { ApplicationOptionsType } from './types.ts';
+import { ResourcerInterface } from '~/resourcer/interfaces.ts';
 
 export interface AnemicInterface {
   boot(): void
@@ -10,12 +12,15 @@ export interface AnemicInterface {
 }
 
 export interface ApplicationInterface {
+  pack: PackNewableType
   container: ContainerInterface;
   packer: PackerInterface
   router: RouterInterface
   middler: MiddlerInterface
   servers: Array<ServerInterface>
+  resourcer: ResourcerInterface;
   tracer: TracerInterface
+  options: ApplicationOptionsType
 }
 
 export interface PathInterface { 
