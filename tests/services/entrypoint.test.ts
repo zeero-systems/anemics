@@ -5,7 +5,7 @@ import type { AnnotationInterface, ArtifactType, ContainerInterface, DecoratorTy
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 import type { ContextType, EventType, NextFunctionType } from '~/controller/types.ts';
 
-import { Console, ConsoleTransport, Decorator, Entity, Factory, Pack, Tracer } from '@zeero/commons';
+import { ConsoleTransport, Decorator, Entity, Factory, Pack, Tracer } from '@zeero/commons';
 import Application from '~/entrypoint/services/application.service.ts';
 import Anemic from '~/entrypoint/services/anemic.service.ts';
 import Controller from '~/controller/decorations/controller.decoration.ts';
@@ -15,7 +15,7 @@ import GatewayMiddleware from '~/controller/middlewares/gateway.middleware.ts';
 
 describe('entrypoint', () => {
   class ExceptionMiddleware implements MiddlewareInterface, AnnotationInterface {
-    name: string = 'Middleware';
+    name: string = 'Exception';
     events: Array<EventType> = ['exception']
 
     onUse(context: ContextType, next: NextFunctionType): Promise<void> {
@@ -31,20 +31,20 @@ describe('entrypoint', () => {
   }
 
   class RequestMiddleware implements MiddlewareInterface, AnnotationInterface {
-    name: string = 'Middleware';
+    name: string = 'Request';
     events: Array<EventType> = ['before']
 
     async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
       const hasContent = context.requester.headers?.get('Content-Length');
       const hasContentType = context.requester.headers?.get('Content-Type');
-
+      
       if (!hasContentType || hasContentType == 'application/json') {
         if (hasContent && Number(hasContent) > 0 && !context.requester.bodyUsed) {
           context.requester.parsed = await context.requester.json();
         }
-
+        
       }
-
+      
       if (context.route.action.entity) {
         const properties = context.requester.parsed ?? {};
         context.requester.parsed = Factory.construct(context.route.action.entity, { properties }) as any;
@@ -58,7 +58,7 @@ describe('entrypoint', () => {
   }
 
   class ResponseMiddleware implements MiddlewareInterface, AnnotationInterface {
-    readonly name: string = 'Middleware'
+    readonly name: string = 'Response'
     events: Array<EventType> = ['after']
 
     onUse(context: ContextType, next: NextFunctionType): Promise<void> {

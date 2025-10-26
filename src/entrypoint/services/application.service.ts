@@ -21,6 +21,7 @@ import {
   DecoratorMetadata,
   Metadata,
   Packer,
+  SpanEnum,
   StatusEnum,
   Tracer,
 } from '@zeero/commons';
@@ -155,7 +156,6 @@ export class Application implements ApplicationInterface {
             if (!Metadata.has(artifact.target)) {
               Metadata.set(artifact.target);
             }
-
             const annotation: AnnotationType = {
               name: middleware.name,
               target: this.container.construct(middleware.name) as any,
@@ -238,7 +238,20 @@ export class Application implements ApplicationInterface {
     return middlewares[event].reduce((a: NextFunctionType, b: MiddlewareInterface) => {
       return (function next(context: ContextType): Promise<void> {
         context.handler.event = event;
-        return b.onUse(context, () => a(context));
+        let called = false;
+        const span = context.span.child({ name: `middleware ${(b as any).name}`, kind: SpanEnum.INTERNAL });
+        span.attributes({ middleware: (b as any).name, event });
+        return b.onUse(context, () => {
+          called = true;
+          span.status({ type: StatusEnum.RESOLVED });
+          span.end();
+
+          return a(context)
+        }).finally(() => {
+          if (!called) {
+            span.end();
+          }
+        });
       }) as NextFunctionType;
     }, lastNext);
   }

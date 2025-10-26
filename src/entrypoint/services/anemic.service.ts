@@ -27,35 +27,40 @@ export class Anemic implements AnemicInterface {
     for (const server of this.application.servers) {
       this.dispatcher.subscribe('start', async () => {
         const span = this.application.tracer.start({ name: 'anemic', kind: SpanEnum.SERVER });
-        await server.start((request, socket) => {
+        await server.start(async (request, socket) => {
           const resources = {
             system: {
               ...this.application.resourcer.getSystem(true),
               execPath: undefined,
               entrypoint: undefined,
             },
-            memory: this.application.resourcer.getMemory(true)
-          }
-          const child = span.child({ name: `HANDLER:${resources.system?.pid}`, kind: SpanEnum.INTERNAL });
+            memory: this.application.resourcer.getMemory(true),
+          };
+          const child = span.child({ name: `HANDLER ${resources.system?.pid}`, kind: SpanEnum.INTERNAL });
           child.attributes(resources);
-          
+
           let handler;
           if (server.accepts.includes(MethodEnum.SOCKET)) {
-            handler = this.socketHandler(new Requester(request), new Responser(), server.options, span, socket)
+            handler = this.socketHandler(new Requester(request), new Responser(), server.options, span, socket);
           } else {
-            handler = this.httpHandler(new Requester(request), new Responser(), server.options, span, socket)
+            handler = this.httpHandler(new Requester(request), new Responser(), server.options, span, socket);
           }
 
           return handler.then((response) => {
-              child.status({ type: StatusEnum.RESOLVED });
-              return response;
-            })
+            child.status({ type: StatusEnum.RESOLVED });
+            return response;
+          })
             .catch((error) => {
               child.error(error);
-              child.event({ name: 'handler.error', attributes: { error: { name: error.name, message: String(error?.message || error), stack: error.stack } } });
+              child.event({
+                name: 'handler.error',
+                attributes: {
+                  error: { name: error.name, message: String(error?.message || error), stack: error.stack },
+                },
+              });
               child.status({ type: StatusEnum.REJECTED });
             })
-            .finally(() => child.end());
+            .finally(() => span.end());
         });
 
         this.dispatcher.subscribe('stop', async () => {
@@ -63,7 +68,7 @@ export class Anemic implements AnemicInterface {
           span.status({ type: StatusEnum.RESOLVED });
           span.end();
         });
-      })
+      });
     }
   }
 
@@ -74,7 +79,6 @@ export class Anemic implements AnemicInterface {
     span: SpanInterface,
     _socket?: WebSocket,
   ): Promise<Response> {
-    
     const readySpan = span.child({ name: `request`, kind: SpanEnum.INTERNAL });
     const method = requester.method.toLowerCase() as any;
     const route = this.application.router.routes[method]?.find((route) => route.pattern?.test(requester.url));
@@ -89,26 +93,30 @@ export class Anemic implements AnemicInterface {
 
     readySpan.attributes({ method: requester.method, pathname: route.pathname });
     readySpan.info(`${requester.method} ${route.pathname}`);
-        
-    const container = this.application.packer.container.duplicate();
-    const handlerSpan = span.child({ name: `response`, kind: SpanEnum.INTERNAL });    
 
-    const handler: HandlerType = { event: EventEnum.BEFORE, attempts: 1, error: undefined };
-    const context: ContextType = { handler, requester, responser, container, route, server, span: handlerSpan };
-    container.collection.set('Context', { artifact: { name: 'Context', target: context }, tags: ['P'] });
+    const container = this.application.packer.container.duplicate();
 
     readySpan.attributes({ route: { action: route.action, controller: route.controller } });
     readySpan.status({ type: StatusEnum.RESOLVED });
     readySpan.end();
 
+    const responseSpan = span.child({ name: `response`, kind: SpanEnum.INTERNAL });
+
+    const handler: HandlerType = { event: EventEnum.BEFORE, attempts: 1, error: undefined };
+    const context: ContextType = { handler, requester, responser, container, route, server, span: responseSpan };
+    container.collection.set('Context', { artifact: { name: 'Context', target: context }, tags: ['P'] });
+
     await this.execute(route, context);
 
     const status = responser.status || 200;
 
-    handlerSpan.info(`${requester.method} ${route.pathname} with ${status}`);
-    handlerSpan.event({ name: 'handled', attributes: { status, statusText: responser.statusText, headers: responser.headers } });
-    handlerSpan.status({ type: StatusEnum.RESOLVED });
-    handlerSpan.end();
+    responseSpan.info(`${requester.method} ${route.pathname} with ${status}`);
+    responseSpan.event({
+      name: 'handled',
+      attributes: { status, statusText: responser.statusText, headers: responser.headers },
+    });
+    responseSpan.status({ type: StatusEnum.RESOLVED });
+    responseSpan.end();
 
     return new Response(responser.parsed || responser.body, {
       status: status,
