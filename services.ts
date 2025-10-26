@@ -9,7 +9,6 @@ import Http from '~/network/services/http.service.ts';
 import Response from '~/network/services/responser.service.ts';
 
 import Filter from '~/persister/services/filter.service.ts';
-import Persister from '~/persister/services/persister.service.ts';
 import Query from '~/persister/services/query.service.ts';
 import Repository from '~/persister/services/repository.ts';
 import Table from '~/persister/services/table.service.ts';
@@ -28,7 +27,6 @@ export { default as Http } from '~/network/services/http.service.ts';
 export { default as Response } from '~/network/services/responser.service.ts';
 
 export { default as Filter } from '~/persister/services/filter.service.ts';
-export { default as Persister } from '~/persister/services/persister.service.ts';
 export { default as Query } from '~/persister/services/query.service.ts';
 export { default as Repository } from '~/persister/services/repository.ts';
 export { default as Table } from '~/persister/services/table.service.ts';
@@ -45,7 +43,6 @@ export default {
   Http,
   Response,
   Filter,
-  Persister,
   Query,
   Repository,
   Table,

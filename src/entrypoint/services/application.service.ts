@@ -249,6 +249,8 @@ export class Application implements ApplicationInterface {
           return a(context)
         })
         .catch((error) => {
+          // @TODO maybe we should truncate the error cause to avoid circular references or big objects
+          // @TODO also expose some knob to configure the truncate length or strategy
           span.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
           span.status({ type: StatusEnum.REJECTED });
           throw error;

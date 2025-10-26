@@ -125,7 +125,7 @@ export interface RepositoryInterface<T extends NewableType<T>> {
 
   schema: T;
   querier: QuerierInterface
-  persister: PersisterInterface;
+  database: DatabaseInterface;
   options: RepositoryOptionsType;
   annotation: SchemaAnnotation;
 

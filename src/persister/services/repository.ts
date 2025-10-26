@@ -2,7 +2,7 @@ import type { AnnotationInterface, NewableType } from '@zeero/commons';
 import type { QueryType } from '~/querier/types.ts';
 import type { QuerierInterface } from '~/querier/interfaces.ts';
 import type { RepositoryExecuteOptionsType, ExecuteOptionsType, ExecuteResultType, RepositoryOptionsType } from '~/persister/types.ts';
-import type { DatabaseInterface, PersisterInterface, SchemaInterface, RepositoryQueryInterface, RepositoryInterface, RepositoryTableInterface } from '~/persister/interfaces.ts';
+import type { DatabaseInterface, SchemaInterface, RepositoryQueryInterface, RepositoryInterface, RepositoryTableInterface } from '~/persister/interfaces.ts';
 
 import { DecoratorMetadata, Text } from '@zeero/commons';
 import Query from '~/persister/services/query.service.ts';
@@ -25,11 +25,10 @@ export class Repository<T extends NewableType<T>> implements RepositoryInterface
   public querier: QuerierInterface
   public query: RepositoryQueryInterface<T>
   public table: RepositoryTableInterface<T>
-  public database: DatabaseInterface
   
   constructor(
     public schema: T,
-    public persister: PersisterInterface,
+    public database: DatabaseInterface,
     public options: RepositoryOptionsType = { 
       toSchemaNaming: Text.toCamelcase,
       toTableNaming: Text.toSnakecase
@@ -37,8 +36,7 @@ export class Repository<T extends NewableType<T>> implements RepositoryInterface
   ) {
     this.table = new Table(this)
     this.query = new Query(this)
-    this.querier = new Querier({ syntax: this.persister.common.syntax })
-    this.database = this.persister.instantiate()
+    this.querier = new Querier({ syntax: this.database.common.syntax })
 
     const decorator = DecoratorMetadata.findByAnnotationInteroperableName(this.schema, 'Schema')
     if (decorator) {

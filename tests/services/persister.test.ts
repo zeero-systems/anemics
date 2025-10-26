@@ -15,7 +15,7 @@ import Structure from '~/persister/decorations/structure.decoration.ts';
 import One from '~/persister/decorations/one.decoration.ts';
 import { FilterDictionaryType } from '~/persister/types.ts';
 import Filter from '~/persister/services/filter.service.ts';
-import Persister from '~/persister/services/persister.service.ts';
+import Postgresql from '~/persister/postgresql/postgresql.database.ts';
 
 describe('persister', () => {
 
@@ -96,10 +96,10 @@ describe('persister', () => {
     user: 'postgres.your-tenant-id',
   }
   
-  const persister = new Persister(commonOptions, clientOptions)
-  const userRepository = new Repository(User, persister)
-  const postRepository = new Repository(Post, persister)
-  const commentRepository = new Repository(Comment, persister)
+  const database = new Postgresql(commonOptions, clientOptions)
+  const userRepository = new Repository(User, database)
+  const postRepository = new Repository(Post, database)
+  const commentRepository = new Repository(Comment, database)
 
   it('repository create tables', async () => {
     await userRepository.table.create()
