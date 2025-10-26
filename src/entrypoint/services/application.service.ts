@@ -249,7 +249,7 @@ export class Application implements ApplicationInterface {
           return a(context)
         })
         .catch((error) => {
-          span.attributes({ error: { name: error.name, message: error.message, stack: error.stack } });
+          span.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
           span.status({ type: StatusEnum.REJECTED });
           throw error;
         })
