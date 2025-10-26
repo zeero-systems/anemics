@@ -19,11 +19,9 @@ import {
   Container,
   Decorator,
   DecoratorMetadata,
-  LogEnum,
   Metadata,
   Packer,
   StatusEnum,
-  Text,
   Tracer,
 } from '@zeero/commons';
 
