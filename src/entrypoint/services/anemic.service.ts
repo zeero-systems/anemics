@@ -60,7 +60,7 @@ export class Anemic implements AnemicInterface {
               });
               child.status({ type: StatusEnum.REJECTED });
             })
-            .finally(() => span.end());
+            .finally(() => child.end());
         });
 
         this.dispatcher.subscribe('stop', async () => {
