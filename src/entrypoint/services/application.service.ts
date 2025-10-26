@@ -247,7 +247,13 @@ export class Application implements ApplicationInterface {
           span.end();
 
           return a(context)
-        }).finally(() => {
+        })
+        .catch((error) => {
+          span.attributes({ error: { name: error.name, message: error.message, stack: error.stack } });
+          span.status({ type: StatusEnum.REJECTED });
+          throw error;
+        })
+        .finally(() => {
           if (!called) {
             span.end();
           }
