@@ -40,6 +40,7 @@ describe('migrator', () => {
     prefix: '-',
     pattern: '/src/{name}/migrations/*.migration.ts',
     tableName,
+    tableSchema: 'public',
     environment: 'test',
   });
 

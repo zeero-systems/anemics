@@ -16,6 +16,7 @@ export type MigratorOptionsType = {
    */
   pattern: string;
   tableName: string;
+  tableSchema: string;
   environment?: string;
   applyBy?: string;
 };

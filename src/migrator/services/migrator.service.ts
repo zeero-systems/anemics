@@ -6,6 +6,8 @@ import type { MigrationInterface, MigratorInterface } from '~/migrator/interface
 import { expandGlob } from '@std/fs';
 import { ContainerInterface, SpanEnum, SpanInterface, StatusEnum, TracerInterface } from '@zeero/commons';
 
+import CreateMigration from '~/migrator/migrations/create.migration.ts';
+
 export class Migrator implements MigratorInterface {
   options: MigratorOptionsType;
 
@@ -20,6 +22,7 @@ export class Migrator implements MigratorInterface {
       prefix: '-',
       pattern: './migrations/{name}/**/*.migration.ts',
       tableName: 'migrations',
+      tableSchema: 'private',
       environment: 'development',
       ...(options || {}),
     };
@@ -41,15 +44,17 @@ export class Migrator implements MigratorInterface {
       .from.table('information_schema.tables')
       .where
         .and('table_name', 'eq', `${this.options.tableName}`)
-        .and('table_schema', 'eq', 'public')
+        .and('table_schema', 'eq', `${this.options.tableSchema}`)
       .toQuery();
 
-    const tableExistsResult = await transaction.execute<{ count: string }>(tableExistsQuery.text, { args: tableExistsQuery.args });
+    const tableExistsResult = await transaction.execute<{ count: string }>(tableExistsQuery.text, {
+      args: tableExistsQuery.args,
+    });
     const tableExists = parseInt(tableExistsResult.rows[0].count, 10) > 0;
 
     for (const migration of migrations) {
-      let exists = false
-      let checksumMatches = false
+      let exists = false;
+      let checksumMatches = false;
 
       if (tableExists) {
         const existingQuery = this.querier.query
@@ -65,7 +70,7 @@ export class Migrator implements MigratorInterface {
             .and('version', 'eq', `${migration.target.version || '1.0.0'}`)
             .and('environment', 'eq', `${this.options.environment}`)
           .toQuery();
-        
+
         const existingResult = await transaction.execute<{
           id: number;
           version: string;
@@ -73,7 +78,7 @@ export class Migrator implements MigratorInterface {
           file_name: string;
           applied_at: Date;
         }>(existingQuery.text, { args: existingQuery.args });
-        
+
         exists = existingResult.rows.length > 0;
         checksumMatches = exists && existingResult.rows[0].checksum === migration.checksum;
         const migrationAttributes = {
@@ -105,9 +110,9 @@ export class Migrator implements MigratorInterface {
       });
     }
 
-    if (mismatches.length > 0 ) {
-      shouldMigrateSpan.warn(`Will not migrate - migration was modified after being applied`, { 
-        mismatches: mismatches.map((m) => m.fileName) 
+    if (mismatches.length > 0) {
+      shouldMigrateSpan.warn(`Will not migrate - migration was modified after being applied`, {
+        mismatches: mismatches.map((m) => m.fileName),
       });
     }
 
@@ -118,7 +123,11 @@ export class Migrator implements MigratorInterface {
     }
 
     shouldMigrateSpan.status({ type: StatusEnum.RESOLVED });
-    shouldMigrateSpan.attributes({ toApply: toApply.map((m) => m.fileName), mismatches: mismatches.map((m) => m.fileName), skippings: skippings.map((m) => m.fileName) });
+    shouldMigrateSpan.attributes({
+      toApply: toApply.map((m) => m.fileName),
+      mismatches: mismatches.map((m) => m.fileName),
+      skippings: skippings.map((m) => m.fileName),
+    });
     shouldMigrateSpan.end();
 
     return toApply;
@@ -133,54 +142,56 @@ export class Migrator implements MigratorInterface {
     const spanMigrations = span.child({ name: `get migrations`, kind: SpanEnum.INTERNAL });
 
     let searchPath: string;
-    
-    // Path resolution strategy:
-    // - When name is provided: consumer migrations using configurable pattern
-    // - When name is null: package's own migrations using import.meta.url
-    if (name) {
-      // For consumer-specified migrations
-      searchPath = this.options.pattern.replace('{name}', name);
-      
-      // Handle different path types:
-      // 1. Absolute paths (start with /) - use as is
-      // 2. file:// URLs - use as is  
-      // 3. Relative paths - resolve from consumer's working directory
-      if (!searchPath.startsWith('/') && !searchPath.startsWith('file://')) {
-        // Resolve relative to the consumer's current working directory
-        searchPath = `${Deno.cwd()}/${searchPath.startsWith('./') ? searchPath.slice(2) : searchPath}`;
-      }
-    } else {
-      // For package's own migrations (like migrator table creation)
-      // Always use import.meta.url to get the correct package location
-      // regardless of where the consumer package is located
-      const packageDir = new URL('..', import.meta.url).pathname;
-      searchPath = `${packageDir}/migrations/*.migration.ts`;
-    }
-
     const migrations: Array<MigrationRecordType> = [];
-    for await (const dirEntry of expandGlob(searchPath)) {
-      if (dirEntry.isFile) {
-        if (only.length == 0 || only.includes(dirEntry.name || '')) {
-          // Convert file system path to file:// URL for proper import resolution
-          const importPath = dirEntry.path.startsWith('file://') 
-            ? dirEntry.path 
-            : `file://${dirEntry.path}`;
-          const module = await import(importPath);
-          const target = new module.default(
-            span,
-            this.querier,
-            transaction,
-            this.options,
-          ) as MigrationInterface;
-          migrations.push({
-            target,
-            fileName: dirEntry.name,
-            checksum: await this.getMigrationChecksum(dirEntry.path),
-          });
+
+    if (name) {
+      searchPath = this.options.pattern.replace('{name}', name);
+
+      if (searchPath.startsWith('file://')) {
+        searchPath = searchPath.substring(7);
+      }
+
+      if (!searchPath.startsWith('/')) {
+        searchPath = `${Deno.cwd()}/${searchPath}`;
+      }
+      
+      for await (const dirEntry of expandGlob(searchPath)) {
+        if (dirEntry.isFile) {
+          if (only.length == 0 || only.includes(dirEntry.name || '')) {
+            const importPath = dirEntry.path.startsWith('file://') ? dirEntry.path : `file://${dirEntry.path}`;
+            const module = await import(importPath);
+            const target = new module.default(
+              span,
+              this.querier,
+              transaction,
+              this.options,
+            ) as MigrationInterface;
+            migrations.push({
+              target,
+              fileName: dirEntry.name,
+              checksum: await this.getMigrationChecksum(dirEntry.path),
+            });
+          }
         }
       }
+    } else {
+      const migratorMigrations = [CreateMigration]
+      for (const MigrationClass of migratorMigrations) {
+        const target = new MigrationClass(
+          span,
+          this.querier,
+          transaction,
+          this.options,
+        ) as MigrationInterface;
+        migrations.push({
+          target,
+          fileName: `create.migration.ts`,
+          checksum: '',
+        });
+      }
     }
-    const attributes = { migrations: migrations.map((m) => ({ fileName: m.fileName, checksum: m.checksum })) }
+
+    const attributes = { migrations: migrations.map((m) => ({ fileName: m.fileName, checksum: m.checksum })) };
     spanMigrations.info(`Found ${migrations.length} migrations in ${name || 'migrator'}`, attributes);
     spanMigrations.status({ type: StatusEnum.RESOLVED });
     spanMigrations.attributes(attributes);
@@ -246,25 +257,24 @@ export class Migrator implements MigratorInterface {
 
     const client = await this.database.connection();
     const transaction = client.transaction(`create-${this.options.tableName}-tables`);
-    
-    
+
     try {
       let returnValue = true;
       await transaction.begin();
-    
-      let migrations = await this.getMigrations(span, transaction, name, only)
+
+      let migrations = await this.getMigrations(span, transaction, name, only);
 
       if (migrations.length > 0) {
         migrations = await this.shouldMigrate(span, transaction, migrations);
       }
-      
+
       if (migrations.length > 0) {
         await this.execute(span, transaction, migrations, 'up');
-      } else{
+      } else {
         span.info(`Skipping ${name || 'migrator'} migrations - not found, applied or mismatch`);
         returnValue = false;
       }
-      
+
       await transaction.commit();
 
       span.status({ type: StatusEnum.RESOLVED });
@@ -291,7 +301,6 @@ export class Migrator implements MigratorInterface {
     const client = await this.database.connection();
     const transaction = client.transaction(`create-${this.options.tableName}-tables`);
 
-    
     try {
       let returnValue = true;
       await transaction.begin();
@@ -304,10 +313,10 @@ export class Migrator implements MigratorInterface {
         span.end();
 
         returnValue = false;
-      } else{
+      } else {
         await this.execute(span, transaction, migrations, 'down');
       }
-      
+
       await transaction.commit();
 
       span.status({ type: StatusEnum.RESOLVED });
