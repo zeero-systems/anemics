@@ -27,7 +27,7 @@ export class Anemic implements AnemicInterface {
     for (const server of this.application.servers) {
       this.dispatcher.subscribe('start', async () => {
         const span = this.application.tracer.start({ name: 'anemic', kind: SpanEnum.SERVER });
-        await server.start(async (request, socket) => {
+        await server.start((request, socket) => {
           const resources = {
             system: {
               ...this.application.resourcer.getSystem(true),
@@ -138,7 +138,7 @@ export class Anemic implements AnemicInterface {
     }
   }
 
-  public async socketHandler(
+  public socketHandler(
     _request: RequesterInterface,
     _response: ResponserInterface,
     _server: ServerOptionsType,

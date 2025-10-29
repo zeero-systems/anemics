@@ -4,7 +4,6 @@ import { expect } from '@std/expect';
 import Index from '~/querier/postgresql/queries/index.querier.ts';
 import Query from '~/querier/postgresql/queries/query.querier.ts';
 import Table from '~/querier/postgresql/queries/table.querier.ts';
-import { QueryFunction } from '@zeero-systems/anemics';
 import { QueryQuerierInterface } from '~/querier/interfaces.ts';
 
 describe('querier', () => {

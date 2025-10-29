@@ -18,7 +18,7 @@ export class Migrator implements MigratorInterface {
   ) {
     this.options = {
       prefix: '-',
-      pattern: '/../{foldername}/**/*.migration.ts',
+      pattern: '/../{name}/**/*.migration.ts',
       tableName: 'migrations',
       environment: 'development',
       ...(options || {}),

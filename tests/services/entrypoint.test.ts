@@ -1,7 +1,7 @@
 import { describe, it } from '@std/bdd';
 import { expect } from '@std/expect';
 
-import type { AnnotationInterface, ArtifactType, ContainerInterface, DecoratorType, PackInterface } from '@zeero/commons';
+import type { AnnotationInterface, ArtifactType, DecoratorType, PackInterface } from '@zeero/commons';
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 import type { ContextType, EventType, NextFunctionType } from '~/controller/types.ts';
 
@@ -135,7 +135,7 @@ describe('entrypoint', () => {
 
     @Pack()
     class Sub implements PackInterface {
-      constructor(container: ContainerInterface) { }
+      constructor() { }
 
       onBoot(): void {}
     }
@@ -146,7 +146,7 @@ describe('entrypoint', () => {
       packs: [Sub]
     })
     class App implements PackInterface {
-      constructor(container: ContainerInterface) {  }
+      constructor() {  }
 
       onBoot(): void {
         bootText = 'onBoot reached';
