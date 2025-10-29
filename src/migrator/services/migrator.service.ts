@@ -132,15 +132,24 @@ export class Migrator implements MigratorInterface {
   ): Promise<Array<MigrationRecordType>> {
     const spanMigrations = span.child({ name: `get migrations`, kind: SpanEnum.INTERNAL });
 
-    const currentDir = new URL('.', import.meta.url).pathname;
-    let path = `${currentDir}../migrations/*.migration.ts`;
+    let searchPath: string;
     
     if (name) {
-      path = `${Deno.cwd()}${this.options.pattern.replace('{name}', name)}`;
+      // For consumer-specified migrations
+      searchPath = this.options.pattern.replace('{name}', name);
+      
+      // Make path absolute if it's relative
+      if (!searchPath.startsWith('/') && !searchPath.startsWith('file://')) {
+        searchPath = `${Deno.cwd()}/${searchPath}`;
+      }
+    } else {
+      // For package's own migrations (like migrator table creation)
+      const packageDir = new URL('..', import.meta.url).pathname;
+      searchPath = `${packageDir}/migrations/*.migration.ts`;
     }
 
     const migrations: Array<MigrationRecordType> = [];
-    for await (const dirEntry of expandGlob(path)) {
+    for await (const dirEntry of expandGlob(searchPath)) {
       if (dirEntry.isFile) {
         if (only.length == 0 || only.includes(dirEntry.name || '')) {
           const module = await import(dirEntry.path);
