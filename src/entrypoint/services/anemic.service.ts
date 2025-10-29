@@ -16,12 +16,73 @@ export class Anemic implements AnemicInterface {
   private dispatcher = new Dispatcher<{ boot: []; start: []; stop: [] }>();
 
   constructor(public application: ApplicationInterface) {
+    const span = this.application.tracer.start({ name: 'anemic', kind: SpanEnum.INTERNAL });
+
     for (const packName of application.packer.packs) {
       const pack = application.packer.container.construct<PackInterface>(packName);
+      
+      const onBootMethod = pack?.onBoot;
+      if (onBootMethod && typeof onBootMethod === 'function') {
+        this.dispatcher.subscribe('boot', (...args: any[]) => {
+          const bootSpan = span.child({ name: `${String(packName)} boot`, kind: SpanEnum.INTERNAL });
+          return onBootMethod(...args)
+            .then(() => {
+              bootSpan.status({ type: StatusEnum.RESOLVED });
+            })
+            .catch((error) => {
+              bootSpan.error(error);
+              bootSpan.status({ type: StatusEnum.REJECTED });
+              bootSpan.attributes({
+                error: { name: error.name, message: String(error?.message || error), cause: error.cause },
+              });
+            })
+            .finally(() => {
+              bootSpan.end();
+            });
+        })
+      }
 
-      if (pack?.onBoot) this.dispatcher.subscribe('boot', pack?.onBoot);
-      if (pack?.onStart) this.dispatcher.subscribe('start', pack?.onStart);
-      if (pack?.onStop) this.dispatcher.subscribe('stop', pack?.onStop);
+      const onStartMethod = pack?.onStart;
+      if (onStartMethod && typeof onStartMethod === 'function') {
+        this.dispatcher.subscribe('start', (...args: any[]) => {
+          const startSpan = span.child({ name: `${String(packName)} start`, kind: SpanEnum.INTERNAL });
+          return onStartMethod(...args)
+            .then(() => {
+              startSpan.status({ type: StatusEnum.RESOLVED });
+            })
+            .catch((error) => {
+              startSpan.error(error);
+              startSpan.status({ type: StatusEnum.REJECTED });
+              startSpan.attributes({
+                error: { name: error.name, message: String(error?.message || error), cause: error.cause },
+              });
+            })
+            .finally(() => {
+              startSpan.end();
+            });
+        });
+      }
+
+      const onStopMethod = pack?.onStop;
+      if (onStopMethod && typeof onStopMethod === 'function') {
+        this.dispatcher.subscribe('stop', (...args: any[]) => {
+          const stopSpan = span.child({ name: `${String(packName)} stop`, kind: SpanEnum.INTERNAL });
+          return onStopMethod(...args)
+            .then(() => {
+              stopSpan.status({ type: StatusEnum.RESOLVED });
+            })
+            .catch((error) => {
+              stopSpan.error(error);
+              stopSpan.status({ type: StatusEnum.REJECTED });
+              stopSpan.attributes({
+                error: { name: error.name, message: String(error?.message || error), cause: error.cause },
+              });
+            })
+            .finally(() => {
+              stopSpan.end();
+            });
+        });
+      }
     }
 
     for (const server of this.application.servers) {

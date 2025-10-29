@@ -137,7 +137,7 @@ describe('entrypoint', () => {
     class Sub implements PackInterface {
       constructor() { }
 
-      onBoot(): void {}
+      async onBoot(): Promise<void> {}
     }
 
     @Pack({
@@ -148,7 +148,7 @@ describe('entrypoint', () => {
     class App implements PackInterface {
       constructor() {  }
 
-      onBoot(): void {
+      async onBoot(): Promise<void> {
         bootText = 'onBoot reached';
       }
     }
