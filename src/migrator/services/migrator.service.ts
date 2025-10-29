@@ -220,7 +220,7 @@ export class Migrator implements MigratorInterface {
         const time = Number((migrationSpan.options.endTime || 0) - migrationSpan.options.startTime).toFixed(3);
 
         const table = this.querier.query.insert
-          .table(this.options.tableName)
+          .table(`${this.options.tableSchema}.${this.options.tableName}`)
           .column('action', `${migration.target.action || 'migration'}`)
           .column('version', `${migration.target.version || '1.0.0'}`)
           .column('environment', `${this.options.environment}`)

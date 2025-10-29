@@ -19,7 +19,7 @@ export class CreateMigration implements MigrationInterface {
   
   async up(): Promise<void> {
     const table = this.querier.table
-      .create.name(`${this.options.tableName}`).notExists()
+      .create.name(`${this.options.tableSchema}.${this.options.tableName}`).notExists()
       .column.name('id').numeric('serial').primaryKey().notNull().unique()
       .column.name('action').character('varchar', { length: 20 }).notNull().default('migration') // migration or seed
       .column.name('version').character('varchar', { length: 50 }).notNull()
