@@ -64,7 +64,7 @@ export class Migrator implements MigratorInterface {
             .column('checksum')
             .column('file_name')
             .column('applied_at')
-          .from.table(this.options.tableName)
+          .from.table(`${this.options.tableSchema}.${this.options.tableName}`)
           .where
             .and('file_name', 'eq', `${migration.fileName}`)
             .and('version', 'eq', `${migration.target.version || '1.0.0'}`)
