@@ -18,7 +18,7 @@ export class Migrator implements MigratorInterface {
   ) {
     this.options = {
       prefix: '-',
-      pattern: '/../{name}/**/*.migration.ts',
+      pattern: './migrations/{name}/**/*.migration.ts',
       tableName: 'migrations',
       environment: 'development',
       ...(options || {}),
@@ -134,16 +134,25 @@ export class Migrator implements MigratorInterface {
 
     let searchPath: string;
     
+    // Path resolution strategy:
+    // - When name is provided: consumer migrations using configurable pattern
+    // - When name is null: package's own migrations using import.meta.url
     if (name) {
       // For consumer-specified migrations
       searchPath = this.options.pattern.replace('{name}', name);
       
-      // Make path absolute if it's relative
+      // Handle different path types:
+      // 1. Absolute paths (start with /) - use as is
+      // 2. file:// URLs - use as is  
+      // 3. Relative paths - resolve from consumer's working directory
       if (!searchPath.startsWith('/') && !searchPath.startsWith('file://')) {
-        searchPath = `${Deno.cwd()}/${searchPath}`;
+        // Resolve relative to the consumer's current working directory
+        searchPath = `${Deno.cwd()}/${searchPath.startsWith('./') ? searchPath.slice(2) : searchPath}`;
       }
     } else {
       // For package's own migrations (like migrator table creation)
+      // Always use import.meta.url to get the correct package location
+      // regardless of where the consumer package is located
       const packageDir = new URL('..', import.meta.url).pathname;
       searchPath = `${packageDir}/migrations/*.migration.ts`;
     }
