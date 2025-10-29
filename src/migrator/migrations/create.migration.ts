@@ -7,7 +7,6 @@ import type { TransactionInterface } from '~/persister/interfaces.ts';
 import { StatusEnum } from '@zeero/commons';
 
 export class CreateMigration implements MigrationInterface {
-  version = '1.0.0';
   persist = true;
 
   constructor(
@@ -22,23 +21,23 @@ export class CreateMigration implements MigrationInterface {
       .create.name(`${this.options.tableSchema}.${this.options.tableName}`).notExists()
       .column.name('id').numeric('serial').primaryKey().notNull().unique()
       .column.name('action').character('varchar', { length: 20 }).notNull().default('migration') // migration or seed
-      .column.name('version').character('varchar', { length: 50 }).notNull()
       .column.name('environment').character('varchar', { length: 20 }).notNull().default('development') // 'development', 'staging', 'production'
+      .column.name('name').character('varchar', { length: 255 }).notNull()
+      .column.name('file_name').character('varchar', { length: 500 }).notNull()
+      .column.name('checksum').character('varchar', { length: 64 }).notNull()
       .column.name('applied_at').date('timestamp').notNull().default('CURRENT_TIMESTAMP')
       .column.name('applied_by').character('varchar', { length: 100 }).notNull()
       .column.name('description').character('text')
-      .column.name('file_name').character('varchar', { length: 500 }).notNull()
+      .column.name('execution_time_ms').numeric('decimal', { precision: 10, scale: 3 }).notNull()
       .column.name('up_sql').character('text')
       .column.name('down_sql').character('text')
-      .column.name('execution_time_ms').numeric('decimal', { precision: 10, scale: 3 }).notNull()
-      .column.name('checksum').character('varchar', { length: 64 }).notNull()
-      .constraint.unique(['version', 'environment'])
+      .constraint.unique(['name', 'environment'])
       .toQuery().text
 
-    const tableIndex = this.querier.index.create.name(`idx_${this.options.tableName}_version_environment_idx`)
+    const tableIndex = this.querier.index.create.name(`idx_${this.options.tableName}_name_environment_idx`)
       .notExists()
       .on.table(this.options.tableName)
-      .with.column('version').column('environment')
+      .with.column('name').column('environment')
       .toQuery().text
 
     try {

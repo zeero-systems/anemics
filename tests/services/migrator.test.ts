@@ -73,7 +73,7 @@ describe('migrator', () => {
           .select
             .column('id')
             .column('file_name')
-            .column('version')
+            .column('name')
             .column('checksum')
           .from.table(tableName)
           .where

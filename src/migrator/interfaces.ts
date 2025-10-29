@@ -9,7 +9,6 @@ export interface MigrationInterface {
   transaction: TransactionInterface,
   options: MigratorOptionsType;
 
-  version: string;
   action?: MigrationActionType;
   persist?: boolean;
   up_sqls?: Array<string>;

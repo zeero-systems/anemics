@@ -60,20 +60,19 @@ export class Migrator implements MigratorInterface {
         const existingQuery = this.querier.query
           .select
             .column('id')
-            .column('version')
             .column('checksum')
             .column('file_name')
             .column('applied_at')
           .from.table(`${this.options.tableSchema}.${this.options.tableName}`)
           .where
+            .and('name', 'eq', `${migration.name || '1.0.0'}`)
             .and('file_name', 'eq', `${migration.fileName}`)
-            .and('version', 'eq', `${migration.target.version || '1.0.0'}`)
             .and('environment', 'eq', `${this.options.environment}`)
           .toQuery();
 
         const existingResult = await transaction.execute<{
           id: number;
-          version: string;
+          name: string;
           checksum: string;
           file_name: string;
           applied_at: Date;
@@ -83,8 +82,8 @@ export class Migrator implements MigratorInterface {
         checksumMatches = exists && existingResult.rows[0].checksum === migration.checksum;
         const migrationAttributes = {
           exists,
+          name: migration.name,
           fileName: migration.fileName,
-          version: migration.target.version || '1.0.0',
           checksumMatches,
         };
 
@@ -167,6 +166,7 @@ export class Migrator implements MigratorInterface {
               this.options,
             ) as MigrationInterface;
             migrations.push({
+              name,
               target,
               fileName: dirEntry.name,
               checksum: await this.getMigrationChecksum(dirEntry.path),
@@ -184,6 +184,7 @@ export class Migrator implements MigratorInterface {
           this.options,
         ) as MigrationInterface;
         migrations.push({
+          name: 'migrator',
           target,
           fileName: `create.migration.ts`,
           checksum: '',
@@ -222,7 +223,7 @@ export class Migrator implements MigratorInterface {
         const table = this.querier.query.insert
           .table(`${this.options.tableSchema}.${this.options.tableName}`)
           .column('action', `${migration.target.action || 'migration'}`)
-          .column('version', `${migration.target.version || '1.0.0'}`)
+          .column('name', `${migration.name}`)
           .column('environment', `${this.options.environment}`)
           .column('applied_by', `${this.options.applyBy || 'system'}`)
           .column('description', `${migration.target.description || ''}`)
