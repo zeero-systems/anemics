@@ -152,7 +152,11 @@ export class Migrator implements MigratorInterface {
     for await (const dirEntry of expandGlob(searchPath)) {
       if (dirEntry.isFile) {
         if (only.length == 0 || only.includes(dirEntry.name || '')) {
-          const module = await import(dirEntry.path);
+          // Convert file system path to file:// URL for proper import resolution
+          const importPath = dirEntry.path.startsWith('file://') 
+            ? dirEntry.path 
+            : `file://${dirEntry.path}`;
+          const module = await import(importPath);
           const target = new module.default(
             span,
             this.querier,
