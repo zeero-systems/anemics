@@ -20,8 +20,8 @@ export class Connection implements ConnectionInterface {
     return this.client.end()
   }
 
-  transaction(name: string, options: TransactionOptionType): TransactionInterface {
-    return new Transaction(this.client, { name, transaction: options })
+  transaction(name: string, options?: TransactionOptionType): TransactionInterface {
+    return new Transaction(this.client, { name, transaction: options || {} })
   }
 
   async execute<T>(query: string, options: ExecuteOptionsType = {}): Promise<ExecuteResultType<T>> {

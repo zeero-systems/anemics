@@ -180,5 +180,4 @@ describe('querier', () => {
 
     expect(query.toQuery().text).toEqual("DELETE FROM users WHERE users.name IN ('Eduardo', 'Segura')");
   });
-
 });

@@ -40,8 +40,19 @@ export class Constraint<T extends BuilderInterface<T>> implements ConstraintClau
   }
 
   unique(column: string | boolean | Array<string>): this & T {
-    if (typeof column !== 'boolean' && !Array.isArray(column)) column = [column];
-    this.value.unique = column;
+    let normalized: boolean | Array<string>;
+    // If column is a non-empty string, wrap it in an array for table-level constraint
+    if (typeof column === 'string' && column.length > 0 && !Array.isArray(column)) {
+      normalized = [column];
+    } else if (typeof column === 'string' && column.length === 0) {
+      // If column is empty string, treat as boolean true for column-level constraint  
+      normalized = true;
+    } else if (typeof column === 'boolean') {
+      normalized = column;
+    } else {
+      normalized = column as Array<string>;
+    }
+    this.value.unique = normalized;
     return Objector.assign(this._querier, this);
   }
 
@@ -79,7 +90,16 @@ export class Constraint<T extends BuilderInterface<T>> implements ConstraintClau
       if (this.value.default) {
         if (Array.isArray(this.value.default)) {
           text.push(`DEFAULT '{${this.value.default.map((v) => `"${v}"`).join(',')}}'`);
+        } else if (typeof this.value.default === 'string') {
+          // Quote string defaults, but don't quote keywords like CURRENT_TIMESTAMP
+          const upperValue = this.value.default.toUpperCase();
+          if (upperValue === 'CURRENT_TIMESTAMP' || upperValue === 'NOW()' || upperValue === 'NULL' || upperValue === 'DEFAULT') {
+            text.push(`DEFAULT ${this.value.default}`);
+          } else {
+            text.push(`DEFAULT '${this.value.default}'`);
+          }
         } else {
+          // Numbers don't need quotes
           text.push(`DEFAULT ${this.value.default}`);
         }
       }

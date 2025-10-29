@@ -2,17 +2,17 @@ import type { BuilderOptionsType, ClauseType, QueryType } from '~/querier/types.
 import type {
   IndexQuerierInterface,
   IndexTypeClauseInterface,
-  NameClauseInterface,
+  CreateClauseInterface,
   RawClauseInterface,
   SelectClauseInterface,
   TableClauseInterface,
 } from '~/querier/interfaces.ts';
 
 import IndexType from '~/querier/postgresql/clauses/index-type.clause.ts';
-import Name from '~/querier/postgresql/clauses/name.clause.ts';
 import Raw from '~/querier/services/raw.clause.ts';
 import Select from '~/querier/postgresql/clauses/select.clause.ts';
 import Table from '~/querier/postgresql/clauses/table.clause.ts';
+import Create from '~/querier/postgresql/clauses/create.clause.ts';
 import Builder from '~/querier/services/builder.services.ts';
 
 export class IndexQuerier implements IndexQuerierInterface {
@@ -29,8 +29,8 @@ export class IndexQuerier implements IndexQuerierInterface {
     return new IndexQuerier();
   }
 
-  public get create(): NameClauseInterface<IndexQuerierInterface> {
-    return this.queue({ name: 'Name', target: new Name<IndexQuerierInterface>(this, 'CREATE INDEX') });
+  public get create(): CreateClauseInterface<IndexQuerierInterface> {
+    return this.queue({ name: 'Name', target: new Create<IndexQuerierInterface>(this, 'CREATE INDEX') });
   }
 
   public get on(): TableClauseInterface<IndexQuerierInterface> {

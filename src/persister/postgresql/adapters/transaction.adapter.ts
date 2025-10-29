@@ -25,7 +25,10 @@ export class Transaction implements TransactionInterface {
   }
 
   release(): Promise<void> {
-    return Promise.resolve((this.client as PoolClient).release())
+    if (this.client instanceof Client) {
+      return Promise.resolve();
+    }
+    return Promise.resolve(this.client.release())
   }
 
   execute<T>(query: string, options: ExecuteOptionsType = {}): Promise<ExecuteResultType<T>> {

@@ -30,6 +30,10 @@ export * from '~/network/interfaces.ts';
 export * from '~/network/types.ts';
 export * from '~/persister/interfaces.ts';
 export * from '~/persister/types.ts';
+export * from '~/resourcer/interfaces.ts';
+export * from '~/resourcer/types.ts';
+export * from '~/migrator/interfaces.ts';
+export * from '~/migrator/types.ts';
 export * from '~/querier/interfaces.ts';
 export * from '~/querier/types.ts';
 

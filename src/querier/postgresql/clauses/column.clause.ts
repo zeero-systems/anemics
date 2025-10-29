@@ -48,7 +48,9 @@ export class Column<T extends BuilderInterface<T>> implements ColumnClauseInterf
 
   public unique(value?: string | Array<string>): this & T {
     const constraint = new Constraint(this._querier);
-    constraint.unique(value ? value : true);
+    // If no value provided, pass true for column-level UNIQUE
+    // Otherwise pass the column names for table-level constraint
+    constraint.unique(value !== undefined ? value : true);
     this.row.constraints.push(constraint);
     return Objector.assign(this._querier, this);
   }

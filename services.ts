@@ -15,6 +15,8 @@ import Table from '~/persister/services/table.service.ts';
 import Memory from '~/persister/memory/memory.database.ts';
 import Postgresql from '~/persister/postgresql/postgresql.database.ts';
 
+import Migrator from '~/migrator/services/migrator.service.ts';
+
 import Builder from '~/querier/services/builder.services.ts';
 import Querier from '~/querier/services/querier.service.ts';
 
@@ -35,6 +37,8 @@ export { default as Table } from '~/persister/services/table.service.ts';
 export { default as Memory } from '~/persister/memory/memory.database.ts';
 export { default as Postgresql } from '~/persister/postgresql/postgresql.database.ts';
 
+export { default as Migrator } from '~/migrator/services/migrator.service.ts';
+
 export { default as Builder } from '~/querier/services/builder.services.ts';
 export { default as Querier } from '~/querier/services/querier.service.ts';
 
@@ -46,6 +50,7 @@ export default {
   Http,
   Memory,
   Middler,
+  Migrator,
   Postgresql,
   Querier,
   Query,

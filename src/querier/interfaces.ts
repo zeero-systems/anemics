@@ -57,7 +57,7 @@ export interface QueryQuerierInterface extends BuilderInterface<QueryQuerierInte
 export interface IndexQuerierInterface extends BuilderInterface<IndexQuerierInterface> {
   clauses: Array<{ previous?: ClauseType; current: ClauseType }>;
 
-  get create(): NameClauseInterface<IndexQuerierInterface>;
+  get create(): CreateClauseInterface<IndexQuerierInterface>;
   get on(): TableClauseInterface<IndexQuerierInterface>;
   get using(): IndexTypeClauseInterface<IndexQuerierInterface>;
   get with(): SelectClauseInterface<IndexQuerierInterface>;

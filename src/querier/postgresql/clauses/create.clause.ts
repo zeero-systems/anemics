@@ -7,7 +7,7 @@ import Name from '~/querier/postgresql/clauses/name.clause.ts';
 
 @Descriptor({ properties: { enumerable: false } })
 export class Create<T extends BuilderInterface<T>> implements CreateClauseInterface<T> {
-  public drops: CreateType = {} as CreateType;
+  public creates: CreateType = {} as CreateType;
   public namer: NameClauseInterface<T>;
 
   constructor(
@@ -31,7 +31,7 @@ export class Create<T extends BuilderInterface<T>> implements CreateClauseInterf
   }
 
   public notExists(): this & T {
-    this.drops.exists = false;
+    this.creates.exists = false;
     return Objector.assign(this._querier, this);
   }
 
@@ -41,7 +41,7 @@ export class Create<T extends BuilderInterface<T>> implements CreateClauseInterf
     if (this.hasCreate()) {
       text.push(this.key);
 
-      if (this.drops.exists === false) {
+      if (this.creates.exists === false) {
         text.push(`IF NOT EXISTS`);
       }
 
