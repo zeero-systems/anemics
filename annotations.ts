@@ -31,20 +31,12 @@ export { default as SocketAnnotation } from '~/controller/annotations/socket.ann
 export { default as TraceAnnotation } from '~/controller/annotations/trace.annotation.ts';
 
 export { default as ColumnAnnotation } from '~/persister/annotations/column.annotation.ts';
-export { default as CharacterAnnotation } from '~/persister/annotations/column.annotation.ts';
-export { default as DateAnnotation } from '~/persister/annotations/column.annotation.ts';
 export { default as ForeignKeyAnnotation } from '~/persister/annotations/foreign-key.annotation.ts';
-export { default as GeometricAnnotation } from '~/persister/annotations/column.annotation.ts';
 export { default as IndexAnnotation } from '~/persister/annotations/index.annotation.ts';
-export { default as LanguageAnnotation } from '~/persister/annotations/column.annotation.ts';
 export { default as ManyAnnotation } from '~/persister/annotations/many.annotation.ts';
-export { default as NetworkAnnotation } from '~/persister/annotations/column.annotation.ts';
-export { default as NumericAnnotation } from '~/persister/annotations/column.annotation.ts';
 export { default as OneAnnotation } from '~/persister/annotations/one.annotation.ts';
-export { default as RangeAnnotation } from '~/persister/annotations/column.annotation.ts';
 export { default as RelationAnnotation } from '~/persister/annotations/relation.annotation.ts';
 export { default as SchemaAnnotation } from '~/persister/annotations/schema.annotation.ts';
-export { default as StructureAnnotation } from '~/persister/annotations/column.annotation.ts';
 
 
 export default {
