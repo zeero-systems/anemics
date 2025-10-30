@@ -34,7 +34,7 @@ export type ClientOptionsType = {
   hostname: string;
   password: string;
   port: number;
-  schema: string;
+  schema?: string;
   user: string;
 };
 

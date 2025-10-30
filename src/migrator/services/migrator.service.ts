@@ -65,7 +65,7 @@ export class Migrator implements MigratorInterface {
             .column('applied_at')
           .from.table(`${this.options.tableSchema}.${this.options.tableName}`)
           .where
-            .and('name', 'eq', `${migration.name || '1.0.0'}`)
+            .and('name', 'eq', `${migration.name}`)
             .and('file_name', 'eq', `${migration.fileName}`)
             .and('environment', 'eq', `${this.options.environment}`)
           .toQuery();
@@ -257,7 +257,7 @@ export class Migrator implements MigratorInterface {
     const span = this.tracer.start({ name: `migrator up`, kind: SpanEnum.CLIENT });
 
     const client = await this.database.connection();
-    const transaction = client.transaction(`create-${this.options.tableName}-tables`);
+    const transaction = client.transaction(`${this.options.tableName}_up`);
 
     try {
       let returnValue = true;
@@ -284,7 +284,7 @@ export class Migrator implements MigratorInterface {
     } catch (error: any) {
       const err = { name: error.name, message: error.message, cause: error.cause ?? 'unknown' };
 
-      span.error(`Error executing ups: ${error.message}`, { error: err });
+      span.error(`Error executing up: ${error.message}`, { error: err });
       span.status({ type: StatusEnum.REJECTED, message: error.message });
       span.attributes({ error: err });
 
@@ -300,7 +300,7 @@ export class Migrator implements MigratorInterface {
     const span = this.tracer.start({ name: `migrator down`, kind: SpanEnum.INTERNAL });
 
     const client = await this.database.connection();
-    const transaction = client.transaction(`create-${this.options.tableName}-tables`);
+    const transaction = client.transaction(`${this.options.tableName}_down`);
 
     try {
       let returnValue = true;
@@ -324,7 +324,7 @@ export class Migrator implements MigratorInterface {
 
       return returnValue;
     } catch (error: any) {
-      span.error(`Error executing downs: ${error.message}`, { error });
+      span.error(`Error executing down: ${error.message}`, { error });
       span.status({ type: StatusEnum.REJECTED, message: error.message });
       span.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
 

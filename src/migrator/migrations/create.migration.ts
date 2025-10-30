@@ -36,7 +36,7 @@ export class CreateMigration implements MigrationInterface {
 
     const tableIndex = this.querier.index.create.name(`idx_${this.options.tableName}_name_environment_idx`)
       .notExists()
-      .on.table(this.options.tableName)
+      .on.table(`${this.options.tableSchema}.${this.options.tableName}`)
       .with.column('name').column('environment')
       .toQuery().text
 
@@ -61,7 +61,7 @@ export class CreateMigration implements MigrationInterface {
 
   async down(): Promise<void> {
     const table = `DROP TABLE IF EXISTS ${this.options.tableName} CASCADE;`;
-    const tableIndex = `DROP INDEX IF EXISTS idx_${this.options.tableName}_version_environment_idx;`;
+    const tableIndex = `DROP INDEX IF EXISTS idx_${this.options.tableName}_name_environment_idx;`;
 
     try {
       await this.transaction.execute(table);
