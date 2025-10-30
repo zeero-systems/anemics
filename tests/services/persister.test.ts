@@ -89,11 +89,11 @@ describe('persister', () => {
 
   const clientOptions = {
     database: 'postgres',
-    hostname: '127.0.0.1',
-    password: 'your-super-secret-and-long-postgres-password',
+    hostname: 'localhost',
+    password: 'postgres',
     port: 5432,
     schema: 'public',
-    user: 'postgres.your-tenant-id',
+    user: 'postgres',
   }
   
   const database = new Postgresql(commonOptions, clientOptions)

@@ -53,10 +53,9 @@ export class CreateMigration implements MigrationInterface {
       this.span.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
        
       throw error;
-
-    } finally {
-      this.span.attributes({ query: `${table}; ${tableIndex};`,  });
     }
+    
+    this.span.attributes({ query: `${table}; ${tableIndex};` });
   }
 
   async down(): Promise<void> {
@@ -76,9 +75,9 @@ export class CreateMigration implements MigrationInterface {
       this.span.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
        
       throw error;
-    } finally {
-      this.span.attributes({ query: `${table}; ${tableIndex};`,  });
     }
+    
+    this.span.attributes({ query: `${table}; ${tableIndex};` });
   }
 
 }

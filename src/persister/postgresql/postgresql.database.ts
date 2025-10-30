@@ -34,7 +34,10 @@ export class Postgresql implements DatabaseInterface {
       this.manager instanceof Pool ? await this.manager.connect() : this.manager,
     );
 
-    // Add this: Set search_path if schema option is provided
+    // Ensure connection is established before setting schema
+    await conn.connect();
+
+    // Set search_path if schema option is provided
     if (this.options.schema) {
       await conn.execute(`SET search_path TO ${this.options.schema}`);
     }

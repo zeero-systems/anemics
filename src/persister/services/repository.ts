@@ -52,55 +52,46 @@ export class Repository<T extends NewableType<T>> implements RepositoryInterface
     return this.executeWithConnect(queriers, options)
   }
 
-  public executeWithConnect(queriers: QueryType[], _options?: ExecuteOptionsType): Promise<ExecuteResultType<InstanceType<T>>[]> {
-    return this.database.connection().then(async (connection) => {
-      await connection.connect()
-      
-      const result = await Promise.all(queriers.map((querier) => {
-        let fields
+  public async executeWithConnect(queriers: QueryType[], _options?: ExecuteOptionsType): Promise<ExecuteResultType<InstanceType<T>>[]> {
+    await using connection = await this.database.connection();
+    await connection.connect();
+    
+    const result = await Promise.all(queriers.map((querier) => {
+      let fields
 
-        if (querier.returns && querier.returns.length > 0) {
-          fields = querier.returns?.map(this.options.toSchemaNaming)
-        }
-        
-        const options = { args: querier.args, fields }
-        
-        return connection.execute<InstanceType<T>>(querier.text, options)
-      }))
-
-      await connection.disconnect()
+      if (querier.returns && querier.returns.length > 0) {
+        fields = querier.returns?.map(this.options.toSchemaNaming)
+      }
       
-      return result
-    })
+      const options = { args: querier.args, fields }
+      
+      return connection.execute<InstanceType<T>>(querier.text, options)
+    }))
+    
+    return result
   }
 
-  public executeWithTransaction(queriers: QueryType[], options?: RepositoryExecuteOptionsType): Promise<ExecuteResultType<InstanceType<T>>[]> {
-    return this.database.connection().then(async (connection) => {
-      await connection.connect()
+  public async executeWithTransaction(queriers: QueryType[], options?: RepositoryExecuteOptionsType): Promise<ExecuteResultType<InstanceType<T>>[]> {
+    await using connection = await this.database.connection();
+    await connection.connect();
 
-      const transaction = connection.transaction(`${Date.now()}`, options?.transaction)
+    await using transaction = connection.transaction(`${Date.now()}`, options?.transaction);
+    await transaction.begin();
+    
+    const result = await Promise.all(queriers.map((querier) => {
+      let fields
 
-      await transaction.begin()
-      
-      const result = await Promise.all(queriers.map((querier) => {
-        let fields
+      if (querier.returns && querier.returns.length > 0) {
+        fields = querier.returns?.map(this.options.toSchemaNaming)
+      }
 
-        if (querier.returns && querier.returns.length > 0) {
-          fields = querier.returns?.map(this.options.toSchemaNaming)
-        }
+      const options = { args: querier.args, fields }
+      return transaction.execute<InstanceType<T>>(querier.text, options)
+    }))
 
-        const options = { args: querier.args, fields }
-        return transaction.execute<InstanceType<T>>(querier.text, options)
-      }))
-
-      await transaction.commit()
-
-      await transaction.release()
-
-      await connection.disconnect()
-      
-      return result
-    })
+    await transaction.commit();
+    
+    return result
   }
 }
 

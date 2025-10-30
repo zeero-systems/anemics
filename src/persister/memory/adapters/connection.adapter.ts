@@ -26,5 +26,9 @@ export class Connection implements ConnectionInterface {
   execute<T>(_query: string, _options: ExecuteOptionsType = {}): Promise<ExecuteResultType<T>> {
     return Promise.resolve({ command: 'NOOP', rows: [] })
   }
+
+  async [Symbol.asyncDispose]() {
+    await this.disconnect();
+  }
  
 }

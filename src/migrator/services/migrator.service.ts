@@ -255,11 +255,11 @@ export class Migrator implements MigratorInterface {
   }
 
   async up(name?: string, only: Array<string> = []): Promise<boolean> {
-    const span = this.tracer.start({ name: `migrator up`, kind: SpanEnum.CLIENT });
+    using span = this.tracer.start({ name: `migrator up`, kind: SpanEnum.CLIENT });
 
-    const client = await this.database.connection();
-    const transaction = client.transaction(`${this.options.tableName}_up`);
-
+    await using client = await this.database.connection();
+    await using transaction = client.transaction(`${this.options.tableName}_up`);
+    
     try {
       let returnValue = true;
       await transaction.begin();
@@ -278,7 +278,6 @@ export class Migrator implements MigratorInterface {
       }
 
       await transaction.commit();
-
       span.status({ type: StatusEnum.RESOLVED });
 
       return returnValue;
@@ -290,18 +289,14 @@ export class Migrator implements MigratorInterface {
       span.attributes({ error: err });
 
       throw error;
-    } finally {
-      await transaction.release();
-      await client.disconnect();
-      span.end();
     }
   }
 
   async down(name?: string, only: Array<string> = []): Promise<boolean> {
-    const span = this.tracer.start({ name: `migrator down`, kind: SpanEnum.INTERNAL });
+    using span = this.tracer.start({ name: `migrator down`, kind: SpanEnum.INTERNAL });
 
-    const client = await this.database.connection();
-    const transaction = client.transaction(`${this.options.tableName}_down`);
+    await using client = await this.database.connection();
+    await using transaction = client.transaction(`${this.options.tableName}_down`);
 
     try {
       let returnValue = true;
@@ -312,15 +307,12 @@ export class Migrator implements MigratorInterface {
       if (migrations.length === 0) {
         span.info(`Skipping migration ${name || 'migrator'} - already applied or checksum mismatch`);
         span.status({ type: StatusEnum.RESOLVED });
-        span.end();
-
         returnValue = false;
       } else {
         await this.execute(span, transaction, migrations, 'down');
       }
 
       await transaction.commit();
-
       span.status({ type: StatusEnum.RESOLVED });
 
       return returnValue;
@@ -330,10 +322,6 @@ export class Migrator implements MigratorInterface {
       span.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
 
       throw error;
-    } finally {
-      await transaction.release();
-      await client.disconnect();
-      span.end();
     }
   }
 }

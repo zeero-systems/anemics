@@ -236,30 +236,23 @@ export class Application implements ApplicationInterface {
     lastNext: NextFunctionType,
   ): NextFunctionType {
     return middlewares[event].reduce((a: NextFunctionType, b: MiddlewareInterface) => {
-      return (function next(context: ContextType): Promise<void> {
+      return (async function next(context: ContextType): Promise<void> {
         context.handler.event = event;
-        let called = false;
-        const span = context.span.child({ name: `middleware ${(b as any).name}`, kind: SpanEnum.INTERNAL });
+        using span = context.span.child({ name: `middleware ${(b as any).name}`, kind: SpanEnum.INTERNAL });
         span.attributes({ middleware: (b as any).name, event });
-        return b.onUse(context, () => {
-          called = true;
-          span.status({ type: StatusEnum.RESOLVED });
-          span.end();
-
-          return a(context)
-        })
-        .catch((error) => {
+        
+        try {
+          await b.onUse(context, () => {
+            span.status({ type: StatusEnum.RESOLVED });
+            return a(context);
+          });
+        } catch (error: any) {
           // @TODO maybe we should truncate the error cause to avoid circular references or big objects
           // @TODO also expose some knob to configure the truncate length or strategy
           span.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
           span.status({ type: StatusEnum.REJECTED });
           throw error;
-        })
-        .finally(() => {
-          if (!called) {
-            span.end();
-          }
-        });
+        }
       }) as NextFunctionType;
     }, lastNext);
   }

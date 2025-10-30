@@ -23,64 +23,55 @@ export class Anemic implements AnemicInterface {
       
       const onBootMethod = pack?.onBoot;
       if (onBootMethod && typeof onBootMethod === 'function') {
-        this.dispatcher.subscribe('boot', (...args: any[]) => {
-          const bootSpan = span.child({ name: `${String(packName)} boot`, kind: SpanEnum.INTERNAL });
-          return onBootMethod(...args)
-            .then(() => {
-              bootSpan.status({ type: StatusEnum.RESOLVED });
-            })
-            .catch((error) => {
-              bootSpan.error(error);
-              bootSpan.status({ type: StatusEnum.REJECTED });
-              bootSpan.attributes({
-                error: { name: error.name, message: String(error?.message || error), cause: error.cause },
-              });
-            })
-            .finally(() => {
-              bootSpan.end();
+        this.dispatcher.subscribe('boot', async (...args: any[]) => {
+          using bootSpan = span.child({ name: `${String(packName)} boot`, kind: SpanEnum.INTERNAL });
+          try {
+            await onBootMethod(...args);
+            bootSpan.status({ type: StatusEnum.RESOLVED });
+          } catch (error: any) {
+            bootSpan.error(String(error?.message || error));
+            bootSpan.status({ type: StatusEnum.REJECTED });
+            bootSpan.attributes({
+              error: { name: error.name, message: String(error?.message || error), cause: error.cause },
             });
+            throw error;
+          }
         })
       }
 
       const onStartMethod = pack?.onStart;
       if (onStartMethod && typeof onStartMethod === 'function') {
-        this.dispatcher.subscribe('start', (...args: any[]) => {
-          const startSpan = span.child({ name: `${String(packName)} start`, kind: SpanEnum.INTERNAL });
-          return onStartMethod(...args)
-            .then(() => {
-              startSpan.status({ type: StatusEnum.RESOLVED });
-            })
-            .catch((error) => {
-              startSpan.error(error);
-              startSpan.status({ type: StatusEnum.REJECTED });
-              startSpan.attributes({
-                error: { name: error.name, message: String(error?.message || error), cause: error.cause },
-              });
-            })
-            .finally(() => {
-              startSpan.end();
+        this.dispatcher.subscribe('start', async (...args: any[]) => {
+          using startSpan = span.child({ name: `${String(packName)} start`, kind: SpanEnum.INTERNAL });
+          try {
+            await onStartMethod(...args);
+            startSpan.status({ type: StatusEnum.RESOLVED });
+          } catch (error: any) {
+            startSpan.error(String(error?.message || error));
+            startSpan.status({ type: StatusEnum.REJECTED });
+            startSpan.attributes({
+              error: { name: error.name, message: String(error?.message || error), cause: error.cause },
             });
+            throw error;
+          }
         });
       }
 
       const onStopMethod = pack?.onStop;
       if (onStopMethod && typeof onStopMethod === 'function') {
-        this.dispatcher.subscribe('stop', (...args: any[]) => {
-          const stopSpan = span.child({ name: `${String(packName)} stop`, kind: SpanEnum.INTERNAL });
-          return onStopMethod(...args)
-            .then(() => {
-              stopSpan.status({ type: StatusEnum.RESOLVED });
-            })
-            .catch((error) => {
-              stopSpan.error(error);
-              stopSpan.status({ type: StatusEnum.REJECTED });
-              stopSpan.attributes({
-                error: { name: error.name, message: String(error?.message || error), cause: error.cause },
-              });
-            })
-            .finally(() => {
-              stopSpan.end();
+        this.dispatcher.subscribe('stop', async (...args: any[]) => {
+          using stopSpan = span.child({ name: `${String(packName)} stop`, kind: SpanEnum.INTERNAL });
+          try {
+            await onStopMethod(...args);
+            stopSpan.status({ type: StatusEnum.RESOLVED });
+          } catch (error: any) {
+            stopSpan.error(String(error?.message || error));
+            stopSpan.status({ type: StatusEnum.REJECTED });
+            stopSpan.attributes({
+              error: { name: error.name, message: String(error?.message || error), cause: error.cause },
             });
+            throw error;
+          }
         });
       }
     }
@@ -88,7 +79,7 @@ export class Anemic implements AnemicInterface {
     for (const server of this.application.servers) {
       this.dispatcher.subscribe('start', async () => {
         const span = this.application.tracer.start({ name: 'anemic', kind: SpanEnum.SERVER });
-        await server.start((request, socket) => {
+        await server.start(async (request, socket) => {
           const resources = {
             system: {
               ...this.application.resourcer.getSystem(true),
@@ -107,21 +98,23 @@ export class Anemic implements AnemicInterface {
             handler = this.httpHandler(new Requester(request), new Responser(), server.options, span, socket);
           }
 
-          return handler.then((response) => {
-            child.status({ type: StatusEnum.RESOLVED });
+          try {
+            using childSpan = child;
+            const response = await handler;
+            childSpan.status({ type: StatusEnum.RESOLVED });
             return response;
-          })
-            .catch((error) => {
-              child.error(error);
-              child.event({
-                name: 'handler.error',
-                attributes: {
-                  error: { name: error.name, message: String(error?.message || error), stack: error.stack },
-                },
-              });
-              child.status({ type: StatusEnum.REJECTED });
-            })
-            .finally(() => child.end());
+          } catch (error: any) {
+            child.error(error);
+            child.event({
+              name: 'handler.error',
+              attributes: {
+                error: { name: error.name, message: String(error?.message || error), stack: error.stack },
+              },
+            });
+            child.status({ type: StatusEnum.REJECTED });
+            child.end();
+            throw error;
+          }
         });
 
         this.dispatcher.subscribe('stop', async () => {

@@ -45,5 +45,9 @@ export class Transaction implements TransactionInterface {
   rollback(): Promise<void> {
     return this.transaction.rollback()
   }
+
+  async [Symbol.asyncDispose]() {
+    await this.release();
+  }
  
 }

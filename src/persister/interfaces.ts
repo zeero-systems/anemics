@@ -54,7 +54,7 @@ export interface DatabaseInterface {
   connection(): Promise<ConnectionInterface>;
 }
 
-export interface TransactionInterface {
+export interface TransactionInterface extends AsyncDisposable {
   client: any;
   options: {
     name: string;
@@ -68,7 +68,7 @@ export interface TransactionInterface {
   rollback(): Promise<void>;
 }
 
-export interface ConnectionInterface {
+export interface ConnectionInterface extends AsyncDisposable {
   client: any;
   connected?: boolean;
 

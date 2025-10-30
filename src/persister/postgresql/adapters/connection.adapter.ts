@@ -34,5 +34,9 @@ export class Connection implements ConnectionInterface {
         notices: result.warnings
       }))
   }
+
+  async [Symbol.asyncDispose]() {
+    await this.disconnect();
+  }
  
 }
