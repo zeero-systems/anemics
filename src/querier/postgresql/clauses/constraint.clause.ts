@@ -1,7 +1,7 @@
 import type { ConstraintType, QueryType } from '~/querier/types.ts';
 import type { BuilderInterface, ConstraintClauseInterface } from '~/querier/interfaces.ts';
 
-import { Objector, Descriptor } from '@zeero/commons';
+import { Descriptor, Objector } from '@zeero/commons';
 
 import ForeingActionEnum from '~/querier/enums/foreign-action.enum.ts';
 
@@ -45,7 +45,7 @@ export class Constraint<T extends BuilderInterface<T>> implements ConstraintClau
     if (typeof column === 'string' && column.length > 0 && !Array.isArray(column)) {
       normalized = [column];
     } else if (typeof column === 'string' && column.length === 0) {
-      // If column is empty string, treat as boolean true for column-level constraint  
+      // If column is empty string, treat as boolean true for column-level constraint
       normalized = true;
     } else if (typeof column === 'boolean') {
       normalized = column;
@@ -93,7 +93,10 @@ export class Constraint<T extends BuilderInterface<T>> implements ConstraintClau
         } else if (typeof this.value.default === 'string') {
           // Quote string defaults, but don't quote keywords like CURRENT_TIMESTAMP
           const upperValue = this.value.default.toUpperCase();
-          if (upperValue === 'CURRENT_TIMESTAMP' || upperValue === 'NOW()' || upperValue === 'NULL' || upperValue === 'DEFAULT') {
+          if (
+            upperValue === 'CURRENT_TIMESTAMP' || upperValue === 'NOW()' || upperValue === 'NULL' ||
+            upperValue === 'DEFAULT'
+          ) {
             text.push(`DEFAULT ${this.value.default}`);
           } else {
             text.push(`DEFAULT '${this.value.default}'`);

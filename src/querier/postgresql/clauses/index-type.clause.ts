@@ -1,7 +1,7 @@
 import type { QueryType } from '~/querier/types.ts';
 import type { BuilderInterface, IndexTypeClauseInterface } from '~/querier/interfaces.ts';
 
-import { Objector, Descriptor } from '@zeero/commons';
+import { Descriptor, Objector } from '@zeero/commons';
 
 @Descriptor({ properties: { enumerable: false } })
 export class IndexType<T extends BuilderInterface<T>> implements IndexTypeClauseInterface<T> {

@@ -1,4 +1,3 @@
-
 export enum HttpStatusEnum {
   CONTINUE = 100,
   SWITCHING_PROTOCOLS = 101,
@@ -57,4 +56,4 @@ export enum HttpStatusEnum {
   LOOP_DETECTED = 508,
 }
 
-export default HttpStatusEnum
+export default HttpStatusEnum;

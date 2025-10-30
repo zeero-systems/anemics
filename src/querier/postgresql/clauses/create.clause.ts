@@ -1,7 +1,7 @@
 import type { CreateType, QueryType } from '~/querier/types.ts';
 import type { BuilderInterface, CreateClauseInterface, NameClauseInterface } from '~/querier/interfaces.ts';
 
-import { Objector, Descriptor } from '@zeero/commons';
+import { Descriptor, Objector } from '@zeero/commons';
 
 import Name from '~/querier/postgresql/clauses/name.clause.ts';
 

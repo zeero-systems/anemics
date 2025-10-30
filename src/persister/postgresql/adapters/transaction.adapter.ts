@@ -4,31 +4,31 @@ import type { TransactionInterface } from '~/persister/interfaces.ts';
 import { Client, PoolClient, Transaction as PostgresTransaction } from '@deno/postgres';
 
 export class Transaction implements TransactionInterface {
-  transaction: PostgresTransaction 
+  transaction: PostgresTransaction;
 
   constructor(
-    public client: Client | PoolClient, 
-    public options: { 
-      name: string, 
-      transaction: TransactionOptionType
-    }
+    public client: Client | PoolClient,
+    public options: {
+      name: string;
+      transaction: TransactionOptionType;
+    },
   ) {
-    this.transaction = client.createTransaction(options.name, options.transaction)
+    this.transaction = client.createTransaction(options.name, options.transaction);
   }
-  
+
   begin(): Promise<void> {
-    return this.transaction.begin()
+    return this.transaction.begin();
   }
 
   commit(): Promise<void> {
-    return this.transaction.commit()
+    return this.transaction.commit();
   }
 
   release(): Promise<void> {
     if (this.client instanceof Client) {
       return Promise.resolve();
     }
-    return Promise.resolve(this.client.release())
+    return Promise.resolve(this.client.release());
   }
 
   execute<T>(query: string, options: ExecuteOptionsType = {}): Promise<ExecuteResultType<T>> {
@@ -38,16 +38,15 @@ export class Transaction implements TransactionInterface {
         columns: result.columns,
         count: result.rowCount,
         rows: result.rows,
-        notices: result.warnings
-      }))
+        notices: result.warnings,
+      }));
   }
 
   rollback(): Promise<void> {
-    return this.transaction.rollback()
+    return this.transaction.rollback();
   }
 
   async [Symbol.asyncDispose]() {
     await this.release();
   }
- 
 }

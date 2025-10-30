@@ -13,13 +13,14 @@ export class Http implements ServerInterface {
     MethodEnum.PUT,
     MethodEnum.POST,
     MethodEnum.TRACE,
-  ]
-  public server!: Deno.HttpServer
+  ];
+  public server!: Deno.HttpServer;
 
   constructor(public options: ServerOptionsType) {}
 
   async start(handler: HttpHandlerType): Promise<void> {
     this.server = Deno.serve(this.options, handler as any);
+    await Promise.resolve(); // Required for async compliance
   }
 
   async stop(): Promise<void> {
@@ -28,4 +29,4 @@ export class Http implements ServerInterface {
   }
 }
 
-export default Http
+export default Http;

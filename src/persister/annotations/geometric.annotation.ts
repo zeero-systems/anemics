@@ -6,10 +6,10 @@ import type { ColumnInterface } from '~/persister/interfaces.ts';
 import { AnnotationException, DecoratorKindEnum } from '@zeero/commons';
 
 export class GeometricAnnotation implements AnnotationInterface, ColumnInterface {
-  name: string = 'Geometric'
-  persists?: boolean | undefined = true
-  stackable?: boolean | undefined = false
-    
+  name: string = 'Geometric';
+  persists?: boolean | undefined = true;
+  stackable?: boolean | undefined = false;
+
   constructor(public type: GeometricType, public options?: ColumnOptionsType) {}
 
   onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
@@ -26,7 +26,7 @@ export class GeometricAnnotation implements AnnotationInterface, ColumnInterface
     });
   }
 
-  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default GeometricAnnotation
+export default GeometricAnnotation;

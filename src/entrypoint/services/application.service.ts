@@ -47,13 +47,12 @@ export class Application implements ApplicationInterface {
     public pack: PackNewableType,
     public options: ApplicationOptionsType = { http: { name: 'Default', port: 3000 } },
   ) {
-
     this.container = new Container();
     this.container.add([{ name: 'Container', target: this.container }], 'provider');
 
-    this.packer = new Packer(pack, this.container);    
+    this.packer = new Packer(pack, this.container);
     this.packer.unpack(this.pack);
-    
+
     if (!this.container.collection.get('Resourcer')) {
       const resourcer = {
         name: 'Resourcer',
@@ -76,13 +75,13 @@ export class Application implements ApplicationInterface {
     }
 
     this.tracer = this.packer.container.construct<TracerInterface>('Tracer') as TracerInterface;
-    
-    const span = this.tracer.start({ name: 'application' })
+
+    const span = this.tracer.start({ name: 'application' });
 
     // @TODO better way to expose current package version
     this.tracer.info(`Anemic Framework v0.20.0`);
     this.tracer.info(`Running Deno v${Deno.version.deno} & Typescript v${Deno.version.typescript}`);
-    
+
     this.setServers(span);
     this.setMiddlewares(span);
     this.setRoutes(span);
@@ -92,7 +91,7 @@ export class Application implements ApplicationInterface {
       { name: 'Router', target: this.router },
       { name: 'Middler', target: this.middler },
     ], 'provider');
-    
+
     const resources = this.resourcer.getResource();
     if (resources) {
       span.attributes(resources);
@@ -103,7 +102,7 @@ export class Application implements ApplicationInterface {
   }
 
   private setServers(span: SpanInterface): void {
-    const child = span.child({ name: 'servers' })
+    const child = span.child({ name: 'servers' });
 
     if (this.options.http) {
       child.attributes({ http: this.options.http });
@@ -143,7 +142,7 @@ export class Application implements ApplicationInterface {
   }
 
   private setMiddlewares(span: SpanInterface): void {
-    const child = span.child({ name: 'middlewares' })
+    const child = span.child({ name: 'middlewares' });
     const artifacts = this.packer.artifacts();
 
     if (this.options.middlewares) {
@@ -240,7 +239,7 @@ export class Application implements ApplicationInterface {
         context.handler.event = event;
         using span = context.span.child({ name: `middleware ${(b as any).name}`, kind: SpanEnum.INTERNAL });
         span.attributes({ middleware: (b as any).name, event });
-        
+
         try {
           await b.onUse(context, () => {
             span.status({ type: StatusEnum.RESOLVED });

@@ -1,15 +1,18 @@
-import type { AnnotationInterface, ArtifactType, NewableType, DecoratorType, KeyableType } from '@zeero/commons';
+import type { AnnotationInterface, ArtifactType, DecoratorType, KeyableType, NewableType } from '@zeero/commons';
 import type { RelationOptionsType } from '~/persister/types.ts';
 import type { RelationInterface } from '~/persister/interfaces.ts';
 
 import { AnnotationException, DecoratorKindEnum } from '@zeero/commons';
 
 export class OneAnnotation implements AnnotationInterface, RelationInterface {
-  name: string = 'One'
-  persists?: boolean | undefined = true
-  stackable?: boolean | undefined = false
-    
-  constructor(public referenceTable: () => NewableType<any>, public options: RelationOptionsType & { localKey: KeyableType }) {}
+  name: string = 'One';
+  persists?: boolean | undefined = true;
+  stackable?: boolean | undefined = false;
+
+  constructor(
+    public referenceTable: () => NewableType<any>,
+    public options: RelationOptionsType & { localKey: KeyableType },
+  ) {}
 
   onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
     if (
@@ -25,7 +28,7 @@ export class OneAnnotation implements AnnotationInterface, RelationInterface {
     });
   }
 
-  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default OneAnnotation
+export default OneAnnotation;

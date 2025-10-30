@@ -1,9 +1,8 @@
-
 export enum EventEnum {
   AFTER = 'after',
   BEFORE = 'before',
   MIDDLE = 'middle',
-  EXCEPTION = 'exception'
+  EXCEPTION = 'exception',
 }
 
-export default EventEnum
+export default EventEnum;

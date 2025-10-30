@@ -1,7 +1,7 @@
 import type { ColumnType, QueryType } from '~/querier/types.ts';
 import type { BuilderInterface, ColumnClauseInterface } from '~/querier/interfaces.ts';
 
-import { Objector, Descriptor } from '@zeero/commons';
+import { Descriptor, Objector } from '@zeero/commons';
 import Constraint from '~/querier/postgresql/clauses/constraint.clause.ts';
 import {
   CharacterType,

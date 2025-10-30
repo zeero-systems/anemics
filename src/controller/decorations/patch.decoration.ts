@@ -1,7 +1,7 @@
 import { DecorationFunctionType, Decorator } from '@zeero/commons';
 
-import PatchAnnotation from '~/controller/annotations/patch.annotation.ts'
+import PatchAnnotation from '~/controller/annotations/patch.annotation.ts';
 
-export const Patch: DecorationFunctionType<typeof PatchAnnotation> = Decorator.create(PatchAnnotation)
+export const Patch: DecorationFunctionType<typeof PatchAnnotation> = Decorator.create(PatchAnnotation);
 
-export default Patch
+export default Patch;

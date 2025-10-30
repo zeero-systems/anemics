@@ -209,10 +209,10 @@ export type QueryInstanceType = {
 };
 
 export type SearchOptionsType = ActionOptionsType & {
-  alias: string,
+  alias: string;
   query: QueryQuerierInterface;
   schema: SchemaAnnotation;
-  instance: QueryInstanceType
+  instance: QueryInstanceType;
 };
 
 export type ManyOptionsType = {

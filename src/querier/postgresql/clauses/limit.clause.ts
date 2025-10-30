@@ -1,11 +1,11 @@
 import type { BuilderInterface, LimitClauseInterface } from '~/querier/interfaces.ts';
 import type { QueryType } from '~/querier/types.ts';
 
-import { Objector, Descriptor } from '@zeero/commons';
+import { Descriptor, Objector } from '@zeero/commons';
 
 @Descriptor({ properties: { enumerable: false } })
 export class Limit<T extends BuilderInterface<T>> implements LimitClauseInterface<T> {
-  private value: number | undefined
+  private value: number | undefined;
 
   constructor(
     private _querier: T,
@@ -13,12 +13,12 @@ export class Limit<T extends BuilderInterface<T>> implements LimitClauseInterfac
   ) {}
 
   hasLimit(): boolean {
-    return typeof this.value !== 'undefined'
+    return typeof this.value !== 'undefined';
   }
 
   at(value: number): this & T;
   at(value: any): this & T {
-    this.value = value
+    this.value = value;
 
     return Objector.assign(this._querier, this);
   }
@@ -31,10 +31,10 @@ export class Limit<T extends BuilderInterface<T>> implements LimitClauseInterfac
       text.push(String(this.value));
     }
 
-    return { 
+    return {
       ...options,
-      args: options.args, 
-      text: text.filter((s) => !!s).join(' ') 
+      args: options.args,
+      text: text.filter((s) => !!s).join(' '),
     };
   }
 }

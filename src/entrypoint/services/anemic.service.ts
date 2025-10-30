@@ -20,7 +20,7 @@ export class Anemic implements AnemicInterface {
 
     for (const packName of application.packer.packs) {
       const pack = application.packer.container.construct<PackInterface>(packName);
-      
+
       const onBootMethod = pack?.onBoot;
       if (onBootMethod && typeof onBootMethod === 'function') {
         this.dispatcher.subscribe('boot', async (...args: any[]) => {
@@ -36,7 +36,7 @@ export class Anemic implements AnemicInterface {
             });
             throw error;
           }
-        })
+        });
       }
 
       const onStartMethod = pack?.onStart;

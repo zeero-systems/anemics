@@ -4,8 +4,8 @@ export class Requester<T = BodyInit> extends Request implements RequesterInterfa
   parsed: T | null | undefined;
 
   constructor(request: Request) {
-    super(request)
+    super(request);
   }
 }
 
-export default Requester
+export default Requester;

@@ -1,4 +1,9 @@
-import type { BuilderInterface, ConstraintClauseInterface, QueryQuerierInterface, RawClauseInterface } from '~/querier/interfaces.ts';
+import type {
+  BuilderInterface,
+  ConstraintClauseInterface,
+  QueryQuerierInterface,
+  RawClauseInterface,
+} from '~/querier/interfaces.ts';
 
 import ForeingActionEnum from '~/querier/enums/foreign-action.enum.ts';
 import { SyntaxType } from '~/persister/types.ts';
@@ -16,7 +21,7 @@ export type TableType = {
 
 export type AliasColumnType = {
   name: string | RawClauseInterface<any>;
-  alias?: ValueType
+  alias?: ValueType;
 };
 
 export type ValueColumnType = {
@@ -27,7 +32,7 @@ export type ValueColumnType = {
 export type QueryType = {
   args: Array<string | number>;
   text: string;
-  returns: Array<string>,
+  returns: Array<string>;
   placeholder?: string;
   placeholderType?: 'counter' | 'static';
 };
@@ -131,9 +136,9 @@ export type CreateType = {
 };
 
 export type QuerierOptionsType = {
-  syntax: SyntaxType
+  syntax: SyntaxType;
   placeholder?: string;
   placeholderType?: 'counter' | 'static';
-} 
+};
 
 export default {};

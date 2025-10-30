@@ -6,10 +6,10 @@ import type { ColumnInterface } from '~/persister/interfaces.ts';
 import { AnnotationException, DecoratorKindEnum } from '@zeero/commons';
 
 export class LanguageAnnotation implements AnnotationInterface, ColumnInterface {
-  name: string = 'Language'
-  persists?: boolean | undefined = true
-  stackable?: boolean | undefined = false
-    
+  name: string = 'Language';
+  persists?: boolean | undefined = true;
+  stackable?: boolean | undefined = false;
+
   constructor(public type: LanguageType, public options?: ColumnOptionsType) {}
 
   onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
@@ -26,7 +26,7 @@ export class LanguageAnnotation implements AnnotationInterface, ColumnInterface 
     });
   }
 
-  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default LanguageAnnotation
+export default LanguageAnnotation;

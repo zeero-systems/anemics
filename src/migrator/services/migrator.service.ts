@@ -43,8 +43,8 @@ export class Migrator implements MigratorInterface {
       .select.column('COUNT(*)', 'count')
       .from.table('information_schema.tables')
       .where
-        .and('table_name', 'eq', `${this.options.tableName}`)
-        .and('table_schema', 'eq', `${this.options.tableSchema}`)
+      .and('table_name', 'eq', `${this.options.tableName}`)
+      .and('table_schema', 'eq', `${this.options.tableSchema}`)
       .toQuery();
 
     const tableExistsResult = await transaction.execute<{ count: string }>(tableExistsQuery.text, {
@@ -59,16 +59,16 @@ export class Migrator implements MigratorInterface {
       if (tableExists) {
         const existingQuery = this.querier.query
           .select
-            .column('id')
-            .column('name')
-            .column('checksum')
-            .column('file_name')
-            .column('applied_at')
+          .column('id')
+          .column('name')
+          .column('checksum')
+          .column('file_name')
+          .column('applied_at')
           .from.table(`${this.options.tableSchema}.${this.options.tableName}`)
           .where
-            .and('name', 'eq', `${migration.name}`)
-            .and('file_name', 'eq', `${migration.fileName}`)
-            .and('environment', 'eq', `${this.options.environment}`)
+          .and('name', 'eq', `${migration.name}`)
+          .and('file_name', 'eq', `${migration.fileName}`)
+          .and('environment', 'eq', `${this.options.environment}`)
           .toQuery();
 
         const existingResult = await transaction.execute<{
@@ -80,7 +80,7 @@ export class Migrator implements MigratorInterface {
         }>(existingQuery.text, { args: existingQuery.args });
 
         exists = existingResult.rows.length > 0;
-        checksumMatches = (exists && existingResult.rows[0].checksum === migration.checksum) || !migration.checksum
+        checksumMatches = (exists && existingResult.rows[0].checksum === migration.checksum) || !migration.checksum;
         const migrationAttributes = {
           exists,
           name: migration.name,
@@ -154,7 +154,7 @@ export class Migrator implements MigratorInterface {
       if (!searchPath.startsWith('/')) {
         searchPath = `${Deno.cwd()}/${searchPath}`;
       }
-      
+
       for await (const dirEntry of expandGlob(searchPath)) {
         if (dirEntry.isFile) {
           if (only.length == 0 || only.includes(dirEntry.name || '')) {
@@ -259,7 +259,7 @@ export class Migrator implements MigratorInterface {
 
     await using client = await this.database.connection();
     await using transaction = client.transaction(`${this.options.tableName}_up`);
-    
+
     try {
       let returnValue = true;
       await transaction.begin();

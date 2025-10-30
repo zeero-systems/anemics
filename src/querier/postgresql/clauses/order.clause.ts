@@ -1,7 +1,7 @@
 import type { BuilderInterface, OrderClauseInterface } from '~/querier/interfaces.ts';
 import type { OrderType, QueryType } from '~/querier/types.ts';
 
-import { Objector, Descriptor } from '@zeero/commons';
+import { Descriptor, Objector } from '@zeero/commons';
 
 @Descriptor({ properties: { enumerable: false } })
 export class Order<T extends BuilderInterface<T>> implements OrderClauseInterface<T> {
@@ -42,10 +42,10 @@ export class Order<T extends BuilderInterface<T>> implements OrderClauseInterfac
       );
     }
 
-    return { 
+    return {
       ...options,
-      args: options.args, 
-      text: text.filter((s) => !!s).join(' ') 
+      args: options.args,
+      text: text.filter((s) => !!s).join(' '),
     };
   }
 }

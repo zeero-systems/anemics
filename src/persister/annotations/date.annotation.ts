@@ -6,10 +6,10 @@ import type { ColumnInterface } from '~/persister/interfaces.ts';
 import { AnnotationException, DecoratorKindEnum } from '@zeero/commons';
 
 export class DateAnnotation implements AnnotationInterface, ColumnInterface {
-  name: string = 'Date'
-  persists?: boolean | undefined = true
-  stackable?: boolean | undefined = false
-    
+  name: string = 'Date';
+  persists?: boolean | undefined = true;
+  stackable?: boolean | undefined = false;
+
   constructor(public type: DateType, public options?: ColumnOptionsType & { precision?: number }) {}
 
   onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
@@ -26,7 +26,7 @@ export class DateAnnotation implements AnnotationInterface, ColumnInterface {
     });
   }
 
-  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default DateAnnotation
+export default DateAnnotation;

@@ -1,14 +1,14 @@
-import type { AnnotationInterface, ArtifactType, NewableType, DecoratorType } from '@zeero/commons';
+import type { AnnotationInterface, ArtifactType, DecoratorType, NewableType } from '@zeero/commons';
 import type { RelationOptionsType } from '~/persister/types.ts';
 import type { RelationInterface } from '~/persister/interfaces.ts';
 
 import { AnnotationException, DecoratorKindEnum } from '@zeero/commons';
 
 export class ManyAnnotation implements AnnotationInterface, RelationInterface {
-  name: string = 'Many'
-  persists?: boolean | undefined = true
-  stackable?: boolean | undefined = false
-    
+  name: string = 'Many';
+  persists?: boolean | undefined = true;
+  stackable?: boolean | undefined = false;
+
   constructor(public referenceTable: () => NewableType<any>, public options: RelationOptionsType) {}
 
   onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
@@ -25,7 +25,7 @@ export class ManyAnnotation implements AnnotationInterface, RelationInterface {
     });
   }
 
-  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default ManyAnnotation
+export default ManyAnnotation;

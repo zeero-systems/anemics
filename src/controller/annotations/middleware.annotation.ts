@@ -3,27 +3,35 @@ import type { AnnotationInterface, ArtifactType, DecorationType, DecoratorType }
 import { AnnotationException, ConsumerAnnotation, Decorator, DecoratorKindEnum } from '@zeero/commons';
 
 export class MiddlewareAnnotation implements AnnotationInterface {
-  readonly name: string = 'Middleware'
+  readonly name: string = 'Middleware';
 
   onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
     if (decorator.decoration.kind == DecoratorKindEnum.CLASS) {
-      Decorator.attach(artifact, { name: 'ConsumerAnnotation', target: new ConsumerAnnotation() }, decorator.decoration)
+      Decorator.attach(
+        artifact,
+        { name: 'ConsumerAnnotation', target: new ConsumerAnnotation() },
+        decorator.decoration,
+      );
 
-      const methodNames = ['onUse']
+      const methodNames = ['onUse'];
 
       for (const methodName of methodNames) {
         if (artifact.target.prototype[methodName]) {
           const onBootDecoration: DecorationType = {
-            ...decorator.decoration, 
-            kind: 'method', 
-            property: methodName, 
-            context: { 
-              ...decorator.decoration.context, 
-              name: methodName, 
-              kind: 'method' 
-            } as any 
-          }
-          Decorator.attach(artifact, { name: 'ConsumerAnnotation', target: new ConsumerAnnotation() }, onBootDecoration)
+            ...decorator.decoration,
+            kind: 'method',
+            property: methodName,
+            context: {
+              ...decorator.decoration.context,
+              name: methodName,
+              kind: 'method',
+            } as any,
+          };
+          Decorator.attach(
+            artifact,
+            { name: 'ConsumerAnnotation', target: new ConsumerAnnotation() },
+            onBootDecoration,
+          );
         }
       }
 
@@ -31,7 +39,11 @@ export class MiddlewareAnnotation implements AnnotationInterface {
     }
 
     if (decorator.decoration.kind == DecoratorKindEnum.METHOD) {
-      Decorator.attach(artifact, { name: 'ConsumerAnnotation', target: new ConsumerAnnotation() }, decorator.decoration)
+      Decorator.attach(
+        artifact,
+        { name: 'ConsumerAnnotation', target: new ConsumerAnnotation() },
+        decorator.decoration,
+      );
 
       return artifact.target;
     }
@@ -42,7 +54,7 @@ export class MiddlewareAnnotation implements AnnotationInterface {
     });
   }
 
-  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default MiddlewareAnnotation
+export default MiddlewareAnnotation;

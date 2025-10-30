@@ -125,24 +125,24 @@ export class Resourcer implements ResourcerInterface {
   }
 
   getResource(refresh?: boolean): ResourceType | null {
-    let resource = null
-    const platform = this.getPlatform(refresh)
-    const service = this.getService(refresh)
-    const system = this.getSystem(refresh)
-    const environment = this.getEnvironment(refresh)
-    const memory = this.getMemory(refresh)
+    let resource = null;
+    const platform = this.getPlatform(refresh);
+    const service = this.getService(refresh);
+    const system = this.getSystem(refresh);
+    const environment = this.getEnvironment(refresh);
+    const memory = this.getMemory(refresh);
 
     if (platform || service || system || environment || memory) {
-      resource = {} as ResourceType
+      resource = {} as ResourceType;
 
-      if (platform) resource.platform = platform
-      if (service) resource.service = service
-      if (system) resource.system = system
-      if (environment) resource.environment = environment
-      if (memory) resource.memory = memory
+      if (platform) resource.platform = platform;
+      if (service) resource.service = service;
+      if (system) resource.system = system;
+      if (environment) resource.environment = environment;
+      if (memory) resource.memory = memory;
     }
 
-    return resource
+    return resource;
   }
 }
 

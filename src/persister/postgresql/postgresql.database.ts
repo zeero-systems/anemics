@@ -1,5 +1,5 @@
 import type { ClientOptionsType, CommonOptionsType } from '~/persister/types.ts';
-import type { DatabaseInterface, ConnectionInterface } from '~/persister/interfaces.ts';
+import type { ConnectionInterface, DatabaseInterface } from '~/persister/interfaces.ts';
 
 import { Client, ClientOptions, Pool } from '@deno/postgres';
 import { Connection } from '~/persister/postgresql/adapters/connection.adapter.ts';
@@ -13,7 +13,7 @@ export class Postgresql implements DatabaseInterface {
     public extra?: ClientOptions | string | undefined,
   ) {
     let normalized: ClientOptions | string | undefined = {
-      applicationName: common.name
+      applicationName: common.name,
     };
 
     if (typeof extra == 'string' || typeof options == 'string') {
@@ -46,4 +46,4 @@ export class Postgresql implements DatabaseInterface {
   }
 }
 
-export default Postgresql
+export default Postgresql;

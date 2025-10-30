@@ -1,11 +1,10 @@
 import type { QueryType } from '~/querier/types.ts';
 import type { RawClauseInterface } from '~/querier/interfaces.ts';
 
-import { Objector, Descriptor } from '@zeero/commons';
+import { Descriptor, Objector } from '@zeero/commons';
 
-@Descriptor({ properties: { enumerable: false }})
+@Descriptor({ properties: { enumerable: false } })
 export class Raw<T> implements RawClauseInterface<T> {
-  
   constructor(public text: string, private _querier?: T) {}
 
   public hasText(): boolean {
@@ -32,4 +31,4 @@ export class Raw<T> implements RawClauseInterface<T> {
   }
 }
 
-export default Raw
+export default Raw;

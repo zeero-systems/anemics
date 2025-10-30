@@ -1,9 +1,9 @@
-import { describe, it, beforeAll, afterAll } from '@std/bdd';
+import { afterAll, beforeAll, describe, it } from '@std/bdd';
 import { expect } from '@std/expect';
 
 import type { CommonOptionsType } from '~/persister/types.ts';
 
-import { Tracer, Container } from '@zeero/commons';
+import { Container, Tracer } from '@zeero/commons';
 import Migrator from '~/migrator/services/migrator.service.ts';
 import Postgresql from '~/persister/postgresql/postgresql.database.ts';
 import Querier from '~/querier/services/querier.service.ts';
@@ -17,7 +17,7 @@ describe('migrator', () => {
     syntax: 'postgresql',
     pool: {
       max: 10,
-      lazy: true
+      lazy: true,
     },
   };
 
@@ -65,20 +65,20 @@ describe('migrator', () => {
 
     it('should not re-run already applied migrations', async () => {
       const client = await database.connection();
-      
+
       try {
         const firstRun = await migrator.up();
         expect(firstRun).toBe(false);
 
         const recordQuery = querier.query
           .select
-            .column('id')
-            .column('file_name')
-            .column('name')
-            .column('checksum')
+          .column('id')
+          .column('file_name')
+          .column('name')
+          .column('checksum')
           .from.table(`${tableSchema}.${tableName}`)
           .where
-            .and('environment', 'eq', 'development')
+          .and('environment', 'eq', 'development')
           .toQuery();
 
         const records = await client.execute(recordQuery.text, { args: recordQuery.args });
@@ -96,15 +96,15 @@ describe('migrator', () => {
 
     it('should calculate and store migration checksum', async () => {
       const client = await database.connection();
-      
+
       try {
         const checksumQuery = querier.query
           .select
-            .column('checksum')
-            .column('file_name')
+          .column('checksum')
+          .column('file_name')
           .from.table(`${tableSchema}.${tableName}`)
           .where
-            .and('environment', 'eq', 'test')
+          .and('environment', 'eq', 'test')
           .toQuery();
 
         const result = await client.execute(checksumQuery.text, { args: checksumQuery.args });
@@ -121,16 +121,16 @@ describe('migrator', () => {
 
     it('should respect environment filtering', async () => {
       const client = await database.connection();
-      
+
       try {
         const envQuery = querier.query
           .select
-            .column('environment')
+          .column('environment')
           .from.table(`${tableSchema}.${tableName}`)
           .toQuery();
 
         const result = await client.execute(envQuery.text, { args: envQuery.args });
-        
+
         result.rows.forEach((row: any) => {
           expect(row.environment).toBe('test');
         });
@@ -141,18 +141,18 @@ describe('migrator', () => {
 
     it('should store execution time', async () => {
       const client = await database.connection();
-      
+
       try {
         const timeQuery = querier.query
           .select
-            .column('execution_time_ms')
-            .column('file_name')
+          .column('execution_time_ms')
+          .column('file_name')
           .from.table(`${tableSchema}.${tableName}`)
           .where
-            .and('environment', 'eq', 'test')
+          .and('environment', 'eq', 'test')
           .toQuery();
 
-        type MigratorType = { execution_time_ms: number; file_name: string }
+        type MigratorType = { execution_time_ms: number; file_name: string };
 
         const result = await client.execute<MigratorType>(timeQuery.text, { args: timeQuery.args });
         expect(result.rows.length).toBeGreaterThan(0);
@@ -169,7 +169,7 @@ describe('migrator', () => {
 
     it('should handle transaction rollback on error', async () => {
       const client = await database.connection();
-      
+
       try {
         try {
           await migrator.up('///invalid-pattern///');
@@ -181,7 +181,7 @@ describe('migrator', () => {
           .select.column('table_name')
           .from.table('information_schema.tables')
           .where
-            .and('table_name', 'eq', tableName)
+          .and('table_name', 'eq', tableName)
           .toQuery();
 
         const result = await client.execute(tableQuery.text, { args: tableQuery.args });

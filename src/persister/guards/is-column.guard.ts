@@ -9,8 +9,8 @@ export const isColumn = (x: any): x is ColumnInterface => {
     'Network',
     'Numeric',
     'Range',
-    'Structure'
-  ].includes(x.name)
+    'Structure',
+  ].includes(x.name);
 };
 
 export default isColumn;

@@ -5,8 +5,8 @@ import type { MigrationActionType, MigratorOptionsType } from '~/migrator/types.
 
 export interface MigrationInterface {
   querier: QuerierInterface;
-  span: SpanInterface,
-  transaction: TransactionInterface,
+  span: SpanInterface;
+  transaction: TransactionInterface;
   options: MigratorOptionsType;
 
   action?: MigrationActionType;

@@ -6,7 +6,7 @@ import type {
 } from '~/querier/interfaces.ts';
 import type { QueryFunction, QueryType } from '~/querier/types.ts';
 
-import { Objector, Descriptor } from '@zeero/commons';
+import { Descriptor, Objector } from '@zeero/commons';
 
 import Table from '~/querier/postgresql/clauses/table.clause.ts';
 import Predicate from '~/querier/postgresql/clauses/predicate.clause.ts';

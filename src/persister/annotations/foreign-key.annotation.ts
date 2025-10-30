@@ -1,14 +1,14 @@
-import type { AnnotationInterface, ArtifactType, NewableType, DecoratorType } from '@zeero/commons';
+import type { AnnotationInterface, ArtifactType, DecoratorType, NewableType } from '@zeero/commons';
 import type { ForeignKeyOptionsType } from '~/persister/types.ts';
 import type { ForeignKeyInterface } from '~/persister/interfaces.ts';
 
 import { AnnotationException, DecoratorKindEnum } from '@zeero/commons';
 
 export class ForeignKeyAnnotation implements AnnotationInterface, ForeignKeyInterface {
-  name: string = 'ForeignKey'
-  persists?: boolean | undefined = true
-  stackable?: boolean | undefined = true
-    
+  name: string = 'ForeignKey';
+  persists?: boolean | undefined = true;
+  stackable?: boolean | undefined = true;
+
   constructor(public referenceTable: string | NewableType<any>, public options: ForeignKeyOptionsType) {}
 
   onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
@@ -25,7 +25,7 @@ export class ForeignKeyAnnotation implements AnnotationInterface, ForeignKeyInte
     });
   }
 
-  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default ForeignKeyAnnotation
+export default ForeignKeyAnnotation;

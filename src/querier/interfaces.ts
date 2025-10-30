@@ -1,6 +1,6 @@
 import ForeingActionEnum from '~/querier/enums/foreign-action.enum.ts';
 import {
-AliasColumnType,
+  AliasColumnType,
   BuilderOptionsType,
   CharacterType,
   ClauseType,
@@ -19,9 +19,9 @@ AliasColumnType,
 } from '~/querier/types.ts';
 
 export interface QuerierInterface {
-  get query(): QueryQuerierInterface
-  get index(): IndexQuerierInterface
-  get table(): TableQuerierInterface
+  get query(): QueryQuerierInterface;
+  get index(): IndexQuerierInterface;
+  get table(): TableQuerierInterface;
 }
 
 export interface BuilderInterface<T> {
@@ -84,11 +84,11 @@ export interface ClauseInterface {
 }
 
 export interface LimitClauseInterface<T> extends ClauseInterface {
-  at(value: number): this & T
+  at(value: number): this & T;
 }
 
 export interface OffsetClauseInterface<T> extends ClauseInterface {
-  from(value: number): this & T
+  from(value: number): this & T;
 }
 
 export interface RawClauseInterface<T> extends ClauseInterface {
@@ -97,15 +97,15 @@ export interface RawClauseInterface<T> extends ClauseInterface {
   value(value: string): this & T;
 }
 export interface SelectClauseInterface<T extends BuilderInterface<T>> extends ClauseInterface {
-  columns: Array<AliasColumnType>
-  
-  hasColumns(): boolean
+  columns: Array<AliasColumnType>;
+
+  hasColumns(): boolean;
 
   column(raw: RawClauseInterface<T>): this & T;
   column(alias: string, raw: RawClauseInterface<T>): this & T;
   column(alias: string, query: QueryFunction<T>): this & T;
   column(name: string, alias?: string): this & T;
-  column(name: any, alias?: any): this & T 
+  column(name: any, alias?: any): this & T;
 }
 
 export interface TableClauseInterface<T extends BuilderInterface<T>> extends ClauseInterface {
@@ -159,7 +159,7 @@ export interface ColumnClauseInterface<T extends BuilderInterface<T>> extends Cl
   notNull(): this & T;
   numeric(value: NumericType, options?: { scale?: number; precision?: number }): this & T;
   primaryKey(): this & T;
-  unique(value?: string | Array<string>): this & T
+  unique(value?: string | Array<string>): this & T;
   default(value: string | number | Array<string | number>): this & T;
   range(value: RangeType): this & T;
   structure(value: StructureType, options?: { enums?: any[] }): this & T;

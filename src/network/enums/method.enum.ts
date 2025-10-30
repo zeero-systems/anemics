@@ -1,4 +1,3 @@
-
 export enum MethodEnum {
   CONNECT = 'connect',
   DELETE = 'delete',
@@ -12,4 +11,4 @@ export enum MethodEnum {
   TRACE = 'trace',
 }
 
-export default MethodEnum
+export default MethodEnum;

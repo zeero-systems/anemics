@@ -1,7 +1,7 @@
 import { describe, it } from '@std/bdd';
 import { expect } from '@std/expect';
 
-import type { CommonOptionsType, FilterPredicateType} from '~/persister/types.ts';
+import type { CommonOptionsType, FilterPredicateType } from '~/persister/types.ts';
 import type { FilterType } from '~/persister/types.ts';
 
 import { Factory } from '@zeero/commons';
@@ -18,74 +18,73 @@ import Filter from '~/persister/services/filter.service.ts';
 import Postgresql from '~/persister/postgresql/postgresql.database.ts';
 
 describe('persister', () => {
-
   @Schema('users')
   class User {
     @Numeric('serial', { primary: true })
-    id?: number
+    id?: number;
 
     @Character('varchar')
-    name!: string
+    name!: string;
 
     @Character('varchar', { length: 10 })
-    lastName!: string
+    lastName!: string;
 
-    @Many(() => Post, { 
+    @Many(() => Post, {
       foreignKey: 'userId',
-      filter: { where: { and: [{ 'posts.status': { eq: 'active' } }] } }
+      filter: { where: { and: [{ 'posts.status': { eq: 'active' } }] } },
     })
-    posts?: Post[]
+    posts?: Post[];
   }
 
   @Schema('posts')
   class Post {
     @Numeric('serial', { primary: true })
-    id?: number
+    id?: number;
 
     @Character('varchar')
-    title!: string
+    title!: string;
 
     @Structure('boolean', { default: false })
-    active?: boolean
+    active?: boolean;
 
     @Numeric('integer')
     @ForeignKey('users', { referenceKey: 'id', onDelete: 'cascade' })
-    userId!: number
+    userId!: number;
 
-    @Many(() => Comment, { 
+    @Many(() => Comment, {
       foreignKey: 'postId',
-      filter: { where: { and: [{ 'message': { like: '%Hello%' } }] } }
+      filter: { where: { and: [{ 'message': { like: '%Hello%' } }] } },
     })
-    comments?: Comment[]
+    comments?: Comment[];
 
     @One(() => User, { localKey: 'userId' })
-    user?: User
+    user?: User;
   }
 
   @Schema('comments')
   class Comment {
     @Numeric('serial', { primary: true })
-    id?: number
+    id?: number;
 
     @Character('varchar')
-    message!: string
+    message!: string;
 
     @Numeric('integer')
     @ForeignKey('users', { referenceKey: 'id', onDelete: 'cascade' })
-    userId!: number
+    userId!: number;
 
     @Numeric('integer')
     @ForeignKey('posts', { referenceKey: 'id', onDelete: 'cascade' })
-    postId!: number
+    postId!: number;
   }
 
-  const commonOptions: CommonOptionsType = { 
-    name: 'fake', 
+  const commonOptions: CommonOptionsType = {
+    name: 'fake',
     naming: {} as any,
     placeholder: '$',
     placeholderType: 'counter',
-    syntax: 'postgresql'
-  }
+    syntax: 'postgresql',
+  };
 
   const clientOptions = {
     database: 'postgres',
@@ -94,86 +93,93 @@ describe('persister', () => {
     port: 5432,
     schema: 'public',
     user: 'postgres',
-  }
-  
-  const database = new Postgresql(commonOptions, clientOptions)
-  const userRepository = new Repository(User, database)
-  const postRepository = new Repository(Post, database)
-  const commentRepository = new Repository(Comment, database)
+  };
+
+  const database = new Postgresql(commonOptions, clientOptions);
+  const userRepository = new Repository(User, database);
+  const postRepository = new Repository(Post, database);
+  const commentRepository = new Repository(Comment, database);
 
   it('repository create tables', async () => {
-    await userRepository.table.create()
-    await postRepository.table.create()
-    await commentRepository.table.create()
-  })
-  let userC: any
+    await userRepository.table.create();
+    await postRepository.table.create();
+    await commentRepository.table.create();
+  });
+  let userC: any;
   it('repository insert records', async () => {
-    const userA = Factory.properties(User, { name: 'Eduardo', lastName: 'Segura' })
-    const userB = Factory.properties(User, { name: 'Maximiliano', lastName: 'Bitencourt' })
-    userC = Factory.properties(User, { name: 'Andres', lastName: 'ooops' } )
-    
-    const userCreateResults = await userRepository.query.createMany([userA, userB, userC])
+    const userA = Factory.properties(User, { name: 'Eduardo', lastName: 'Segura' });
+    const userB = Factory.properties(User, { name: 'Maximiliano', lastName: 'Bitencourt' });
+    userC = Factory.properties(User, { name: 'Andres', lastName: 'ooops' });
+
+    const userCreateResults = await userRepository.query.createMany([userA, userB, userC]);
     expect(userCreateResults.length).toEqual(3);
-    
-    userC = userCreateResults[2]
-    
-    let lastActive = true
+
+    userC = userCreateResults[2];
+
+    let lastActive = true;
     for (const userResult of userCreateResults) {
-      const post = Factory.properties(Post, { userId: userResult.id as number, title: `Test-${Date.now()}`, active: lastActive = !lastActive })
+      const post = Factory.properties(Post, {
+        userId: userResult.id as number,
+        title: `Test-${Date.now()}`,
+        active: lastActive = !lastActive,
+      });
 
-      const postCreateResult = await postRepository.query.create(post)
+      const postCreateResult = await postRepository.query.create(post);
 
-      expect(postCreateResult.id).toBeDefined()
+      expect(postCreateResult.id).toBeDefined();
 
       if (userResult.id && postCreateResult.id) {
-        const commentA = Factory.properties(Comment, { message: `Hello from ${Date.now()}`, userId: userResult.id, postId: postCreateResult.id })
+        const commentA = Factory.properties(Comment, {
+          message: `Hello from ${Date.now()}`,
+          userId: userResult.id,
+          postId: postCreateResult.id,
+        });
 
-        const commentCreateResult = await commentRepository.query.create(commentA)
+        const commentCreateResult = await commentRepository.query.create(commentA);
 
-        expect(commentCreateResult.id).toBeDefined()
+        expect(commentCreateResult.id).toBeDefined();
       }
     }
-  })
+  });
 
   it('repository search records', async () => {
-
     const postsFilter: FilterType = {
       select: { title: 'string', id: 'number', active: 'boolean', comments: true, user: true },
       where: { or: [{ active: { eq: false } }] },
-      order: { id: 'desc' }
-    }
+      order: { id: 'desc' },
+    };
 
-    const options: FilterType =  {
-      select: { name: 'string', lastName: 'string', posts: postsFilter }
-    }
+    const options: FilterType = {
+      select: { name: 'string', lastName: 'string', posts: postsFilter },
+    };
 
-    const userResults = await userRepository.query.search(options)    
+    const userResults = await userRepository.query.search(options);
 
-    expect(userResults.length).toBeGreaterThan(0)
-  })
+    expect(userResults.length).toBeGreaterThan(0);
+  });
 
   it('repository update records', async () => {
-    const userAreateResult = await userRepository.query.update({ id: userC.id, lastName: 'Castro' })
+    const userAreateResult = await userRepository.query.update({ id: userC.id, lastName: 'Castro' });
 
-    expect(userAreateResult.id).toBe(userC.id)
-  })
+    expect(userAreateResult.id).toBe(userC.id);
+  });
 
   it('repository delete records', async () => {
-    const deleteFilter: FilterPredicateType = { and: [ { lastName: { eq: 'Castro' } }] }
-    const userDeleteResult = await userRepository.query.delete(deleteFilter, { returns: ['id'] })
+    const deleteFilter: FilterPredicateType = { and: [{ lastName: { eq: 'Castro' } }] };
+    const userDeleteResult = await userRepository.query.delete(deleteFilter, { returns: ['id'] });
 
-    expect(userDeleteResult.id).not.toBeUndefined()
-  })
+    expect(userDeleteResult.id).not.toBeUndefined();
+  });
 
   it('repository drop tables', async () => {
-    const postDrop = await postRepository.table.drop('cascade')
-    const userDrop = await userRepository.table.drop('cascade')
-    const commentDrop = await commentRepository.table.drop('cascade')
-    
-    expect(userDrop).toEqual(true)
-    expect(postDrop).toEqual(true)
-    expect(commentDrop).toEqual(true)
-  })
+    const postDrop = await postRepository.table.drop('cascade');
+    const userDrop = await userRepository.table.drop('cascade');
+    const commentDrop = await commentRepository.table.drop('cascade');
+
+    expect(userDrop).toEqual(true);
+    expect(postDrop).toEqual(true);
+    expect(commentDrop).toEqual(true);
+  });
 
   it('filter to string and back', () => {
     const filter: FilterType = {
@@ -220,9 +226,7 @@ describe('persister', () => {
 
     expect(q).toEqual(filter);
   });
-
-})
-
+});
 
 // @todo
 

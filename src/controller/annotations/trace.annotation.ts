@@ -3,24 +3,24 @@ import { AnnotationException, ConsumerAnnotation, Decorator, DecoratorKindEnum }
 import { HttpAnnotationInterface } from '~/controller/interfaces.ts';
 
 export class TraceAnnotation implements AnnotationInterface, HttpAnnotationInterface {
-  name: string = 'Trace'
+  name: string = 'Trace';
 
   constructor(public path?: string) {}
 
-  onAttach(artifact: ArtifactType, decorator: DecoratorType): any{
+  onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
     if (decorator.decoration.kind == DecoratorKindEnum.METHOD) {
-      const consumer = new ConsumerAnnotation()
-      Decorator.attach(artifact, { name: 'ConsumerAnnotation', target: consumer }, decorator.decoration)
+      const consumer = new ConsumerAnnotation();
+      Decorator.attach(artifact, { name: 'ConsumerAnnotation', target: consumer }, decorator.decoration);
       return artifact.target;
     }
-    
+
     throw new AnnotationException('Method not implemented for {name} on {kind}.', {
       key: 'NOT_IMPLEMENTED',
       context: { name: artifact.name, kind: decorator.decoration.kind },
     });
   }
 
-  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default TraceAnnotation
+export default TraceAnnotation;

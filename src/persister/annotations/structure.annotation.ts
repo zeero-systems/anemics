@@ -6,10 +6,10 @@ import type { ColumnInterface } from '~/persister/interfaces.ts';
 import { AnnotationException, DecoratorKindEnum } from '@zeero/commons';
 
 export class StructureAnnotation implements AnnotationInterface, ColumnInterface {
-  name: string = 'Structure'
-  persists?: boolean | undefined = true
-  stackable?: boolean | undefined = false
-    
+  name: string = 'Structure';
+  persists?: boolean | undefined = true;
+  stackable?: boolean | undefined = false;
+
   constructor(public type: StructureType, public options?: ColumnOptionsType & { enums?: any[] }) {}
 
   onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
@@ -26,7 +26,7 @@ export class StructureAnnotation implements AnnotationInterface, ColumnInterface
     });
   }
 
-  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default StructureAnnotation
+export default StructureAnnotation;

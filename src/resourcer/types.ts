@@ -1,10 +1,9 @@
-
 export type PlatformType = {
-  name: string
-  engine: string
-  version: string
-  language: string
-}
+  name: string;
+  engine: string;
+  version: string;
+  language: string;
+};
 
 export type SystemType = {
   os: string;

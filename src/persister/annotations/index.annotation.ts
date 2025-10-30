@@ -5,10 +5,10 @@ import type { IndexInterface } from '~/persister/interfaces.ts';
 import { AnnotationException, DecoratorKindEnum } from '@zeero/commons';
 
 export class IndexAnnotation implements AnnotationInterface, IndexInterface {
-  name: string = 'Index'
-  persists?: boolean | undefined = true
-  stackable?: boolean | undefined = false
-    
+  name: string = 'Index';
+  persists?: boolean | undefined = true;
+  stackable?: boolean | undefined = false;
+
   constructor(public indexName?: string | string[], public options?: IndexOptionsType) {}
 
   onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
@@ -25,7 +25,7 @@ export class IndexAnnotation implements AnnotationInterface, IndexInterface {
     });
   }
 
-  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default IndexAnnotation
+export default IndexAnnotation;

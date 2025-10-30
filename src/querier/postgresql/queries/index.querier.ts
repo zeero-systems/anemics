@@ -1,8 +1,8 @@
 import type { BuilderOptionsType, ClauseType, QueryType } from '~/querier/types.ts';
 import type {
+  CreateClauseInterface,
   IndexQuerierInterface,
   IndexTypeClauseInterface,
-  CreateClauseInterface,
   RawClauseInterface,
   SelectClauseInterface,
   TableClauseInterface,
@@ -18,7 +18,7 @@ import Builder from '~/querier/services/builder.services.ts';
 export class IndexQuerier implements IndexQuerierInterface {
   public clauses: Array<{ previous?: ClauseType; current: ClauseType }> = [];
 
-  constructor(public options: BuilderOptionsType = { args: [], text: '' }) { }
+  constructor(public options: BuilderOptionsType = { args: [], text: '' }) {}
 
   public use(options: BuilderOptionsType): IndexQuerierInterface {
     this.options = options;
@@ -70,18 +70,18 @@ export class IndexQuerier implements IndexQuerierInterface {
 
   public toQuery(options: QueryType = { args: [], returns: [], text: '' }): QueryType {
     const text: Array<string> = [];
-    const ordered =  Builder.sorter(this.clauses, ['Name', 'From', 'Using', 'With']);
+    const ordered = Builder.sorter(this.clauses, ['Name', 'From', 'Using', 'With']);
 
-    const opts = { ...this.options, ...options }
+    const opts = { ...this.options, ...options };
 
     if (ordered.length > 0) {
       text.push(
         ...ordered.map((clause) => {
           let result = clause.target.query(opts).text;
           if (clause.name == 'With') {
-            result = `(${result})`
+            result = `(${result})`;
           }
-          return result
+          return result;
         }),
       );
     }

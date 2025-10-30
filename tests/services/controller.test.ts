@@ -11,10 +11,8 @@ import Router from '~/controller/services/router.service.ts';
 import Get from '~/controller/decorations/get.decoration.ts';
 
 describe('controller', () => {
-
   @Controller('/users')
   class UserController {
-    
     @Post()
     createUser() {}
 
@@ -34,44 +32,43 @@ describe('controller', () => {
     optionsUser() {}
   }
 
-  const router = new Router()
+  const router = new Router();
 
-  router.routerify([{ name: 'UserController', target: UserController }])
+  router.routerify([{ name: 'UserController', target: UserController }]);
 
   it('should have post routes', () => {
-    const routes = router.routes.post
+    const routes = router.routes.post;
 
-    expect(routes.length).toEqual(1)
+    expect(routes.length).toEqual(1);
   });
 
   it('should have get routes', () => {
-    const routes = router.routes.get
+    const routes = router.routes.get;
 
-    expect(routes.length).toEqual(1)
+    expect(routes.length).toEqual(1);
   });
 
   it('should have patch routes', () => {
-    const routes = router.routes.patch
+    const routes = router.routes.patch;
 
-    expect(routes.length).toEqual(1)
+    expect(routes.length).toEqual(1);
   });
 
   it('should have put routes', () => {
-    const routes = router.routes.put
+    const routes = router.routes.put;
 
-    expect(routes.length).toEqual(1)
+    expect(routes.length).toEqual(1);
   });
 
   it('should have delete routes', () => {
-    const routes = router.routes.delete
+    const routes = router.routes.delete;
 
-    expect(routes.length).toEqual(1)
+    expect(routes.length).toEqual(1);
   });
 
   it('should have options routes', () => {
-    const routes = router.routes.options
+    const routes = router.routes.options;
 
-    expect(routes.length).toEqual(1)
+    expect(routes.length).toEqual(1);
   });
-
 });

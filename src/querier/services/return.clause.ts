@@ -1,7 +1,7 @@
-import type { QueryType, AliasColumnType } from '~/querier/types.ts';
+import type { AliasColumnType, QueryType } from '~/querier/types.ts';
 import type { BuilderInterface, SelectClauseInterface } from '~/querier/interfaces.ts';
 
-import { Objector, Descriptor } from '@zeero/commons';
+import { Descriptor, Objector } from '@zeero/commons';
 
 @Descriptor({ properties: { enumerable: false } })
 export class Return<T extends BuilderInterface<T>> implements SelectClauseInterface<T> {
@@ -9,7 +9,7 @@ export class Return<T extends BuilderInterface<T>> implements SelectClauseInterf
 
   constructor(
     private _querier: T,
-    public key: string = ''
+    public key: string = '',
   ) {}
 
   public hasColumns(): boolean {
@@ -26,12 +26,14 @@ export class Return<T extends BuilderInterface<T>> implements SelectClauseInterf
 
     if (this.key && this.hasColumns()) {
       text.push(this.key);
-      text.push(this.columns.map((column) => {
-        return [
-          column.name,
-          column.alias ? ` AS ${column.alias}` : undefined,
-        ].join('');
-      }).join(', '))
+      text.push(
+        this.columns.map((column) => {
+          return [
+            column.name,
+            column.alias ? ` AS ${column.alias}` : undefined,
+          ].join('');
+        }).join(', '),
+      );
     }
 
     return {

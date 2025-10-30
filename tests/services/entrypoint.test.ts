@@ -16,35 +16,34 @@ import GatewayMiddleware from '~/controller/middlewares/gateway.middleware.ts';
 describe('entrypoint', () => {
   class ExceptionMiddleware implements MiddlewareInterface, AnnotationInterface {
     name: string = 'Exception';
-    events: Array<EventType> = ['exception']
+    events: Array<EventType> = ['exception'];
 
     onUse(context: ContextType, next: NextFunctionType): Promise<void> {
       if (context.handler.error) {
-        context.responser.body = 'Internal Server Error'
+        context.responser.body = 'Internal Server Error';
       }
 
       return next();
     }
 
-    onAttach(_artifact: ArtifactType, _decorator: DecoratorType): any { }
-    onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+    onAttach(_artifact: ArtifactType, _decorator: DecoratorType): any {}
+    onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
   }
 
   class RequestMiddleware implements MiddlewareInterface, AnnotationInterface {
     name: string = 'Request';
-    events: Array<EventType> = ['before']
+    events: Array<EventType> = ['before'];
 
     async onUse(context: ContextType, next: NextFunctionType): Promise<void> {
       const hasContent = context.requester.headers?.get('Content-Length');
       const hasContentType = context.requester.headers?.get('Content-Type');
-      
+
       if (!hasContentType || hasContentType == 'application/json') {
         if (hasContent && Number(hasContent) > 0 && !context.requester.bodyUsed) {
           context.requester.parsed = await context.requester.json();
         }
-        
       }
-      
+
       if (context.route.action.entity) {
         const properties = context.requester.parsed ?? {};
         context.requester.parsed = Factory.construct(context.route.action.entity, { properties }) as any;
@@ -53,13 +52,13 @@ describe('entrypoint', () => {
       return next();
     }
 
-    onAttach(_artifact: ArtifactType, _decorator: DecoratorType): any { }
-    onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+    onAttach(_artifact: ArtifactType, _decorator: DecoratorType): any {}
+    onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
   }
 
   class ResponseMiddleware implements MiddlewareInterface, AnnotationInterface {
-    readonly name: string = 'Response'
-    events: Array<EventType> = ['after']
+    readonly name: string = 'Response';
+    events: Array<EventType> = ['after'];
 
     onUse(context: ContextType, next: NextFunctionType): Promise<void> {
       if (context.responser && context.responser.body) {
@@ -71,8 +70,8 @@ describe('entrypoint', () => {
       return next();
     }
 
-    onAttach(_artifact: ArtifactType, _decorator: DecoratorType): any { }
-    onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+    onAttach(_artifact: ArtifactType, _decorator: DecoratorType): any {}
+    onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
   }
 
   const ResponseParser = Decorator.create(ResponseMiddleware);
@@ -94,7 +93,7 @@ describe('entrypoint', () => {
 
     @Get('/error')
     getTestToThrow(_context: ContextType) {
-      throw new Error('A throw test')
+      throw new Error('A throw test');
     }
 
     @Post('/create', Test)
@@ -121,21 +120,21 @@ describe('entrypoint', () => {
       context.responser.setBody(JSON.stringify({ status: 'OK', server: context.server.hostname }));
     }
   }
-  
+
   const mockTracer = {
     name: 'Tracer',
     target: new Tracer({
       name: 'AnemicTest',
       transports: [new ConsoleTransport({ pretty: true, span: false, log: false })],
     }),
-  }
+  };
 
   describe('simple server', () => {
     let bootText = '';
 
     @Pack()
     class Sub implements PackInterface {
-      constructor() { }
+      constructor() {}
 
       async onBoot(): Promise<void> {}
     }
@@ -143,17 +142,23 @@ describe('entrypoint', () => {
     @Pack({
       providers: [mockTracer],
       consumers: [HealthController],
-      packs: [Sub]
+      packs: [Sub],
     })
     class App implements PackInterface {
-      constructor() {  }
+      constructor() {}
 
       async onBoot(): Promise<void> {
         bootText = 'onBoot reached';
+        await Promise.resolve(); // Required for async compliance
       }
     }
 
-    const anemic = new Anemic(new Application(App, { http: { name: 'Joey', port: 3000 }, middlewares: [GatewayMiddleware, ResponseMiddleware]  }));
+    const anemic = new Anemic(
+      new Application(App, {
+        http: { name: 'Joey', port: 3000 },
+        middlewares: [GatewayMiddleware, ResponseMiddleware],
+      }),
+    );
 
     it('boot', async () => {
       await anemic.boot();
@@ -183,7 +188,12 @@ describe('entrypoint', () => {
     })
     class App implements PackInterface {}
 
-    const anemic2 = new Anemic(new Application(App, { http: { name: 'Chandler', port: 3001 }, middlewares: [GatewayMiddleware, ResponseMiddleware] }));
+    const anemic2 = new Anemic(
+      new Application(App, {
+        http: { name: 'Chandler', port: 3001 },
+        middlewares: [GatewayMiddleware, ResponseMiddleware],
+      }),
+    );
 
     it('fetch', async () => {
       await anemic2.start();
@@ -206,9 +216,9 @@ describe('entrypoint', () => {
       new Application(App, {
         http: { name: 'Ross', port: 3002 },
         middlewares: [
-          RequestMiddleware, 
+          RequestMiddleware,
           GatewayMiddleware,
-          ExceptionMiddleware
+          ExceptionMiddleware,
         ],
       }),
     );
@@ -229,11 +239,11 @@ describe('entrypoint', () => {
 
     expect(responseText2.name).toEqual('Eduardo');
 
-    const response3 = await fetch('http://0.0.0.0:3002/test/error', { method: 'get' })
-    const error = await response3.text()
+    const response3 = await fetch('http://0.0.0.0:3002/test/error', { method: 'get' });
+    const error = await response3.text();
 
-    expect(error).toBe('Internal Server Error')
-    
+    expect(error).toBe('Internal Server Error');
+
     await anemic.stop();
   });
 });

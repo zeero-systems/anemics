@@ -29,7 +29,7 @@ export class Query<T extends NewableType<T>> implements RepositoryQueryInterface
         const entity = record as any;
         const query = this.repository.querier.query;
         const insert = query.insert;
-        const returns = query.returns
+        const returns = query.returns;
 
         insert.table(this.repository.annotation.table);
 
@@ -84,14 +84,13 @@ export class Query<T extends NewableType<T>> implements RepositoryQueryInterface
       const primaryColumn = this.repository.annotation.columns.find((column) => column.annotation.options?.primary);
 
       if (primaryColumn) {
-        
         for (const record of records) {
           const entity = record as any;
           const query = this.repository.querier.query;
-          const where = query.where
+          const where = query.where;
           const update = query.update.table(this.repository.annotation.table);
-          const returner = query.returns
-          const returns = []
+          const returner = query.returns;
+          const returns = [];
 
           for (const decoration of this.repository.annotation.columns) {
             const propertyKey = String(decoration.key);
@@ -110,7 +109,7 @@ export class Query<T extends NewableType<T>> implements RepositoryQueryInterface
             }
           }
           for (const r of returns) {
-            returner.column(r)
+            returner.column(r);
           }
           queriers.push(query.toQuery());
         }
@@ -143,7 +142,7 @@ export class Query<T extends NewableType<T>> implements RepositoryQueryInterface
   }
 
   public deleteQuery(where: FilterPredicateType, options?: ActionOptionsType): QueryType {
-    const opts = { ...this.getQueryOptions(), alias: undefined }
+    const opts = { ...this.getQueryOptions(), alias: undefined };
 
     if (this.repository.annotation) {
       opts.instance.delete.table(this.repository.annotation.table);

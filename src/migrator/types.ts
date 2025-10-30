@@ -2,7 +2,7 @@ import { MigrationInterface } from './interfaces.ts';
 
 export type MigrationActionType = 'migration' | 'seed';
 
-export type MigrationRecordType = { name: string, fileName: string, checksum: string, target: MigrationInterface };
+export type MigrationRecordType = { name: string; fileName: string; checksum: string; target: MigrationInterface };
 
 export type MigratorOptionsType = {
   prefix?: string;
@@ -21,5 +21,4 @@ export type MigratorOptionsType = {
   applyBy?: string;
 };
 
-export default {}
-
+export default {};

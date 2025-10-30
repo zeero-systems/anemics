@@ -10,7 +10,7 @@ export class ControllerAnnotation implements AnnotationInterface, HttpAnnotation
 
   onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
     if (decorator.decoration.kind == DecoratorKindEnum.CLASS) {
-      return artifact.target
+      return artifact.target;
     }
 
     throw new AnnotationException('Method not implemented for {name} on {kind}.', {

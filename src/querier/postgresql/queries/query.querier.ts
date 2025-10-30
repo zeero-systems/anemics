@@ -149,15 +149,15 @@ export class QueryQuerier implements QueryQuerierInterface {
 
     const opts = { ...this.options, ...options };
 
-    const returns: string[] = []
+    const returns: string[] = [];
 
-    const printReturns = ordered.find((o) => ['Insert', 'Update', 'Delete'].includes(o.name))
-    
+    const printReturns = ordered.find((o) => ['Insert', 'Update', 'Delete'].includes(o.name));
+
     if (ordered.length > 0) {
       text.push(
         ...ordered.map((clause) => {
           if (!printReturns && clause.name == 'Return') {
-            returns.push(...clause.target.columns.map((c: any) => c.name))
+            returns.push(...clause.target.columns.map((c: any) => c.name));
           }
           return clause.target.query(opts).text;
         }),

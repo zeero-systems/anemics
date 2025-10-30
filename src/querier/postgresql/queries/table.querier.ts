@@ -1,12 +1,12 @@
 import type { BuilderOptionsType, ClauseType, QueryType } from '~/querier/types.ts';
 import type {
-  TableQuerierInterface,
-  RawClauseInterface,
   ColumnClauseInterface,
   ConstraintClauseInterface,
-  DropClauseInterface,
-  SelectClauseInterface,
   CreateClauseInterface,
+  DropClauseInterface,
+  RawClauseInterface,
+  SelectClauseInterface,
+  TableQuerierInterface,
 } from '~/querier/interfaces.ts';
 
 import Column from '~/querier/postgresql/clauses/column.clause.ts';
@@ -19,9 +19,9 @@ import Create from '~/querier/postgresql/clauses/create.clause.ts';
 
 export class TableQuerier implements TableQuerierInterface {
   public clauses: Array<{ previous?: ClauseType; current: ClauseType }> = [];
-  public columnIndex!: number
+  public columnIndex!: number;
 
-  constructor(public options: BuilderOptionsType = { args: [], text: '' }) { }
+  constructor(public options: BuilderOptionsType = { args: [], text: '' }) {}
 
   public use(options: BuilderOptionsType): TableQuerierInterface {
     this.options = options;
@@ -41,14 +41,14 @@ export class TableQuerier implements TableQuerierInterface {
   }
 
   public get column(): ColumnClauseInterface<TableQuerierInterface> {
-    const target = new Column<TableQuerierInterface>(this, '')
+    const target = new Column<TableQuerierInterface>(this, '');
     if (typeof this.columnIndex === 'undefined') {
-      this.columnIndex = this.clauses.length
+      this.columnIndex = this.clauses.length;
       this.queue({ name: 'Columns', target: [target] });
     } else {
-      this.clauses[this.columnIndex].current.target.push(target)
+      this.clauses[this.columnIndex].current.target.push(target);
     }
-    return target
+    return target;
   }
 
   public get constraint(): ConstraintClauseInterface<TableQuerierInterface> {
@@ -86,17 +86,17 @@ export class TableQuerier implements TableQuerierInterface {
     const text: Array<string> = [];
     const ordered = Builder.sorter(this.clauses, ['Create', 'Drop', 'Columns', 'Constraint']);
 
-    const opts = { ...this.options, ...options }
+    const opts = { ...this.options, ...options };
 
     if (ordered.length > 0) {
-      text.push(ordered.shift()?.target.query(opts).text)
+      text.push(ordered.shift()?.target.query(opts).text);
 
       const columns = ordered.map((clause) => {
         if (clause.name == 'Columns') {
-          return `${clause.target.map((c: any) => c.query(opts).text).join(', ')}`;  
+          return `${clause.target.map((c: any) => c.query(opts).text).join(', ')}`;
         }
         return clause.target.query(opts).text;
-      }).join(', ')
+      }).join(', ');
 
       if (columns) {
         text.push(`(${columns})`);

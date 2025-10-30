@@ -1,6 +1,6 @@
 {
   "name": "@zeero-systems/anemics",
-  "version": "0.24.0",
+  "version": "0.25.0",
   "license": "GPL-3.0",
   "exports": {
     ".": "./index.ts",
@@ -43,37 +43,31 @@
     "dev": "deno run --watch index.ts"
   },
   "fmt": {
-    "files": {
-      "include": [
-        "index.ts",
-        "mod.ts",
-        "src/",
-        "test/"
-      ]
-    },
-    "options": {
-      "useTabs": false,
-      "lineWidth": 120,
-      "indentWidth": 2,
-      "singleQuote": true,
-      "proseWrap": "preserve"
-    }
+    "include": [
+      "index.ts",
+      "mod.ts",
+      "src/",
+      "tests/"
+    ],
+    "useTabs": false,
+    "lineWidth": 120,
+    "indentWidth": 2,
+    "singleQuote": true,
+    "proseWrap": "preserve"
   },
   "lint": {
-    "files": {
-      "include": [
-        "index.ts", 
-        "annotations.ts",
-        "decorations.ts",
-        "enums.ts",
-        "exceptions.ts",
-        "guards.ts",
-        "middlewares.ts",
-        "services.ts",
-        "src/**/*.ts", 
-        "test/**/*.ts"
-      ]
-    },
+    "include": [
+      "index.ts", 
+      "annotations.ts",
+      "decorations.ts",
+      "enums.ts",
+      "exceptions.ts",
+      "guards.ts",
+      "middlewares.ts",
+      "services.ts",
+      "src/**/*.ts", 
+      "tests/**/*.ts"
+    ],
     "rules": {
       "tags": ["recommended"],
       "exclude": ["no-explicit-any"]
@@ -81,8 +75,6 @@
   },
   "test": {
     "exclude": [
-      "tests/services/migrator.test.ts",
-      "tests/services/persister.test.ts"
     ]
   }
 }

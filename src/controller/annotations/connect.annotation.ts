@@ -4,24 +4,24 @@ import { HttpAnnotationInterface } from '~/controller/interfaces.ts';
 import ActionEnum from '~/network/enums/method.enum.ts';
 
 export class ConnectAnnotation implements AnnotationInterface, HttpAnnotationInterface {
-  name: string = ActionEnum.CONNECT
+  name: string = ActionEnum.CONNECT;
 
   constructor(public path?: string) {}
 
-  onAttach(artifact: ArtifactType, decorator: DecoratorType): any{
+  onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
     if (decorator.decoration.kind == DecoratorKindEnum.METHOD) {
-      const consumer = new ConsumerAnnotation()
-      Decorator.attach(artifact, { name: consumer.name, target: consumer }, decorator.decoration)
+      const consumer = new ConsumerAnnotation();
+      Decorator.attach(artifact, { name: consumer.name, target: consumer }, decorator.decoration);
       return artifact.target;
     }
-    
+
     throw new AnnotationException('Method not implemented for {name} on {kind}.', {
       key: 'NOT_IMPLEMENTED',
       context: { name: artifact.name, kind: decorator.decoration.kind },
     });
   }
 
-  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default ConnectAnnotation
+export default ConnectAnnotation;

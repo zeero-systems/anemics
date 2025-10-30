@@ -1,5 +1,10 @@
 import type { QuerierOptionsType } from '~/querier/types.ts';
-import type { IndexQuerierInterface, QuerierInterface, QueryQuerierInterface, TableQuerierInterface } from '~/querier/interfaces.ts';
+import type {
+  IndexQuerierInterface,
+  QuerierInterface,
+  QueryQuerierInterface,
+  TableQuerierInterface,
+} from '~/querier/interfaces.ts';
 
 import Index from '~/querier/postgresql/queries/index.querier.ts';
 import Query from '~/querier/postgresql/queries/query.querier.ts';

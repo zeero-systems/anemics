@@ -1,7 +1,7 @@
 import type { QueryFunction, QueryType, TableType } from '~/querier/types.ts';
 import type { BuilderInterface, TableClauseInterface } from '~/querier/interfaces.ts';
 
-import { Objector, Descriptor } from '@zeero/commons';
+import { Descriptor, Objector } from '@zeero/commons';
 
 import isBuilder from '~/querier/guards/is-builder.guard.ts';
 import isQueryFunction from '~/querier/guards/is-query-function.guard.ts';

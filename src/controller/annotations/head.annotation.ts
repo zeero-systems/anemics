@@ -6,24 +6,24 @@ import { AnnotationException, ConsumerAnnotation, Decorator, DecoratorKindEnum }
 import ActionEnum from '~/network/enums/method.enum.ts';
 
 export class HeadAnnotation implements AnnotationInterface, HttpAnnotationInterface {
-  name: string = ActionEnum.HEAD
-  
+  name: string = ActionEnum.HEAD;
+
   constructor(public path?: string, public filter?: FilterType) {}
 
-  onAttach(artifact: ArtifactType, decorator: DecoratorType): any{
+  onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
     if (decorator.decoration.kind == DecoratorKindEnum.METHOD) {
-      const consumer = new ConsumerAnnotation()
-      Decorator.attach(artifact, { name: 'ConsumerAnnotation', target: consumer }, decorator.decoration)
+      const consumer = new ConsumerAnnotation();
+      Decorator.attach(artifact, { name: 'ConsumerAnnotation', target: consumer }, decorator.decoration);
       return artifact.target;
     }
-    
+
     throw new AnnotationException('Method not implemented for {name} on {kind}.', {
       key: 'NOT_IMPLEMENTED',
       context: { name: artifact.name, kind: decorator.decoration.kind },
     });
   }
 
-  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) { }
+  onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default HeadAnnotation
+export default HeadAnnotation;

@@ -1,7 +1,4 @@
-import type {
-  ArtifactType,
-  DecoratorType,
-} from '@zeero/commons';
+import type { ArtifactType, DecoratorType } from '@zeero/commons';
 import type { MiddlerInterface, MiddlewareInterface } from '~/controller/interfaces.ts';
 
 import { DecoratorMetadata } from '@zeero/commons';
@@ -15,7 +12,7 @@ export class Middler implements MiddlerInterface {
 
   public middlewares: { [key: string]: { [key in EventEnum]: Array<MiddlewareInterface> } } = {};
 
-  constructor() { }
+  constructor() {}
 
   public wirefy(artifacts: Array<ArtifactType>): void {
     for (const artifact of artifacts) {

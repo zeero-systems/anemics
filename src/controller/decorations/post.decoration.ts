@@ -1,7 +1,7 @@
 import { DecorationFunctionType, Decorator } from '@zeero/commons';
 
-import PostAnnotation from '~/controller/annotations/post.annotation.ts'
+import PostAnnotation from '~/controller/annotations/post.annotation.ts';
 
-export const Post: DecorationFunctionType<typeof PostAnnotation> = Decorator.create(PostAnnotation)
+export const Post: DecorationFunctionType<typeof PostAnnotation> = Decorator.create(PostAnnotation);
 
-export default Post
+export default Post;

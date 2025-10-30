@@ -1,6 +1,6 @@
 import type { AnnotationInterface, NewableType } from '@zeero/commons';
 import type {
-ActionOptionsType,
+  ActionOptionsType,
   ClientOptionsType,
   ColumnOptionsType,
   CommonOptionsType,
@@ -32,11 +32,11 @@ import type { QueryType } from '~/querier/types.ts';
 import type { QuerierInterface } from '~/querier/interfaces.ts';
 
 export interface PersisterInterface {
-  common: CommonOptionsType,
-  options: ClientOptionsType,
-  extra?: any,
+  common: CommonOptionsType;
+  options: ClientOptionsType;
+  extra?: any;
 
-  instantiate(): DatabaseInterface
+  instantiate(): DatabaseInterface;
 }
 
 export interface NamingInterface {
@@ -85,7 +85,7 @@ export interface IndexInterface {
 
 export interface ColumnInterface {
   name: string;
-  options?: ColumnOptionsType & { length?: number; scale?: number; precision?: number; enums?: any[]  }
+  options?: ColumnOptionsType & { length?: number; scale?: number; precision?: number; enums?: any[] };
   type: CharacterType | DateType | GeometricType | LanguageType | NetworkType | NumericType | RangeType | StructureType;
 }
 
@@ -124,14 +124,20 @@ export interface RepositoryInterface<T extends NewableType<T>> {
   table: RepositoryTableInterface<T>;
 
   schema: T;
-  querier: QuerierInterface
+  querier: QuerierInterface;
   database: DatabaseInterface;
   options: RepositoryOptionsType;
   annotation: SchemaAnnotation;
 
   execute(queries: QueryType[], options?: ExecuteOptionsType): Promise<Array<ExecuteResultType<InstanceType<T>>>>;
-  executeWithConnect(queriers: QueryType[], options?: ExecuteOptionsType): Promise<ExecuteResultType<InstanceType<T>>[]>;
-  executeWithTransaction(queriers: QueryType[], options?: ExecuteOptionsType): Promise<ExecuteResultType<InstanceType<T>>[]>;
+  executeWithConnect(
+    queriers: QueryType[],
+    options?: ExecuteOptionsType,
+  ): Promise<ExecuteResultType<InstanceType<T>>[]>;
+  executeWithTransaction(
+    queriers: QueryType[],
+    options?: ExecuteOptionsType,
+  ): Promise<ExecuteResultType<InstanceType<T>>[]>;
 }
 
 export interface RepositoryTableInterface<T extends NewableType<T>> {
@@ -148,17 +154,32 @@ export interface RepositoryQueryInterface<T extends NewableType<T>> {
   create(record: InstanceType<T>, options?: ActionOptionsType): Promise<InstanceType<T>>;
   createMany(records: Array<InstanceType<T>>, options?: ActionOptionsType): Promise<Array<InstanceType<T>>>;
   createQuery(records: Array<InstanceType<T>>, options?: ActionOptionsType): Array<QueryType>;
-  createExecute(records: Array<InstanceType<T>>, options?: ActionOptionsType): Promise<Array<ExecuteResultType<InstanceType<T>>>>;
+  createExecute(
+    records: Array<InstanceType<T>>,
+    options?: ActionOptionsType,
+  ): Promise<Array<ExecuteResultType<InstanceType<T>>>>;
 
   update(record: Partial<InstanceType<T>>, options?: ActionOptionsType): Promise<InstanceType<T>>;
-  updateMany(records: Array<Partial<InstanceType<T>>>, options?: ActionOptionsType): Promise<Array<Partial<InstanceType<T>>>>;
+  updateMany(
+    records: Array<Partial<InstanceType<T>>>,
+    options?: ActionOptionsType,
+  ): Promise<Array<Partial<InstanceType<T>>>>;
   updateQuery(records: Array<Partial<InstanceType<T>>>, options?: ActionOptionsType): Array<QueryType>;
-  updateExecute(records: Array<Partial<InstanceType<T>>>, options?: ActionOptionsType): Promise<Array<ExecuteResultType<InstanceType<T>>>>;
+  updateExecute(
+    records: Array<Partial<InstanceType<T>>>,
+    options?: ActionOptionsType,
+  ): Promise<Array<ExecuteResultType<InstanceType<T>>>>;
 
   delete(query: FilterPredicateType | InstanceType<T>, returning?: ActionOptionsType): Promise<InstanceType<T>>;
-  deleteMany(queries: Array<FilterPredicateType | InstanceType<T>>, returning?: ActionOptionsType): Promise<Array<InstanceType<T>>>;
+  deleteMany(
+    queries: Array<FilterPredicateType | InstanceType<T>>,
+    returning?: ActionOptionsType,
+  ): Promise<Array<InstanceType<T>>>;
   deleteQuery(where: FilterPredicateType, returning?: ActionOptionsType): QueryType;
-  deleteExecute(where: FilterPredicateType, returning?: ActionOptionsType): Promise<Array<ExecuteResultType<InstanceType<T>>>>;
+  deleteExecute(
+    where: FilterPredicateType,
+    returning?: ActionOptionsType,
+  ): Promise<Array<ExecuteResultType<InstanceType<T>>>>;
 
   search(search: FilterType, options?: SearchOptionsType): Promise<Array<InstanceType<T>>>;
   searchFirst(search: FilterType, options?: SearchOptionsType): Promise<InstanceType<T>>;
