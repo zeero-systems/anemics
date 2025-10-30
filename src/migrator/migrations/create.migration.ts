@@ -60,8 +60,8 @@ export class CreateMigration implements MigrationInterface {
   }
 
   async down(): Promise<void> {
-    const table = `DROP TABLE IF EXISTS ${this.options.tableName} CASCADE;`;
-    const tableIndex = `DROP INDEX IF EXISTS idx_${this.options.tableName}_name_environment_idx;`;
+    const table = `DROP TABLE IF EXISTS ${this.options.tableSchema}.${this.options.tableName} CASCADE;`;
+    const tableIndex = `DROP INDEX IF EXISTS ${this.options.tableSchema}.${this.options.tableName}_name_environment_idx;`;
 
     try {
       await this.transaction.execute(table);
