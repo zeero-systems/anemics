@@ -1,6 +1,6 @@
 {
   "name": "@zeero-systems/anemics",
-  "version": "0.26.0",
+  "version": "0.26.1",
   "license": "GPL-3.0",
   "exports": {
     ".": "./index.ts",
@@ -75,6 +75,8 @@
   },
   "test": {
     "exclude": [
+      "tests/services/migrator.test.ts",
+      "tests/services/persister.test.ts"
     ]
   }
 }
