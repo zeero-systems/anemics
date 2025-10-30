@@ -6,12 +6,10 @@ import type { FilterType } from '~/persister/types.ts';
 
 import { Factory } from '@zeero/commons';
 import Schema from '~/persister/decorations/schema.decoration.ts';
-import Numeric from '~/persister/decorations/numeric.decoration.ts';
-import Character from '~/persister/decorations/character.decoration.ts';
+import Column from '~/persister/decorations/column.decoration.ts';
 import ForeignKey from '~/persister/decorations/foreign-key.decoration.ts';
 import Repository from '~/persister/services/repository.ts';
 import Many from '~/persister/decorations/many.decoration.ts';
-import Structure from '~/persister/decorations/structure.decoration.ts';
 import One from '~/persister/decorations/one.decoration.ts';
 import { FilterDictionaryType } from '~/persister/types.ts';
 import Filter from '~/persister/services/filter.service.ts';
@@ -20,13 +18,13 @@ import Postgresql from '~/persister/postgresql/postgresql.database.ts';
 describe('persister', () => {
   @Schema('users')
   class User {
-    @Numeric('serial', { primary: true })
+    @Column('serial', { primary: true })
     id?: number;
 
-    @Character('varchar')
+    @Column('varchar')
     name!: string;
 
-    @Character('varchar', { length: 10 })
+    @Column('varchar', { length: 10 })
     lastName!: string;
 
     @Many(() => Post, {
@@ -38,16 +36,16 @@ describe('persister', () => {
 
   @Schema('posts')
   class Post {
-    @Numeric('serial', { primary: true })
+    @Column('serial', { primary: true })
     id?: number;
 
-    @Character('varchar')
+    @Column('varchar')
     title!: string;
 
-    @Structure('boolean', { default: false })
+    @Column('boolean', { default: false })
     active?: boolean;
 
-    @Numeric('integer')
+    @Column('integer')
     @ForeignKey('users', { referenceKey: 'id', onDelete: 'cascade' })
     userId!: number;
 
@@ -63,17 +61,17 @@ describe('persister', () => {
 
   @Schema('comments')
   class Comment {
-    @Numeric('serial', { primary: true })
+    @Column('serial', { primary: true })
     id?: number;
 
-    @Character('varchar')
+    @Column('varchar')
     message!: string;
 
-    @Numeric('integer')
+    @Column('integer')
     @ForeignKey('users', { referenceKey: 'id', onDelete: 'cascade' })
     userId!: number;
 
-    @Numeric('integer')
+    @Column('integer')
     @ForeignKey('posts', { referenceKey: 'id', onDelete: 'cascade' })
     postId!: number;
   }

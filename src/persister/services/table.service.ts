@@ -23,7 +23,7 @@ class Table<T extends NewableType<T>> implements RepositoryTableInterface<T> {
       for (const decoration of this.repository.annotation.columns) {
         const column = queryTable.column.name(this.repository.options.toTableNaming(decoration.key)) as any;
 
-        column[decoration.annotation.name.toLowerCase()](decoration.annotation.type, decoration.annotation.options);
+        column.type(decoration.annotation.type, decoration.annotation.options);
 
         if (decoration.annotation.options?.primary) column.primaryKey();
         if (decoration.annotation.options?.nullable === false) column.notNull();

@@ -2,21 +2,14 @@ import ForeingActionEnum from '~/querier/enums/foreign-action.enum.ts';
 import {
   AliasColumnType,
   BuilderOptionsType,
-  CharacterType,
   ClauseType,
-  DateType,
-  GeometricType,
-  LanguageType,
-  NetworkType,
-  NumericType,
   OperatorType,
   PredicateType,
   QueryFunction,
   QueryType,
-  RangeType,
-  StructureType,
   TermType,
 } from '~/querier/types.ts';
+import { ColumnType } from '../persister/types.ts';
 
 export interface QuerierInterface {
   get query(): QueryQuerierInterface;
@@ -150,19 +143,12 @@ export interface IndexTypeClauseInterface<T extends BuilderInterface<T>> extends
 }
 
 export interface ColumnClauseInterface<T extends BuilderInterface<T>> extends ClauseInterface {
-  character(value: CharacterType, options?: { length?: number }): this & T;
-  date(value: DateType, options?: { precision?: number }): this & T;
-  geometric(value: GeometricType): this & T;
-  language(value: LanguageType): this & T;
+  type(value: ColumnType, options?: { length?: number; scale?: number; precision?: number; enums?: any[] }): this & T;
   name(value: string): this & T;
-  network(value: NetworkType): this & T;
   notNull(): this & T;
-  numeric(value: NumericType, options?: { scale?: number; precision?: number }): this & T;
   primaryKey(): this & T;
   unique(value?: string | Array<string>): this & T;
   default(value: string | number | Array<string | number>): this & T;
-  range(value: RangeType): this & T;
-  structure(value: StructureType, options?: { enums?: any[] }): this & T;
 }
 
 export interface ConstraintClauseInterface<T extends BuilderInterface<T>> extends ClauseInterface {

@@ -5,17 +5,12 @@ import isColumn from '~/persister/guards/is-column.guard.ts';
 
 describe('isColumn guard', () => {
   it('should return true for valid column annotation', () => {
-    const validColumn = { name: 'Character' };
+    const validColumn = { name: 'Column' };
     expect(isColumn(validColumn)).toBe(true);
   });
 
-  it('should return true for numeric column', () => {
-    const column = { name: 'Numeric' };
-    expect(isColumn(column)).toBe(true);
-  });
-
-  it('should return true for date column', () => {
-    const column = { name: 'Date' };
+  it('should return true for column with type', () => {
+    const column = { name: 'Column', type: 'varchar' };
     expect(isColumn(column)).toBe(true);
   });
 

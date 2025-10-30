@@ -1,16 +1,18 @@
 import type { AnnotationInterface, ArtifactType, DecoratorType } from '@zeero/commons';
-import type { CharacterType } from '~/querier/types.ts';
-import type { ColumnOptionsType } from '~/persister/types.ts';
+import type { ColumnOptionsType, ColumnType } from '~/persister/types.ts';
 import type { ColumnInterface } from '~/persister/interfaces.ts';
 
 import { AnnotationException, DecoratorKindEnum } from '@zeero/commons';
 
-export class CharacterAnnotation implements AnnotationInterface, ColumnInterface {
-  name: string = 'Character';
+export class ColumnAnnotation implements AnnotationInterface, ColumnInterface {
+  name: string = 'Column';
   persists?: boolean | undefined = true;
   stackable?: boolean | undefined = false;
 
-  constructor(public type: CharacterType, public options?: ColumnOptionsType & { length?: number }) {}
+  constructor(
+    public type: ColumnType,
+    public options?: ColumnOptionsType & { length?: number; scale?: number; precision?: number }
+  ) {}
 
   onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
     if (
@@ -29,4 +31,4 @@ export class CharacterAnnotation implements AnnotationInterface, ColumnInterface
   onInitialize(_artifact: ArtifactType, _decorator: DecoratorType) {}
 }
 
-export default CharacterAnnotation;
+export default ColumnAnnotation;

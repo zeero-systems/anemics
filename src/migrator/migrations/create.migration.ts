@@ -19,18 +19,18 @@ export class CreateMigration implements MigrationInterface {
   async up(): Promise<void> {
     const table = this.querier.table
       .create.name(`${this.options.tableSchema}.${this.options.tableName}`).notExists()
-      .column.name('id').numeric('serial').primaryKey().notNull().unique()
-      .column.name('action').character('varchar', { length: 20 }).notNull().default('migration') // migration or seed
-      .column.name('environment').character('varchar', { length: 20 }).notNull().default('development') // 'development', 'staging', 'production'
-      .column.name('name').character('varchar', { length: 255 }).notNull()
-      .column.name('file_name').character('varchar', { length: 500 }).notNull()
-      .column.name('checksum').character('varchar', { length: 64 }).notNull()
-      .column.name('applied_at').date('timestamp').notNull().default('CURRENT_TIMESTAMP')
-      .column.name('applied_by').character('varchar', { length: 100 }).notNull()
-      .column.name('description').character('text')
-      .column.name('execution_time_ms').numeric('decimal', { precision: 10, scale: 3 }).notNull()
-      .column.name('up_sql').character('text')
-      .column.name('down_sql').character('text')
+      .column.name('id').type('serial').primaryKey().notNull().unique()
+      .column.name('action').type('varchar', { length: 20 }).notNull().default('migration') // migration or seed
+      .column.name('environment').type('varchar', { length: 20 }).notNull().default('development') // 'development', 'staging', 'production'
+      .column.name('name').type('varchar', { length: 255 }).notNull()
+      .column.name('file_name').type('varchar', { length: 500 }).notNull()
+      .column.name('checksum').type('varchar', { length: 64 }).notNull()
+      .column.name('applied_at').type('timestamp').notNull().default('CURRENT_TIMESTAMP')
+      .column.name('applied_by').type('varchar', { length: 100 }).notNull()
+      .column.name('description').type('text')
+      .column.name('execution_time_ms').type('decimal', { precision: 10, scale: 3 }).notNull()
+      .column.name('up_sql').type('text')
+      .column.name('down_sql').type('text')
       .constraint.unique(['name', 'file_name', 'environment'])
       .toQuery().text;
 

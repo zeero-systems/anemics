@@ -35,19 +35,12 @@ export class SchemaAnnotation implements AnnotationInterface, SchemaInterface {
   onAttach(artifact: ArtifactType, decorator: DecoratorType): any {
     if (decorator.decoration.kind == DecoratorKindEnum.CLASS) {
       const types = [
-        'Character',
-        'Date',
+        'Column',
         'ForeignKey',
-        'Geometric',
         'Index',
         'Join',
-        'Language',
         'Many',
-        'Network',
-        'Numeric',
         'One',
-        'Range',
-        'Structure',
       ];
       const decorators = DecoratorMetadata.filterByAnnotationInteroperableNames(decorator.decoration.context, types);
 

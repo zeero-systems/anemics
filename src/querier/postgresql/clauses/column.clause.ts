@@ -1,22 +1,13 @@
-import type { ColumnType, QueryType } from '~/querier/types.ts';
+import type { ColumnType } from '~/persister/types.ts';
+import type { QueryType, ColumnRowType } from '~/querier/types.ts';
 import type { BuilderInterface, ColumnClauseInterface } from '~/querier/interfaces.ts';
 
 import { Descriptor, Objector } from '@zeero/commons';
 import Constraint from '~/querier/postgresql/clauses/constraint.clause.ts';
-import {
-  CharacterType,
-  DateType,
-  GeometricType,
-  LanguageType,
-  NetworkType,
-  NumericType,
-  RangeType,
-  StructureType,
-} from '~/querier/types.ts';
 
 @Descriptor({ properties: { enumerable: false } })
 export class Column<T extends BuilderInterface<T>> implements ColumnClauseInterface<T> {
-  public row: ColumnType<T> = { constraints: [] as any } as ColumnType<T>;
+  public row: ColumnRowType<T> = { constraints: [] as any } as ColumnRowType<T>;
 
   constructor(
     private _querier: T,
@@ -60,41 +51,14 @@ export class Column<T extends BuilderInterface<T>> implements ColumnClauseInterf
     return Objector.assign(this._querier, this);
   }
 
-  public character(value: CharacterType, options?: { length?: number }): this & T {
+  public type(
+    value: ColumnType,
+    options?: { length?: number; scale?: number; precision?: number; enums?: any[] }
+  ): this & T {
     this.row.type = value;
     this.row.length = options?.length;
-    return Objector.assign(this._querier, this);
-  }
-
-  public date(value: DateType, options?: { precision?: number }): this & T {
-    this.row.type = value;
-    this.row.precision = options?.precision;
-    return Objector.assign(this._querier, this);
-  }
-  public geometric(value: GeometricType): this & T {
-    this.row.type = value;
-    return Objector.assign(this._querier, this);
-  }
-  public language(value: LanguageType): this & T {
-    this.row.type = value;
-    return Objector.assign(this._querier, this);
-  }
-  public network(value: NetworkType): this & T {
-    this.row.type = value;
-    return Objector.assign(this._querier, this);
-  }
-  public numeric(value: NumericType, options?: { scale?: number; precision?: number }): this & T {
-    this.row.type = value;
     this.row.scale = options?.scale;
     this.row.precision = options?.precision;
-    return Objector.assign(this._querier, this);
-  }
-  public range(value: RangeType): this & T {
-    this.row.type = value;
-    return Objector.assign(this._querier, this);
-  }
-  public structure(value: StructureType, options?: { enums?: any[] }): this & T {
-    this.row.type = value;
     this.row.enums = options?.enums;
     return Objector.assign(this._querier, this);
   }

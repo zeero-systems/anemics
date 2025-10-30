@@ -3,6 +3,7 @@ import type {
   ActionOptionsType,
   ClientOptionsType,
   ColumnOptionsType,
+  ColumnType,
   CommonOptionsType,
   ExecuteOptionsType,
   ExecuteResultType,
@@ -17,16 +18,6 @@ import type {
   SearchOptionsType,
   TransactionOptionType,
 } from '~/persister/types.ts';
-import {
-  CharacterType,
-  DateType,
-  GeometricType,
-  LanguageType,
-  NetworkType,
-  NumericType,
-  RangeType,
-  StructureType,
-} from '~/querier/types.ts';
 
 import type { QueryType } from '~/querier/types.ts';
 import type { QuerierInterface } from '~/querier/interfaces.ts';
@@ -86,7 +77,7 @@ export interface IndexInterface {
 export interface ColumnInterface {
   name: string;
   options?: ColumnOptionsType & { length?: number; scale?: number; precision?: number; enums?: any[] };
-  type: CharacterType | DateType | GeometricType | LanguageType | NetworkType | NumericType | RangeType | StructureType;
+  type: ColumnType;
 }
 
 export interface ForeignKeyInterface {
