@@ -30,9 +30,16 @@ export class Postgresql implements DatabaseInterface {
   }
 
   async connection(): Promise<ConnectionInterface> {
-    return new Connection(
+    const conn = new Connection(
       this.manager instanceof Pool ? await this.manager.connect() : this.manager,
     );
+
+    // Add this: Set search_path if schema option is provided
+    if (this.options.schema) {
+      await conn.execute(`SET search_path TO ${this.options.schema}`);
+    }
+
+    return conn;
   }
 }
 
