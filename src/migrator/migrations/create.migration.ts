@@ -31,13 +31,13 @@ export class CreateMigration implements MigrationInterface {
       .column.name('execution_time_ms').numeric('decimal', { precision: 10, scale: 3 }).notNull()
       .column.name('up_sql').character('text')
       .column.name('down_sql').character('text')
-      .constraint.unique(['name', 'environment'])
+      .constraint.unique(['name', 'file_name', 'environment'])
       .toQuery().text
 
-    const tableIndex = this.querier.index.create.name(`idx_${this.options.tableName}_name_environment_idx`)
+    const tableIndex = this.querier.index.create.name(`${this.options.tableName}_name_file_name_environment_idx`)
       .notExists()
       .on.table(`${this.options.tableSchema}.${this.options.tableName}`)
-      .with.column('name').column('environment')
+      .with.column('name').column('file_name').column('environment')
       .toQuery().text
 
     try {
@@ -61,7 +61,7 @@ export class CreateMigration implements MigrationInterface {
 
   async down(): Promise<void> {
     const table = `DROP TABLE IF EXISTS ${this.options.tableSchema}.${this.options.tableName} CASCADE;`;
-    const tableIndex = `DROP INDEX IF EXISTS ${this.options.tableSchema}.${this.options.tableName}_name_environment_idx;`;
+    const tableIndex = `DROP INDEX IF EXISTS ${this.options.tableSchema}.${this.options.tableName}_name_file_name_environment_idx;`;
 
     try {
       await this.transaction.execute(table);
