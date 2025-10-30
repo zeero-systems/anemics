@@ -60,6 +60,7 @@ export class Migrator implements MigratorInterface {
         const existingQuery = this.querier.query
           .select
             .column('id')
+            .column('name')
             .column('checksum')
             .column('file_name')
             .column('applied_at')
@@ -79,7 +80,7 @@ export class Migrator implements MigratorInterface {
         }>(existingQuery.text, { args: existingQuery.args });
 
         exists = existingResult.rows.length > 0;
-        checksumMatches = exists && existingResult.rows[0].checksum === migration.checksum;
+        checksumMatches = exists && !migration.checksum || existingResult.rows[0].checksum === migration.checksum;
         const migrationAttributes = {
           exists,
           name: migration.name,
@@ -175,9 +176,9 @@ export class Migrator implements MigratorInterface {
         }
       }
     } else {
-      const migratorMigrations = [CreateMigration]
-      for (const MigrationClass of migratorMigrations) {
-        const target = new MigrationClass(
+      const migratorMigrations = [{ fileName: `create.migration.ts`, target: CreateMigration }];
+      for (const migration of migratorMigrations) {
+        const target = new migration.target(
           span,
           this.querier,
           transaction,
@@ -186,7 +187,7 @@ export class Migrator implements MigratorInterface {
         migrations.push({
           name: 'migrator',
           target,
-          fileName: `create.migration.ts`,
+          fileName: migration.fileName,
           checksum: '',
         });
       }
