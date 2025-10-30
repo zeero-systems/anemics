@@ -22,7 +22,7 @@ describe('migrator', () => {
   };
 
   const clientOptions = {
-    database: 'accounts',
+    database: 'postgres',
     hostname: '127.0.0.1',
     password: 'postgres',
     port: 5432,
@@ -36,11 +36,12 @@ describe('migrator', () => {
   const container = new Container();
 
   const tableName = 'test_migrations';
+  const tableSchema = 'public';
   const migrator = new Migrator(querier, database, container, tracer, {
     prefix: '-',
     pattern: '/src/{name}/migrations/*.migration.ts',
     tableName,
-    tableSchema: 'private',
+    tableSchema,
     environment: 'test',
   });
 
@@ -75,7 +76,7 @@ describe('migrator', () => {
             .column('file_name')
             .column('name')
             .column('checksum')
-          .from.table(`private.${tableName}`)
+          .from.table(`${tableSchema}.${tableName}`)
           .where
             .and('environment', 'eq', 'development')
           .toQuery();
@@ -101,7 +102,7 @@ describe('migrator', () => {
           .select
             .column('checksum')
             .column('file_name')
-          .from.table(`private.${tableName}`)
+          .from.table(`${tableSchema}.${tableName}`)
           .where
             .and('environment', 'eq', 'test')
           .toQuery();
@@ -125,7 +126,7 @@ describe('migrator', () => {
         const envQuery = querier.query
           .select
             .column('environment')
-          .from.table(`private.${tableName}`)
+          .from.table(`${tableSchema}.${tableName}`)
           .toQuery();
 
         const result = await client.execute(envQuery.text, { args: envQuery.args });
@@ -146,7 +147,7 @@ describe('migrator', () => {
           .select
             .column('execution_time_ms')
             .column('file_name')
-          .from.table(`private.${tableName}`)
+          .from.table(`${tableSchema}.${tableName}`)
           .where
             .and('environment', 'eq', 'test')
           .toQuery();

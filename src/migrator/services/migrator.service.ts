@@ -80,7 +80,7 @@ export class Migrator implements MigratorInterface {
         }>(existingQuery.text, { args: existingQuery.args });
 
         exists = existingResult.rows.length > 0;
-        checksumMatches = exists && !migration.checksum || existingResult.rows[0].checksum === migration.checksum;
+        checksumMatches = (exists && existingResult.rows[0].checksum === migration.checksum) || !migration.checksum
         const migrationAttributes = {
           exists,
           name: migration.name,
