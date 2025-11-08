@@ -18,7 +18,7 @@
     "jsr:@std/path@^1.1.1": "1.1.2",
     "jsr:@std/path@^1.1.2": "1.1.2",
     "jsr:@std/testing@1.0.16": "1.0.16",
-    "jsr:@zeero-systems/commons@~0.44.1": "0.44.1"
+    "jsr:@zeero-systems/commons@~0.44.5": "0.44.5"
   },
   "jsr": {
     "@db/postgres@0.19.5": {
@@ -85,11 +85,8 @@
         "jsr:@std/path@^1.1.2"
       ]
     },
-    "@zeero-systems/commons@0.44.1": {
-      "integrity": "65b3b35d20945ee98ea69eeeaf804cea58dbf8bf7c6d505a3d33c31c36ae4677",
-      "dependencies": [
-        "jsr:@zeero-systems/commons"
-      ]
+    "@zeero-systems/commons@0.44.5": {
+      "integrity": "f58bc6ef3c92ab5f3852743ef0ffce5120e5445fd7b0c5b256fd697d349fafbb"
     }
   },
   "redirects": {
@@ -232,7 +229,7 @@
       "jsr:@std/expect@1.0.17",
       "jsr:@std/fs@^1.0.19",
       "jsr:@std/testing@1.0.16",
-      "jsr:@zeero-systems/commons@~0.44.1"
+      "jsr:@zeero-systems/commons@~0.44.5"
     ]
   }
 }

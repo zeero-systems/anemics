@@ -88,32 +88,26 @@ export class Anemic implements AnemicInterface {
             },
             memory: this.application.resourcer.getMemory(true),
           };
-          const child = span.child({ name: `HANDLER ${resources.system?.pid}`, kind: SpanEnum.INTERNAL });
-          child.attributes(resources);
-
-          let handler;
-          if (server.accepts.includes(MethodEnum.SOCKET)) {
-            handler = this.socketHandler(new Requester(request), new Responser(), server.options, span, socket);
-          } else {
-            handler = this.httpHandler(new Requester(request), new Responser(), server.options, span, socket);
-          }
+          
+          using handlerSpan = span.child({ name: `HANDLER ${resources.system?.pid}`, kind: SpanEnum.INTERNAL });
+          handlerSpan.attributes(resources);
 
           try {
-            using childSpan = child;
-            const response = await handler;
-            childSpan.status({ type: StatusEnum.RESOLVED });
+            let response
+            if (server.accepts.includes(MethodEnum.SOCKET)) {
+              response = await this.socketHandler(new Requester(request), new Responser(), server.options, span, socket);
+            } else {
+              response = await this.httpHandler(new Requester(request), new Responser(), server.options, span, socket);
+            }            
+
+            handlerSpan.status({ type: StatusEnum.RESOLVED });
             return response;
           } catch (error: any) {
-            child.error(error);
-            child.event({
-              name: 'handler.error',
-              attributes: {
-                error: { name: error.name, message: String(error?.message || error), stack: error.stack },
-              },
+            handlerSpan.error(error);
+            handlerSpan.attributes({
+              error: { name: error.name, message: String(error?.message || error), stack: error.stack }
             });
-            child.status({ type: StatusEnum.REJECTED });
-            child.end();
-            throw error;
+            handlerSpan.status({ type: StatusEnum.REJECTED });
           }
         });
 
@@ -165,10 +159,7 @@ export class Anemic implements AnemicInterface {
     const status = responser.status || 200;
 
     responseSpan.info(`${requester.method} ${route.pathname} with ${status}`);
-    responseSpan.event({
-      name: 'handled',
-      attributes: { status, statusText: responser.statusText, headers: responser.headers },
-    });
+    responseSpan.attributes({ status, statusText: responser.statusText, headers: responser.headers });
     responseSpan.status({ type: StatusEnum.RESOLVED });
     responseSpan.end();
 

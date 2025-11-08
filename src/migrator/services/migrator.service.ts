@@ -2,7 +2,6 @@ import type { DatabaseInterface } from '~/persister/interfaces.ts';
 import type { QuerierInterface } from '~/querier/interfaces.ts';
 import type {
   MigrationFetchOptionsType,
-  MigrationOptionsType,
   MigrationRecordType,
   MigratorOptionsType,
 } from '~/migrator/types.ts';
