@@ -3,7 +3,7 @@ import { expect } from '@std/expect';
 
 import type { CommonOptionsType } from '~/persister/types.ts';
 
-import { ConsoleTransport, Container, Tracer } from '@zeero/commons';
+import { Container, Tracer } from '@zeero/commons';
 import Migrator from '~/migrator/services/migrator.service.ts';
 import Postgresql from '~/persister/postgresql/postgresql.database.ts';
 import Querier from '~/querier/services/querier.service.ts';
@@ -192,6 +192,69 @@ describe('migrator', () => {
  
         const result = await client.execute(tableQuery.text, { args: tableQuery.args });
         expect(result.rows.length).toBe(1); // Table should still exist
+      } finally {
+        await client.disconnect();
+      }
+    });
+
+    it('should delete migration entry from database after rollback with count', async () => {
+      const client = await database.connection();
+
+      try {
+        await migrator.up();
+      
+        const beforeQuery = querier.query
+          .select
+            .column('m.id')
+            .column('mf.file_name')
+          .from.table(`${tableSchema}.${tableName}`, 'm')
+          .left.table(`${tableSchema}.${tableName}_files`, 'mf')
+            .on.and(new Raw('mf.migration_id = m.id'))
+          .where.and('m.environment', 'eq', 'test')
+          .toQuery();
+
+        const beforeResult = await client.execute(beforeQuery.text, { args: beforeQuery.args });
+        const beforeCount = beforeResult.rows.length;
+        
+        expect(beforeCount).toBeGreaterThan(0);
+
+        const migrationRecord = beforeResult.rows[0] as any;
+        const migrationId = migrationRecord.id;
+        const migrationFileName = migrationRecord.file_name;
+
+        const downResult = await migrator.down(undefined, 1);
+        expect(downResult).toBe(true);
+
+        const afterMainQuery = querier.query
+          .select
+            .column('id')
+          .from.table(`${tableSchema}.${tableName}`)
+          .where.and('id', 'eq', migrationId)
+          .and('environment', 'eq', 'test')
+          .toQuery();
+
+        const afterMainResult = await client.execute(afterMainQuery.text, { args: afterMainQuery.args });
+        expect(afterMainResult.rows.length).toBe(0);
+
+        const afterFileQuery = querier.query
+          .select
+            .column('id')
+          .from.table(`${tableSchema}.${tableName}_files`)
+          .where.and('file_name', 'eq', migrationFileName)
+          .toQuery();
+
+        const afterFileResult = await client.execute(afterFileQuery.text, { args: afterFileQuery.args });
+        expect(afterFileResult.rows.length).toBe(0);
+
+        const afterTotalQuery = querier.query
+          .select
+            .column('m.id')
+          .from.table(`${tableSchema}.${tableName}`, 'm')
+          .where.and('m.environment', 'eq', 'test')
+          .toQuery();
+
+        const afterTotalResult = await client.execute(afterTotalQuery.text, { args: afterTotalQuery.args });
+        expect(afterTotalResult.rows.length).toBe(beforeCount - 1);
       } finally {
         await client.disconnect();
       }

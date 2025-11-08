@@ -299,9 +299,9 @@ export class Migrator implements MigratorInterface {
     if (migrations.some((m) => m.target.persist)) {
       const table = this.querier.query.insert
         .table(`${this.options.tableSchema}.${this.options.tableName}`)
-        .column('environment', `${this.options.environment}`)
-        .column('applied_by', `${this.options.applyBy || 'system'}`)
-        .returns.column('id')
+          .column('environment', `${this.options.environment}`)
+          .column('applied_by', `${this.options.applyBy || 'system'}`)
+          .returns.column('id')
         .toQuery();
 
       migrationId = await options.transaction.execute<{ id: number }>(table.text, { args: table.args }).then((res) =>
@@ -350,15 +350,48 @@ export class Migrator implements MigratorInterface {
     options: MigrationFetchOptionsType,
   ): Promise<void> {
 
+    const migrationIds: Array<number> = [];
+
     for (const migration of migrations) {
       const migrationSpan = options.span.child({ name: `execute ${migration.fileName}`, kind: SpanEnum.CLIENT });
       migration.target.span = migrationSpan;
       await migration.target.down?.();
 
+      if (migration.target.persist) {
+        const selectQuery = this.querier.query
+          .select
+            .column('m.id')
+          .from.table(`${this.options.tableSchema}.${this.options.tableName}`, 'm')
+          .left.table(`${this.options.tableSchema}.${this.options.tableName}_files`, 'mf')
+            .on.and(new Raw('mf.migration_id = m.id'))
+          .where.and('mf.file_name', 'eq', migration.fileName)
+          .toQuery();
+
+        const result = await options.transaction.execute<{ id: number }>(selectQuery.text, { args: selectQuery.args });
+
+        if (result.rows.length > 0) {
+          migrationIds.push(result.rows[0].id);
+        }
+      }
+
       migrationSpan.status({ type: StatusEnum.RESOLVED });
       migrationSpan.end();
     }
+
+    if (migrationIds.length > 0) {
+      const deleteQuery = this.querier.query
+        .delete.table(`${this.options.tableSchema}.${this.options.tableName}`)
+          .where.and('id', 'in', migrationIds)
+        .toQuery();
+  
+      await options.transaction.execute(deleteQuery.text, { args: deleteQuery.args });
+  
+      options.span.info(`Removed persisted migrations`, { migrationIds });
+      options.span.attributes({ migrationIds });
+    }
+
   }
+
 }
 
 export default Migrator;

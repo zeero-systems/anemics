@@ -43,16 +43,12 @@ export class TestTableMigration implements MigrationInterface {
   }
 
   async down(): Promise<void> {
-    const testTable = 'DROP TABLE IF EXISTS public.test_users CASCADE';
-    const migrationFilesTable = `DROP TABLE IF EXISTS ${this.options.tableSchema}.${this.options.tableName}_files CASCADE`;
-    const migrationTable = `DROP TABLE IF EXISTS ${this.options.tableSchema}.${this.options.tableName} CASCADE`;
+    const testTable = `DROP TABLE IF EXISTS ${this.options.tableSchema}.test_users CASCADE`;
 
     try {
       await this.transaction.execute(testTable);
-      await this.transaction.execute(migrationFilesTable);
-      await this.transaction.execute(migrationTable);
-      
-      this.span.info(`Test table and migration tables dropped`);
+
+      this.span.info(`Test table dropped`);
       this.span.status({ type: StatusEnum.RESOLVED });
     } catch (error: any) {
       this.span.error(`Error executing migration down: ${error.message}`);
@@ -62,7 +58,7 @@ export class TestTableMigration implements MigrationInterface {
       throw error;
     }
 
-    this.span.attributes({ query: `${testTable}; ${migrationFilesTable}; ${migrationTable};` });
+    this.span.attributes({ query: testTable });
   }
 }
 
