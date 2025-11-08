@@ -6,7 +6,7 @@ import { isString } from '@zeero/commons/guards';
 export class Filter implements FilterInterface {
   public dictionary: FilterDictionaryType = {
     delimiter: { start: '(', end: ')', array: ',', item: ';', value: ':' },
-    key: { query: 'q', select: 's', where: 'w', group: 'g', order: 'r', and: 'a', or: 'o', entity: 'e' },
+    key: { query: 'q', select: 's', where: 'w', group: 'g', order: 'r', limit: 'l', offset: 'f', and: 'a', or: 'o', entity: 'e' },
     value: { ascend: 'c', descend: 'd', number: 'n', string: 't', boolean: 'b' },
   };
 
@@ -21,6 +21,8 @@ export class Filter implements FilterInterface {
         search.where ? this.toWhereString(search.where) : null,
         search.order ? this.toOrderString(search.order) : null,
         search.group ? this.toGroupString(search.group) : null,
+        search.limit ? this.toLimitString(search.limit) : null,
+        search.offset ? this.toOffsetString(search.offset) : null,
       ].filter(Boolean).join('')
     }${this.dictionary.delimiter.end}`;
   }
@@ -100,6 +102,14 @@ export class Filter implements FilterInterface {
     return `${this.dictionary.key.group}${this.dictionary.delimiter.start}${
       group.join(this.dictionary.delimiter.item)
     }${this.dictionary.delimiter.end}`;
+  }
+
+  protected toLimitString(limit: number): string {
+    return `${this.dictionary.key.limit}${this.dictionary.delimiter.start}${limit}${this.dictionary.delimiter.end}`;
+  }
+
+  protected toOffsetString(offset: number): string {
+    return `${this.dictionary.key.offset}${this.dictionary.delimiter.start}${offset}${this.dictionary.delimiter.end}`;
   }
 
   public toFilter(text: string): FilterType {
@@ -197,6 +207,12 @@ export class Filter implements FilterInterface {
           if (!references[lastIndex].reference.group) references[lastIndex].reference.group = [];
           references.push({ type: 'group', reference: references[lastIndex].reference.group });
         }
+        if (previousLetter === this.dictionary.key.limit) {
+          references.push({ type: 'limit', reference: references[lastIndex].reference });
+        }
+        if (previousLetter === this.dictionary.key.offset) {
+          references.push({ type: 'offset', reference: references[lastIndex].reference });
+        }
 
         cutoffs.push(cutoffPosition);
       }
@@ -274,6 +290,20 @@ export class Filter implements FilterInterface {
 
         if (lastReference.type === 'group') {
           lastReference.reference.push(...slice.split(this.dictionary.delimiter.item).map((s) => s.trim()));
+        }
+
+        if (lastReference.type === 'limit') {
+          const limitValue = slice.trim();
+          if (!isNaN(Number(limitValue))) {
+            lastReference.reference.limit = Number(limitValue);
+          }
+        }
+
+        if (lastReference.type === 'offset') {
+          const offsetValue = slice.trim();
+          if (!isNaN(Number(offsetValue))) {
+            lastReference.reference.offset = Number(offsetValue);
+          }
         }
       }
 

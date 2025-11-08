@@ -1,12 +1,17 @@
-import type { DatabaseInterface, TransactionInterface } from '~/persister/interfaces.ts';
+import type { DatabaseInterface } from '~/persister/interfaces.ts';
 import type { QuerierInterface } from '~/querier/interfaces.ts';
-import type { MigrationRecordType, MigratorOptionsType } from '~/migrator/types.ts';
+import type {
+  MigrationFetchOptionsType,
+  MigrationOptionsType,
+  MigrationRecordType,
+  MigratorOptionsType,
+} from '~/migrator/types.ts';
 import type { MigrationInterface, MigratorInterface } from '~/migrator/interfaces.ts';
+import type { ContainerInterface, SpanInterface, TracerInterface } from '@zeero/commons';
 
-import { expandGlob } from '@std/fs';
-import { ContainerInterface, SpanEnum, SpanInterface, StatusEnum, TracerInterface } from '@zeero/commons';
-
-import CreateMigration from '~/migrator/migrations/create.migration.ts';
+import { expandGlob, WalkEntry } from '@std/fs';
+import { SpanEnum, StatusEnum } from '@zeero/commons';
+import Raw from '~/querier/services/raw.clause.ts'
 
 export class Migrator implements MigratorInterface {
   options: MigratorOptionsType;
@@ -28,16 +33,13 @@ export class Migrator implements MigratorInterface {
     };
   }
 
-  async shouldMigrate(
-    span: SpanInterface,
-    transaction: TransactionInterface,
-    migrations: Array<MigrationRecordType>,
-  ): Promise<Array<MigrationRecordType>> {
-    const shouldMigrateSpan = span.child({ name: 'filter migrations', kind: SpanEnum.INTERNAL });
+  async createTableIfNotExists(span: SpanInterface): Promise<boolean> {
+    await using client = await this.database.connection();
+    await using transaction = client.transaction(`${this.options.tableName}_check`);
 
-    const toApply: Array<MigrationRecordType> = [];
-    const mismatches: Array<MigrationRecordType> = [];
-    const skippings: Array<MigrationRecordType> = [];
+    await transaction.begin();
+
+    const tableExistsSpan = span.child({ name: 'check migrator table exists', kind: SpanEnum.INTERNAL });
 
     const tableExistsQuery = this.querier.query
       .select.column('COUNT(*)', 'count')
@@ -52,197 +54,133 @@ export class Migrator implements MigratorInterface {
     });
     const tableExists = parseInt(tableExistsResult.rows[0].count, 10) > 0;
 
-    for (const migration of migrations) {
-      let exists = false;
-      let checksumMatches = false;
+    if (!tableExists) {
+      const migrationtable = this.querier
+        .table
+        .create.name(`${this.options.tableSchema}.${this.options.tableName}`).notExists()
+        .column.name('id').type('serial').primaryKey().notNull().unique()
+        .column.name('applied_at').type('timestamp').notNull().default('CURRENT_TIMESTAMP')
+        .column.name('applied_by').type('varchar', { length: 100 }).notNull()
+        .column.name('environment').type('varchar', { length: 20 }).notNull().default('development') // 'development', 'staging', 'production'
+        .toQuery();
 
-      if (tableExists) {
-        const existingQuery = this.querier.query
-          .select
-          .column('id')
-          .column('name')
-          .column('checksum')
-          .column('file_name')
-          .column('applied_at')
-          .from.table(`${this.options.tableSchema}.${this.options.tableName}`)
-          .where
-          .and('name', 'eq', `${migration.name}`)
-          .and('file_name', 'eq', `${migration.fileName}`)
-          .and('environment', 'eq', `${this.options.environment}`)
-          .toQuery();
+      await transaction.execute(migrationtable.text, { args: migrationtable.args });
 
-        const existingResult = await transaction.execute<{
-          id: number;
-          name: string;
-          checksum: string;
-          file_name: string;
-          applied_at: Date;
-        }>(existingQuery.text, { args: existingQuery.args });
+      const migrationFileTable = this.querier.table
+        .create.name(`${this.options.tableSchema}.${this.options.tableName}_files`).notExists()
+          .column.name('id').type('serial').primaryKey().notNull().unique()
+          .column.name('migration_id').type('integer').notNull()
+          .column.name('type').type('varchar', { length: 20 }).notNull().default('migration') // migration or seed
+          .column.name('file_name').type('varchar', { length: 500 }).notNull().unique()
+          .column.name('checksum').type('varchar', { length: 64 }).notNull()
+          .column.name('description').type('text')
+          .column.name('execution_time_ms').type('decimal', { precision: 10, scale: 3 }).notNull()
+          .column.name('up_sql').type('text')
+          .column.name('down_sql').type('text')
+          .constraint.foreignKey('migration_id')
+            .references(`${this.options.tableSchema}.${this.options.tableName}`, { column: 'id' })
+            .onDelete('cascade')
+            .onUpdate('cascade')
+        .toQuery();
 
-        exists = existingResult.rows.length > 0;
-        checksumMatches = (exists && existingResult.rows[0].checksum === migration.checksum) || !migration.checksum;
-        const migrationAttributes = {
-          exists,
-          name: migration.name,
-          fileName: migration.fileName,
-          checksumMatches,
-        };
+      await transaction.execute(migrationFileTable.text, { args: migrationFileTable.args });
 
-        shouldMigrateSpan.event({ name: `checked`, attributes: migrationAttributes });
-      }
+      const migrationFileForeignKeyIndex = this.querier.index
+        .create.name(`${this.options.tableName}_migration_id_fkey`)
+          .on.table(`${this.options.tableSchema}.${this.options.tableName}_files`)
+          .with.column('migration_id')
+        .toQuery();
 
-      if (!exists) {
-        toApply.push(migration);
-      }
+      await transaction.execute(migrationFileForeignKeyIndex.text, { args: migrationFileForeignKeyIndex.args });
 
-      if (exists && !checksumMatches) {
-        mismatches.push(migration);
-      }
+      tableExistsSpan.info(`Migrator tables ${this.options.tableName}, ${this.options.tableName}_files created in schema ${this.options.tableSchema}`);
 
-      if (exists && checksumMatches) {
-        skippings.push(migration);
-      }
     }
 
-    if (toApply.length > 0) {
-      shouldMigrateSpan.info(`Should migrate - not found in database`, {
-        toApply: toApply.map((m) => m.fileName),
-      });
-    }
+    tableExistsSpan.status({ type: StatusEnum.RESOLVED });
+    tableExistsSpan.attributes({ tableExists });
+    tableExistsSpan.end();
 
-    if (mismatches.length > 0) {
-      shouldMigrateSpan.warn(`Will not migrate - migration was modified after being applied`, {
-        mismatches: mismatches.map((m) => m.fileName),
-      });
-    }
+    await transaction.commit();
 
-    if (skippings.length > 0) {
-      shouldMigrateSpan.info(`Will not migrate - already in database`, {
-        skippings: skippings.map((m) => m.fileName),
-      });
-    }
-
-    shouldMigrateSpan.status({ type: StatusEnum.RESOLVED });
-    shouldMigrateSpan.attributes({
-      toApply: toApply.map((m) => m.fileName),
-      mismatches: mismatches.map((m) => m.fileName),
-      skippings: skippings.map((m) => m.fileName),
-    });
-    shouldMigrateSpan.end();
-
-    return toApply;
+    return tableExists;
   }
+  
+  async getFileMigrations(name: string, options: MigrationFetchOptionsType): Promise<Array<MigrationRecordType>> {
+    const spanGet = options.span.child({ name: 'migration files', kind: SpanEnum.INTERNAL });
 
-  async getMigrations(
-    span: SpanInterface,
-    transaction: TransactionInterface,
-    name?: string,
-    only: Array<string> = [],
-  ): Promise<Array<MigrationRecordType>> {
-    const spanMigrations = span.child({ name: `get migrations`, kind: SpanEnum.INTERNAL });
+    const files: Array<WalkEntry> = [];
+    
+    let searchPath = this.options.pattern
 
-    let searchPath: string;
-    const migrations: Array<MigrationRecordType> = [];
+    if (searchPath.startsWith('file://')) {
+      searchPath = searchPath.substring(7);
+    }
 
-    if (name) {
-      searchPath = this.options.pattern.replace('{name}', name);
+    if (!searchPath.startsWith('/')) {
+      searchPath = `${Deno.cwd()}/${searchPath}`;
+    }
 
-      if (searchPath.startsWith('file://')) {
-        searchPath = searchPath.substring(7);
-      }
-
-      if (!searchPath.startsWith('/')) {
-        searchPath = `${Deno.cwd()}/${searchPath}`;
-      }
-
-      for await (const dirEntry of expandGlob(searchPath)) {
-        if (dirEntry.isFile) {
-          if (only.length == 0 || only.includes(dirEntry.name || '')) {
-            const importPath = dirEntry.path.startsWith('file://') ? dirEntry.path : `file://${dirEntry.path}`;
-            const module = await import(importPath);
-            const target = new module.default(
-              span,
-              this.querier,
-              transaction,
-              this.options,
-            ) as MigrationInterface;
-            migrations.push({
-              name,
-              target,
-              fileName: dirEntry.name,
-              checksum: await this.getMigrationChecksum(dirEntry.path),
-            });
+    for await (const dirEntry of expandGlob(searchPath)) {
+      if (dirEntry.isFile) {
+        if (options?.includes && options.includes.length > 0) {
+          const matched = options.includes.some((include) => dirEntry.name.includes(include));
+          if (matched) {
+            files.push(dirEntry);
           }
+        } else {
+          files.push(dirEntry);
         }
       }
-    } else {
-      const migratorMigrations = [{ fileName: `create.migration.ts`, target: CreateMigration }];
-      for (const migration of migratorMigrations) {
-        const target = new migration.target(
-          span,
-          this.querier,
-          transaction,
-          this.options,
-        ) as MigrationInterface;
-        migrations.push({
-          name: 'migrator',
-          target,
-          fileName: migration.fileName,
-          checksum: '',
-        });
-      }
     }
 
-    const attributes = { migrations: migrations.map((m) => ({ fileName: m.fileName, checksum: m.checksum })) };
-    spanMigrations.info(`Found ${migrations.length} migrations in ${name || 'migrator'}`, attributes);
-    spanMigrations.status({ type: StatusEnum.RESOLVED });
-    spanMigrations.attributes(attributes);
-    spanMigrations.end();
+    const migrations: Array<MigrationRecordType> = [];
+
+    for (const file of files) {
+      const importPath = file.path.startsWith('file://') ? file.path : `file://${file.path}`;
+      const module = await import(importPath);
+      const target = new module.default(
+        options.span,
+        this.querier,
+        options.transaction,
+        this.options,
+      ) as MigrationInterface;
+      const checksum = await this.getMigrationChecksum(file.path);
+
+      migrations.push({ target, fileName: file.name, checksum });
+    }
+
+    spanGet.info(`Found ${files.length} migration files`, { count: files.length });
+
+    spanGet.status({ type: StatusEnum.RESOLVED });
+    spanGet.attributes({ count: files.length });
+    spanGet.end();
 
     return migrations;
   }
 
-  async execute(
-    span: SpanInterface,
-    transaction: TransactionInterface,
-    migrations: Array<MigrationRecordType>,
-    type: 'up' | 'down',
-  ): Promise<void> {
-    const spanExecute = span.child({ name: 'execute migrations', kind: SpanEnum.INTERNAL });
+  async getPersistedMigrations(options: MigrationFetchOptionsType): Promise<Array<{ id: number; file_name: string }>> {
+    const select = this.querier.query
+      .select
+        .column('m.id')
+        .column('mf.file_name')
+      .from.table(`${this.options.tableSchema}.${this.options.tableName}`, 'm')
+      .left.table(`${this.options.tableSchema}.${this.options.tableName}_files`, 'mf')
+        .on.and(new Raw('mf.migration_id = m.id'))
+      .where.and('environment', 'eq', this.options.environment)
+      .order.desc('m.id')
 
-    for (const migration of migrations) {
-      const migrationSpan = spanExecute.child({ name: `execute ${migration.fileName}`, kind: SpanEnum.CLIENT });
-      migration.target.span = migrationSpan;
-      await (migration.target[type] as any)();
-      migrationSpan.end();
-
-      if (type == 'up' && migration.target.persist) {
-        const persistSpan = spanExecute.child({ name: `persist ${migration.fileName}`, kind: SpanEnum.CLIENT });
-
-        const time = Number((migrationSpan.options.endTime || 0) - migrationSpan.options.startTime).toFixed(3);
-
-        const table = this.querier.query.insert
-          .table(`${this.options.tableSchema}.${this.options.tableName}`)
-          .column('action', `${migration.target.action || 'migration'}`)
-          .column('name', `${migration.name}`)
-          .column('environment', `${this.options.environment}`)
-          .column('applied_by', `${this.options.applyBy || 'system'}`)
-          .column('description', `${migration.target.description || ''}`)
-          .column('file_name', `${migration.fileName}`)
-          .column('up_sql', `${migration.target.up_sqls?.join(';') || ''}`)
-          .column('down_sql', `${migration.target.down_sqls?.join(';') || ''}`)
-          .column('execution_time_ms', `${time}`)
-          .column('checksum', `${migration.checksum || ''}`)
-          .returns.column('id')
-          .toQuery();
-
-        const migrationRecord = await transaction.execute<{ id: number }>(table.text, { args: table.args });
-
-        persistSpan.attributes({ id: migrationRecord.rows[0].id });
-        persistSpan.status({ type: StatusEnum.RESOLVED });
-        persistSpan.end();
-      }
+    if (options.count) {
+      select.limit.at(options.count);
     }
+    
+    const query = select.toQuery()
+
+    const persistedMigrations = await options.transaction.execute<{ id: number; file_name: string }>(query.text, {
+      args: query.args,
+    });
+    
+    return persistedMigrations.rows
   }
 
   async getMigrationChecksum(filePath: string): Promise<string> {
@@ -254,31 +192,43 @@ export class Migrator implements MigratorInterface {
     return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
   }
 
-  async up(name?: string, only: Array<string> = []): Promise<boolean> {
+  async up(includes?: Array<string>): Promise<boolean> {
     using span = this.tracer.start({ name: `migrator up`, kind: SpanEnum.CLIENT });
 
-    await using client = await this.database.connection();
-    await using transaction = client.transaction(`${this.options.tableName}_up`);
-
     try {
+      await this.createTableIfNotExists(span);
+
       let returnValue = true;
+      let migrationsToPersist: Array<MigrationRecordType> = [];
+      let fileNamesToPersists: Array<string> = [];
+
+      await using client = await this.database.connection();
+      await using transaction = client.transaction(`${this.options.tableName}_up`);
+      
       await transaction.begin();
 
-      let migrations = await this.getMigrations(span, transaction, name, only);
+      const fileMigrations = await this.getFileMigrations(name, { span, transaction, includes });
 
-      if (migrations.length > 0) {
-        migrations = await this.shouldMigrate(span, transaction, migrations);
+      if (fileMigrations.length > 0) {
+        const persistedMigrations = await this.getPersistedMigrations({ span, transaction, includes });
+
+        migrationsToPersist = fileMigrations.filter((f) => persistedMigrations.find((r) => r.file_name === f.fileName) === undefined);
+
+        fileNamesToPersists = migrationsToPersist.map((m) => m.fileName);
       }
 
-      if (migrations.length > 0) {
-        await this.execute(span, transaction, migrations, 'up');
+      if (migrationsToPersist.length > 0) {
+        span.info(`Applying ${migrationsToPersist.length} migrations`, { files: fileNamesToPersists });
+        await this.executeUp(migrationsToPersist, { span, transaction });
       } else {
-        span.info(`Skipping ${name || 'migrator'} migrations - not found, applied or mismatch`);
+        span.info(`Skipping migrations - not found, applied or mismatch`);
         returnValue = false;
       }
-
+      
       await transaction.commit();
+      
       span.status({ type: StatusEnum.RESOLVED });
+      span.attributes({ appliedMigrations: fileNamesToPersists });
 
       return returnValue;
     } catch (error: any) {
@@ -292,28 +242,43 @@ export class Migrator implements MigratorInterface {
     }
   }
 
-  async down(name?: string, only: Array<string> = []): Promise<boolean> {
+   async down(includes?: Array<string>, count?: number): Promise<boolean> {
     using span = this.tracer.start({ name: `migrator down`, kind: SpanEnum.INTERNAL });
 
-    await using client = await this.database.connection();
-    await using transaction = client.transaction(`${this.options.tableName}_down`);
-
     try {
+      await this.createTableIfNotExists(span);
+
       let returnValue = true;
+      let migrationsToRollback: Array<MigrationRecordType> = [];
+      let fileNamesToRollback: Array<string> = [];
+
+      await using client = await this.database.connection();
+      await using transaction = client.transaction(`${this.options.tableName}_down`);
+
       await transaction.begin();
 
-      const migrations = await this.getMigrations(span, transaction, name, only);
+      const fileMigrations = await this.getFileMigrations(name, { span, transaction, includes });
 
-      if (migrations.length === 0) {
-        span.info(`Skipping migration ${name || 'migrator'} - already applied or checksum mismatch`);
-        span.status({ type: StatusEnum.RESOLVED });
-        returnValue = false;
+      if (fileMigrations.length > 0) {
+        const persistedMigrations = await this.getPersistedMigrations({ span, transaction, includes, count });
+
+        migrationsToRollback = fileMigrations.filter((f) => persistedMigrations.find((r) => r.file_name === f.fileName));
+
+        fileNamesToRollback = migrationsToRollback.map((m) => m.fileName);
+      }
+
+      if (migrationsToRollback.length > 0) {
+        span.info(`Rolling back ${migrationsToRollback.length} migrations`, { files: fileNamesToRollback });
+        await this.executeDown(migrationsToRollback, { span, transaction });
       } else {
-        await this.execute(span, transaction, migrations, 'down');
+        span.info(`Skipping migrations - not found, applied or mismatch`);
+        returnValue = false;
       }
 
       await transaction.commit();
+
       span.status({ type: StatusEnum.RESOLVED });
+      span.attributes({ rolledBackMigrations: fileNamesToRollback });
 
       return returnValue;
     } catch (error: any) {
@@ -322,6 +287,76 @@ export class Migrator implements MigratorInterface {
       span.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
 
       throw error;
+    }
+  }
+
+  async executeUp(
+    migrations: Array<MigrationRecordType>,
+    options: MigrationFetchOptionsType,
+  ): Promise<void> {
+    let migrationId: number | undefined = undefined;
+
+    if (migrations.some((m) => m.target.persist)) {
+      const table = this.querier.query.insert
+        .table(`${this.options.tableSchema}.${this.options.tableName}`)
+        .column('environment', `${this.options.environment}`)
+        .column('applied_by', `${this.options.applyBy || 'system'}`)
+        .returns.column('id')
+        .toQuery();
+
+      migrationId = await options.transaction.execute<{ id: number }>(table.text, { args: table.args }).then((res) =>
+        res.rows[0].id
+      );
+    }
+
+    for (const migration of migrations) {
+      const migrationSpan = options.span.child({ name: `execute ${migration.fileName}`, kind: SpanEnum.CLIENT });
+      migration.target.span = migrationSpan;
+
+      await migration.target.up();
+
+      migrationSpan.status({ type: StatusEnum.RESOLVED });
+      migrationSpan.end();
+
+      if (migration.target.persist) {
+        const persistSpan = options.span.child({ name: `persist ${migration.fileName}`, kind: SpanEnum.CLIENT });
+
+        const time = Number((migrationSpan.options.endTime || 0) - migrationSpan.options.startTime).toFixed(3);
+
+        const table = this.querier.query.insert
+          .table(`${this.options.tableSchema}.${this.options.tableName}_files`)
+          .column('migration_id', `${migrationId}`)
+          .column('type', `${migration.target.type || 'migration'}`)
+          .column('description', `${migration.target.description || ''}`)
+          .column('file_name', `${migration.fileName}`)
+          .column('up_sql', `${migration.target.up_sqls?.join(';') || ''}`)
+          .column('down_sql', `${migration.target.down_sqls?.join(';') || ''}`)
+          .column('execution_time_ms', `${time}`)
+          .column('checksum', `${migration.checksum || ''}`)
+          .returns.column('id')
+          .toQuery();
+
+        const migrationRecord = await options.transaction.execute<{ id: number }>(table.text, { args: table.args });
+
+        persistSpan.attributes({ id: migrationRecord.rows[0].id, migrationId });
+        persistSpan.status({ type: StatusEnum.RESOLVED });
+        persistSpan.end();
+      }
+    }
+  }
+
+  async executeDown(
+    migrations: Array<MigrationRecordType>,
+    options: MigrationFetchOptionsType,
+  ): Promise<void> {
+
+    for (const migration of migrations) {
+      const migrationSpan = options.span.child({ name: `execute ${migration.fileName}`, kind: SpanEnum.CLIENT });
+      migration.target.span = migrationSpan;
+      await migration.target.down?.();
+
+      migrationSpan.status({ type: StatusEnum.RESOLVED });
+      migrationSpan.end();
     }
   }
 }

@@ -1,6 +1,6 @@
 import type { NewableType } from '@zeero/commons';
 import type { QueryType } from '~/querier/types.ts';
-import type { RepositoryInterface, RepositoryQueryInterface } from '~/persister/interfaces.ts';
+import type { CursorInterface, RepositoryInterface, RepositoryQueryInterface, CursorOptionsType } from '~/persister/interfaces.ts';
 import type {
   ActionOptionsType,
   ExecuteResultType,
@@ -14,6 +14,7 @@ import { DecoratorMetadata, isBoolean, isString, Objector, Text } from '@zeero/c
 
 import SchemaAnnotation from '~/persister/annotations/schema.annotation.ts';
 import Raw from '~/querier/services/raw.clause.ts';
+import Cursor from '~/persister/services/cursor.service.ts';
 
 import isFilterPredicate from '~/persister/guards/is-filter-predicate.guard.ts';
 import isFilter from '~/persister/guards/is-filter.guard.ts';
@@ -81,7 +82,7 @@ export class Query<T extends NewableType<T>> implements RepositoryQueryInterface
     const queriers = [];
 
     if (this.repository.annotation) {
-      const primaryColumn = this.repository.annotation.columns.find((column) => column.annotation.options?.primary);
+      const primaryColumn = this.repository.annotation.columns.find((column) => column.annotation.options?.primaryKey);
 
       if (primaryColumn) {
         for (const record of records) {
@@ -170,7 +171,7 @@ export class Query<T extends NewableType<T>> implements RepositoryQueryInterface
     let where: FilterPredicateType = {};
     if (!isFilterPredicate(query)) {
       if (this.repository.annotation) {
-        const primaryColumn = this.repository.annotation.columns.find((column) => column.annotation.options?.primary);
+        const primaryColumn = this.repository.annotation.columns.find((column) => column.annotation.options?.primaryKey);
 
         if (primaryColumn) {
           where = { and: [{ [primaryColumn.key]: { eq: (query as any)[primaryColumn.key] } }] };
@@ -196,7 +197,7 @@ export class Query<T extends NewableType<T>> implements RepositoryQueryInterface
     for (const query of queries) {
       if (!isFilterPredicate(query)) {
         if (this.repository.annotation) {
-          const primaryColumn = this.repository.annotation.columns.find((column) => column.annotation.options?.primary);
+          const primaryColumn = this.repository.annotation.columns.find((column) => column.annotation.options?.primaryKey);
 
           if (primaryColumn) {
             where.or?.push({ and: [{ [primaryColumn.key]: { eq: (query as any)[primaryColumn.key] } }] });
@@ -269,6 +270,14 @@ export class Query<T extends NewableType<T>> implements RepositoryQueryInterface
 
     if (search.order) {
       this.setOrderQuery(search, options);
+    }
+
+    if (search.limit !== undefined) {
+      options.instance.limit.at(search.limit);
+    }
+
+    if (search.offset !== undefined) {
+      options.instance.offset.from(search.offset);
     }
 
     return options.query;
@@ -361,7 +370,7 @@ export class Query<T extends NewableType<T>> implements RepositoryQueryInterface
           const referenceColumnPairs: any = [];
 
           const relationPrimaryKeyDecorator = relationSchema?.columns.find((column) => {
-            return column.annotation.options?.primary;
+            return column.annotation.options?.primaryKey;
           });
           if (!relationPrimaryKeyDecorator) throw new Error('DEFAULT relationPrimaryKeyDecorator not found');
 
@@ -484,6 +493,10 @@ export class Query<T extends NewableType<T>> implements RepositoryQueryInterface
     return this.searchExecute(search, options).then((results) => {
       return results[0].rows[0];
     });
+  }
+
+  public cursor(search: FilterType, options?: CursorOptionsType): CursorInterface<T> {
+    return new Cursor<T>(this.repository, search, options);
   }
 }
 

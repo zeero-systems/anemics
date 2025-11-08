@@ -173,9 +173,25 @@ export interface RepositoryQueryInterface<T extends NewableType<T>> {
   ): Promise<Array<ExecuteResultType<InstanceType<T>>>>;
 
   search(search: FilterType, options?: SearchOptionsType): Promise<Array<InstanceType<T>>>;
+  cursor(search: FilterType, options?: CursorOptionsType): CursorInterface<T>;
   searchFirst(search: FilterType, options?: SearchOptionsType): Promise<InstanceType<T>>;
   searchQuery(search: FilterType, options?: SearchOptionsType): QueryType;
   searchExecute(search: FilterType, options?: SearchOptionsType): Promise<Array<ExecuteResultType<InstanceType<T>>>>;
+}
+
+export interface CursorOptionsType {
+  batchSize?: number;
+  orderBy?: string | string[];
+  direction?: 'asc' | 'desc';
+}
+
+export interface CursorInterface<T extends NewableType<T>> extends AsyncIterable<InstanceType<T>> {
+  batchSize: number;
+  hasMore: boolean;
+  
+  next(): Promise<InstanceType<T> | null>;
+  nextBatch(): Promise<Array<InstanceType<T>>>;
+  close(): void;
 }
 
 export default {};

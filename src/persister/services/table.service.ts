@@ -25,7 +25,7 @@ class Table<T extends NewableType<T>> implements RepositoryTableInterface<T> {
 
         column.type(decoration.annotation.type, decoration.annotation.options);
 
-        if (decoration.annotation.options?.primary) column.primaryKey();
+        if (decoration.annotation.options?.primaryKey) column.primaryKey();
         if (decoration.annotation.options?.nullable === false) column.notNull();
         if (decoration.annotation.options?.unique) column.unique();
       }

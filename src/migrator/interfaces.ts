@@ -1,7 +1,7 @@
 import type { ContainerInterface, SpanInterface, TracerInterface } from '@zeero/commons';
 import type { DatabaseInterface, TransactionInterface } from '~/persister/interfaces.ts';
 import type { QuerierInterface } from '~/querier/interfaces.ts';
-import type { MigrationActionType, MigratorOptionsType } from '~/migrator/types.ts';
+import type { MigrationActionType, MigrationOptionsType, MigratorOptionsType } from '~/migrator/types.ts';
 
 export interface MigrationInterface {
   querier: QuerierInterface;
@@ -9,7 +9,7 @@ export interface MigrationInterface {
   transaction: TransactionInterface;
   options: MigratorOptionsType;
 
-  action?: MigrationActionType;
+  type?: MigrationActionType;
   persist?: boolean;
   up_sqls?: Array<string>;
   down_sqls?: Array<string>;
@@ -26,8 +26,8 @@ export interface MigratorInterface {
   tracer: TracerInterface;
   options: MigratorOptionsType;
 
-  up(dirPath?: string, includes?: Array<string>): Promise<boolean>;
-  down(dirPath?: string, includes?: Array<string>): Promise<boolean>;
+  up(includes?: Array<string>): Promise<boolean>;
+  down(includes?: Array<string>, count?: number): Promise<boolean>;
 }
 
 export default {};

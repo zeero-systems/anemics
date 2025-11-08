@@ -1,8 +1,20 @@
-import { MigrationInterface } from './interfaces.ts';
+import { SpanInterface } from '@zeero/commons';
+import { MigrationInterface } from '~/migrator/interfaces.ts';
+import { TransactionInterface } from '~/persister/interfaces.ts';
 
 export type MigrationActionType = 'migration' | 'seed';
 
-export type MigrationRecordType = { name: string; fileName: string; checksum: string; target: MigrationInterface };
+export type MigrationRecordType = { fileName: string; checksum: string; target: MigrationInterface };
+
+export type MigrationOptionsType = {
+  count?: number;
+  includes?: Array<string>;
+}
+
+export type MigrationFetchOptionsType = {
+  span: SpanInterface;
+  transaction: TransactionInterface;
+} & MigrationOptionsType;
 
 export type MigratorOptionsType = {
   prefix?: string;
@@ -17,7 +29,7 @@ export type MigratorOptionsType = {
   pattern: string;
   tableName: string;
   tableSchema: string;
-  environment?: string;
+  environment: string;
   applyBy?: string;
 };
 

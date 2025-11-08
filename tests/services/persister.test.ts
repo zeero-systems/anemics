@@ -18,7 +18,7 @@ import Postgresql from '~/persister/postgresql/postgresql.database.ts';
 describe('persister', () => {
   @Schema('users')
   class User {
-    @Column('serial', { primary: true })
+    @Column('serial', { primaryKey: true })
     id?: number;
 
     @Column('varchar')
@@ -36,7 +36,7 @@ describe('persister', () => {
 
   @Schema('posts')
   class Post {
-    @Column('serial', { primary: true })
+    @Column('serial', { primaryKey: true })
     id?: number;
 
     @Column('varchar')
@@ -61,7 +61,7 @@ describe('persister', () => {
 
   @Schema('comments')
   class Comment {
-    @Column('serial', { primary: true })
+    @Column('serial', { primaryKey: true })
     id?: number;
 
     @Column('varchar')
@@ -208,7 +208,7 @@ describe('persister', () => {
 
     const dictionary: FilterDictionaryType = {
       delimiter: { start: '(', end: ')', array: ',', item: ';', value: ':' },
-      key: { query: 'q', select: 's', where: 'w', group: 'g', order: 'r', and: 'a', or: 'o', entity: 'e' },
+      key: { query: 'q', select: 's', where: 'w', group: 'g', order: 'r', limit: 'l', offset: 'f', and: 'a', or: 'o', entity: 'e' },
       value: { ascend: 'c', descend: 'd', number: 'n', string: 't', boolean: 'b' },
     };
 
@@ -225,26 +225,3 @@ describe('persister', () => {
     expect(q).toEqual(filter);
   });
 });
-
-// @todo
-
-// anemics
-// x refactor to be able to use only specifics parts of the systems
-
-// anemics: querier
-// test performance usign object.assign. Change class methods to properties to use spreading
-// x add parameters to the currente implementation with counter of placeholders, even the recursive ones
-// x put everything in files
-// add tests for a more use cases
-// - implement a lot more of the sql syntax
-// x add raw to everything added until now
-// x add skipBinding to everything added until now (per instance configuration, default: no binding)
-// add a cache mechanism to save the reusable generated query type [text, args]
-
-// anemics: databaser
-// implement a mongodb driver
-// implement a query builder for mongo
-
-// commons
-// x refactor to be able to use only specifics parts of the systems
-// implement a lot of more validators

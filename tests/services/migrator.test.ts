@@ -1,12 +1,13 @@
-import { afterAll, beforeAll, describe, it } from '@std/bdd';
+import { afterAll, describe, it } from '@std/bdd';
 import { expect } from '@std/expect';
 
 import type { CommonOptionsType } from '~/persister/types.ts';
 
-import { Container, Tracer } from '@zeero/commons';
+import { ConsoleTransport, Container, Tracer } from '@zeero/commons';
 import Migrator from '~/migrator/services/migrator.service.ts';
 import Postgresql from '~/persister/postgresql/postgresql.database.ts';
 import Querier from '~/querier/services/querier.service.ts';
+import Raw from '~/querier/services/raw.clause.ts';
 
 describe('migrator', () => {
   const commonOptions: CommonOptionsType = {
@@ -23,7 +24,7 @@ describe('migrator', () => {
 
   const clientOptions = {
     database: 'postgres',
-    hostname: '127.0.0.1',
+    hostname: 'localhost',
     password: 'postgres',
     port: 5432,
     schema: 'public',
@@ -39,19 +40,16 @@ describe('migrator', () => {
   const tableSchema = 'public';
   const migrator = new Migrator(querier, database, container, tracer, {
     prefix: '-',
-    pattern: '/src/{name}/migrations/*.migration.ts',
+    pattern: './tests/migrations/*.migration.ts',
     tableName,
     tableSchema,
     environment: 'test',
   });
 
-  beforeAll(async () => {
-    await migrator.up();
-  });
-
   afterAll(async () => {
     try {
       await migrator.down();
+      console.log('Cleanup completed successfully');
     } catch (error) {
       console.error('Error cleaning up migrator tables:', error);
     }
@@ -59,7 +57,7 @@ describe('migrator', () => {
 
   describe('Migrator service', () => {
     it('should return false when no migrations found', async () => {
-      const result = await migrator.up('nonexistent-folder');
+      const result = await migrator.up(['nonexistent-folder']);
       expect(result).toBe(false);
     });
 
@@ -68,21 +66,23 @@ describe('migrator', () => {
 
       try {
         const firstRun = await migrator.up();
-        expect(firstRun).toBe(false);
+        expect(firstRun).toBe(true);
 
         const recordQuery = querier.query
           .select
-          .column('id')
-          .column('file_name')
-          .column('name')
-          .column('checksum')
-          .from.table(`${tableSchema}.${tableName}`)
-          .where
-          .and('environment', 'eq', 'development')
+            .column('mf.id')
+            .column('mf.file_name')
+            .column('mf.checksum')
+          .from.table(`${tableSchema}.${tableName}`, 'm')
+          .left.table(`${tableSchema}.${tableName}_files`, 'mf')
+            .on.and(new Raw('mf.migration_id = m.id'))
+          .where.and('m.environment', 'eq', 'test')
           .toQuery();
 
         const records = await client.execute(recordQuery.text, { args: recordQuery.args });
         const initialCount = records.rows.length;
+        
+        expect(initialCount).toBeGreaterThan(0);
 
         const secondRun = await migrator.up();
         expect(secondRun).toBe(false);
@@ -100,11 +100,13 @@ describe('migrator', () => {
       try {
         const checksumQuery = querier.query
           .select
-          .column('checksum')
-          .column('file_name')
-          .from.table(`${tableSchema}.${tableName}`)
-          .where
-          .and('environment', 'eq', 'test')
+            .column('mf.id')
+            .column('mf.file_name')
+            .column('mf.checksum')
+          .from.table(`${tableSchema}.${tableName}`, 'm')
+          .left.table(`${tableSchema}.${tableName}_files`, 'mf')
+            .on.and(new Raw('mf.migration_id = m.id'))
+          .where.and('m.environment', 'eq', 'test')
           .toQuery();
 
         const result = await client.execute(checksumQuery.text, { args: checksumQuery.args });
@@ -113,7 +115,7 @@ describe('migrator', () => {
         const record = result.rows[0] as any;
         expect(record.checksum).toBeDefined();
         expect(typeof record.checksum).toBe('string');
-        expect(record.checksum.length).toBe(0);
+        expect(record.checksum.length).toBeGreaterThan(0);
       } finally {
         await client.disconnect();
       }
@@ -125,8 +127,8 @@ describe('migrator', () => {
       try {
         const envQuery = querier.query
           .select
-          .column('environment')
-          .from.table(`${tableSchema}.${tableName}`)
+          .column('m.environment')
+          .from.table(`${tableSchema}.${tableName}`, 'm')
           .toQuery();
 
         const result = await client.execute(envQuery.text, { args: envQuery.args });
@@ -145,11 +147,14 @@ describe('migrator', () => {
       try {
         const timeQuery = querier.query
           .select
-          .column('execution_time_ms')
-          .column('file_name')
-          .from.table(`${tableSchema}.${tableName}`)
-          .where
-          .and('environment', 'eq', 'test')
+            .column('mf.id')
+            .column('mf.execution_time_ms')
+            .column('mf.file_name')
+            .column('mf.checksum')
+          .from.table(`${tableSchema}.${tableName}`, 'm')
+          .left.table(`${tableSchema}.${tableName}_files`, 'mf')
+            .on.and(new Raw('mf.migration_id = m.id'))
+          .where.and('m.environment', 'eq', 'test')
           .toQuery();
 
         type MigratorType = { execution_time_ms: number; file_name: string };
@@ -172,7 +177,7 @@ describe('migrator', () => {
 
       try {
         try {
-          await migrator.up('///invalid-pattern///');
+          await migrator.up(['///invalid-pattern///']);
         } catch (error) {
           expect(error).toBeDefined();
         }
@@ -182,8 +187,9 @@ describe('migrator', () => {
           .from.table('information_schema.tables')
           .where
           .and('table_name', 'eq', tableName)
+          .and('table_schema', 'eq', tableSchema)
           .toQuery();
-
+ 
         const result = await client.execute(tableQuery.text, { args: tableQuery.args });
         expect(result.rows.length).toBe(1); // Table should still exist
       } finally {

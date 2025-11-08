@@ -162,7 +162,7 @@ export type ColumnOptionsType = {
   default?: string | number | boolean;
   unique?: boolean;
   nullable?: boolean;
-  primary?: boolean;
+  primaryKey?: boolean;
   collation?: string;
 };
 
@@ -200,6 +200,8 @@ export type FilterType = {
   where?: FilterPredicateType;
   order?: FilterOrderType;
   group?: Array<string>;
+  limit?: number;
+  offset?: number;
 };
 
 export type FilterDictionaryType = {
@@ -218,6 +220,8 @@ export type FilterDictionaryType = {
     or: string;
     group: string;
     order: string;
+    limit: string;
+    offset: string;
     entity: string;
   };
   value: {
