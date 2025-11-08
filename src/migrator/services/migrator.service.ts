@@ -106,7 +106,7 @@ export class Migrator implements MigratorInterface {
     return tableExists;
   }
   
-  async getFileMigrations(name: string, options: MigrationFetchOptionsType): Promise<Array<MigrationRecordType>> {
+  async getFileMigrations(options: MigrationFetchOptionsType): Promise<Array<MigrationRecordType>> {
     const spanGet = options.span.child({ name: 'migration files', kind: SpanEnum.INTERNAL });
 
     const files: Array<WalkEntry> = [];
@@ -207,7 +207,7 @@ export class Migrator implements MigratorInterface {
       
       await transaction.begin();
 
-      const fileMigrations = await this.getFileMigrations(name, { span, transaction, includes });
+      const fileMigrations = await this.getFileMigrations({ span, transaction, includes });
 
       if (fileMigrations.length > 0) {
         const persistedMigrations = await this.getPersistedMigrations({ span, transaction, includes });
@@ -257,7 +257,7 @@ export class Migrator implements MigratorInterface {
 
       await transaction.begin();
 
-      const fileMigrations = await this.getFileMigrations(name, { span, transaction, includes });
+      const fileMigrations = await this.getFileMigrations({ span, transaction, includes });
 
       if (fileMigrations.length > 0) {
         const persistedMigrations = await this.getPersistedMigrations({ span, transaction, includes, count });

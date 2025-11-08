@@ -13,7 +13,7 @@ import MethodEnum from '~/network/enums/method.enum.ts';
 import EventEnum from '~/controller/enums/event.enum.ts';
 
 export class Anemic implements AnemicInterface {
-  private dispatcher = new Dispatcher<{ boot: []; start: []; stop: [] }>();
+  private dispatcher = new Dispatcher<{ boot: any[]; start: any[]; stop: any[] }>();
 
   constructor(public application: ApplicationInterface) {
     const span = this.application.tracer.start({ name: 'anemic', kind: SpanEnum.INTERNAL });
@@ -202,16 +202,16 @@ export class Anemic implements AnemicInterface {
     throw new Error('Not implemented');
   }
 
-  public boot(): Promise<void> {
-    return this.dispatcher.dispatch('boot');
+  public boot(...args: any[]): Promise<void> {
+    return this.dispatcher.dispatch('boot', ...args);
   }
 
-  public start(): Promise<void> {
-    return this.dispatcher.dispatch('start');
+  public start(...args: any[]): Promise<void> {
+    return this.dispatcher.dispatch('start', ...args);
   }
 
-  public stop(): Promise<void> {
-    return this.dispatcher.dispatch('stop');
+  public stop(...args: any[]): Promise<void> {
+    return this.dispatcher.dispatch('stop', ...args);
   }
 }
 

@@ -6,9 +6,9 @@ import { ApplicationOptionsType } from './types.ts';
 import { ResourcerInterface } from '~/resourcer/interfaces.ts';
 
 export interface AnemicInterface {
-  boot(): void;
-  start(): void;
-  stop(): void;
+  boot(...args: any[]): void;
+  start(...args: any[]): void;
+  stop(...args: any[]): void;
 }
 
 export interface ApplicationInterface {
