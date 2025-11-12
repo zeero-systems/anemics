@@ -1,4 +1,4 @@
-import type { PackInterface, SpanInterface } from '@zeero/commons';
+import type { PackInterface, TracerInterface } from '@zeero/commons';
 import type { ServerOptionsType } from '~/network/types.ts';
 import type { AnemicInterface, ApplicationInterface } from '~/entrypoint/interfaces.ts';
 import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
@@ -16,7 +16,7 @@ export class Anemic implements AnemicInterface {
   private dispatcher = new Dispatcher<{ boot: any[]; start: any[]; stop: any[] }>();
 
   constructor(public application: ApplicationInterface) {
-    const span = this.application.tracer.start({ name: 'anemic', kind: SpanEnum.INTERNAL });
+    const tracer = this.application.tracer.start({ name: 'anemic', kind: SpanEnum.INTERNAL });
 
     for (const packName of application.packer.packs) {
       const pack = application.packer.container.construct<PackInterface>(packName);
@@ -24,13 +24,13 @@ export class Anemic implements AnemicInterface {
       const onBootMethod = pack?.onBoot;
       if (onBootMethod && typeof onBootMethod === 'function') {
         this.dispatcher.subscribe('boot', async (...args: any[]) => {
-          using bootSpan = span.child({ name: `${String(packName)} boot`, kind: SpanEnum.INTERNAL });
+          const bootSpan = tracer.start({ name: `${String(packName)} boot`, kind: SpanEnum.INTERNAL });
           try {
             await onBootMethod(...args);
-            bootSpan.status({ type: StatusEnum.RESOLVED });
+            bootSpan.status(StatusEnum.RESOLVED);
           } catch (error: any) {
             bootSpan.error(String(error?.message || error));
-            bootSpan.status({ type: StatusEnum.REJECTED });
+            bootSpan.status(StatusEnum.REJECTED);
             bootSpan.attributes({
               error: { name: error.name, message: String(error?.message || error), cause: error.cause },
             });
@@ -42,13 +42,13 @@ export class Anemic implements AnemicInterface {
       const onStartMethod = pack?.onStart;
       if (onStartMethod && typeof onStartMethod === 'function') {
         this.dispatcher.subscribe('start', async (...args: any[]) => {
-          using startSpan = span.child({ name: `${String(packName)} start`, kind: SpanEnum.INTERNAL });
+          const startSpan = tracer.start({ name: `${String(packName)} start`, kind: SpanEnum.INTERNAL });
           try {
             await onStartMethod(...args);
-            startSpan.status({ type: StatusEnum.RESOLVED });
+            startSpan.status(StatusEnum.RESOLVED);
           } catch (error: any) {
             startSpan.error(String(error?.message || error));
-            startSpan.status({ type: StatusEnum.REJECTED });
+            startSpan.status(StatusEnum.REJECTED);
             startSpan.attributes({
               error: { name: error.name, message: String(error?.message || error), cause: error.cause },
             });
@@ -60,13 +60,13 @@ export class Anemic implements AnemicInterface {
       const onStopMethod = pack?.onStop;
       if (onStopMethod && typeof onStopMethod === 'function') {
         this.dispatcher.subscribe('stop', async (...args: any[]) => {
-          using stopSpan = span.child({ name: `${String(packName)} stop`, kind: SpanEnum.INTERNAL });
+          const stopSpan = tracer.start({ name: `${String(packName)} stop`, kind: SpanEnum.INTERNAL });
           try {
             await onStopMethod(...args);
-            stopSpan.status({ type: StatusEnum.RESOLVED });
+            stopSpan.status(StatusEnum.RESOLVED);
           } catch (error: any) {
             stopSpan.error(String(error?.message || error));
-            stopSpan.status({ type: StatusEnum.REJECTED });
+            stopSpan.status(StatusEnum.REJECTED);
             stopSpan.attributes({
               error: { name: error.name, message: String(error?.message || error), cause: error.cause },
             });
@@ -78,7 +78,7 @@ export class Anemic implements AnemicInterface {
 
     for (const server of this.application.servers) {
       this.dispatcher.subscribe('start', async () => {
-        const span = this.application.tracer.start({ name: 'anemic', kind: SpanEnum.SERVER });
+        const tracer = this.application.tracer.start({ name: 'anemic', kind: SpanEnum.SERVER });
         await server.start(async (request, socket) => {
           const resources = {
             system: {
@@ -89,32 +89,35 @@ export class Anemic implements AnemicInterface {
             memory: this.application.resourcer.getMemory(true),
           };
           
-          using handlerSpan = span.child({ name: `HANDLER ${resources.system?.pid}`, kind: SpanEnum.INTERNAL });
-          handlerSpan.attributes(resources);
+          const handlerTracer = tracer.start({ name: `HANDLER ${resources.system?.pid}`, kind: SpanEnum.INTERNAL });
+          handlerTracer.attributes(resources);
 
           try {
             let response
             if (server.accepts.includes(MethodEnum.SOCKET)) {
-              response = await this.socketHandler(new Requester(request), new Responser(), server.options, span, socket);
+              response = await this.socketHandler(new Requester(request), new Responser(), server.options, handlerTracer, socket);
             } else {
-              response = await this.httpHandler(new Requester(request), new Responser(), server.options, span, socket);
+              response = await this.httpHandler(new Requester(request), new Responser(), server.options, handlerTracer, socket);
             }            
 
-            handlerSpan.status({ type: StatusEnum.RESOLVED });
+            handlerTracer.status(StatusEnum.RESOLVED);
             return response;
           } catch (error: any) {
-            handlerSpan.error(error);
-            handlerSpan.attributes({
+            handlerTracer.error(error);
+            handlerTracer.attributes({
               error: { name: error.name, message: String(error?.message || error), stack: error.stack }
             });
-            handlerSpan.status({ type: StatusEnum.REJECTED });
+            handlerTracer.status(StatusEnum.REJECTED);
           }
+
+          handlerTracer.flush();
         });
 
         this.dispatcher.subscribe('stop', async () => {
           await server.stop();
-          span.status({ type: StatusEnum.RESOLVED });
-          span.end();
+          tracer.status(StatusEnum.RESOLVED);
+          tracer.end();
+          tracer.flush();
         });
       });
     }
@@ -124,16 +127,16 @@ export class Anemic implements AnemicInterface {
     requester: RequesterInterface,
     responser: ResponserInterface,
     server: ServerOptionsType,
-    span: SpanInterface,
+    tracer: TracerInterface,
     _socket?: WebSocket,
   ): Promise<Response> {
-    const readySpan = span.child({ name: `request`, kind: SpanEnum.INTERNAL });
+    const readySpan = tracer.start({ name: `request`, kind: SpanEnum.INTERNAL });
     const method = requester.method.toLowerCase() as any;
     const route = this.application.router.routes[method]?.find((route) => route.pattern?.test(requester.url));
 
     if (!route) {
-      readySpan.event({ name: 'route.not.found' });
-      readySpan.status({ type: StatusEnum.REJECTED });
+      readySpan.event('route.not.found');
+      readySpan.status(StatusEnum.REJECTED);
       readySpan.end();
 
       return new Response(null, { status: 404 });
@@ -145,23 +148,23 @@ export class Anemic implements AnemicInterface {
     const container = this.application.packer.container.duplicate();
 
     readySpan.attributes({ route: { action: route.action, controller: route.controller } });
-    readySpan.status({ type: StatusEnum.RESOLVED });
+    readySpan.status(StatusEnum.RESOLVED);
     readySpan.end();
 
-    const responseSpan = span.child({ name: `response`, kind: SpanEnum.INTERNAL });
+    const responseTracer = tracer.start({ name: `response`, kind: SpanEnum.INTERNAL });
 
     const handler: HandlerType = { event: EventEnum.BEFORE, attempts: 1, error: undefined };
-    const context: ContextType = { handler, requester, responser, container, route, server, span: responseSpan };
+    const context: ContextType = { handler, requester, responser, container, route, server, tracer: responseTracer };
     container.collection.set('Context', { artifact: { name: 'Context', target: context }, tags: ['P'] });
 
     await this.execute(route, context);
 
     const status = responser.status || 200;
 
-    responseSpan.info(`${requester.method} ${route.pathname} with ${status}`);
-    responseSpan.attributes({ status, statusText: responser.statusText, headers: responser.headers });
-    responseSpan.status({ type: StatusEnum.RESOLVED });
-    responseSpan.end();
+    responseTracer.info(`${requester.method} ${route.pathname} with ${status}`);
+    responseTracer.attributes({ status, statusText: responser.statusText, headers: responser.headers });
+    responseTracer.status(StatusEnum.RESOLVED);
+    responseTracer.end();
 
     return new Response(responser.parsed || responser.body, {
       status: status,
@@ -187,7 +190,7 @@ export class Anemic implements AnemicInterface {
     _request: RequesterInterface,
     _response: ResponserInterface,
     _server: ServerOptionsType,
-    _span: SpanInterface,
+    _tracer: TracerInterface,
     _socket: WebSocket,
   ): Promise<Response> {
     throw new Error('Not implemented');

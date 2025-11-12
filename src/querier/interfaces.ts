@@ -1,4 +1,3 @@
-import ForeingActionEnum from '~/querier/enums/foreign-action.enum.ts';
 import {
   AliasColumnType,
   BuilderOptionsType,
@@ -9,7 +8,9 @@ import {
   QueryType,
   TermType,
 } from '~/querier/types.ts';
-import { ColumnType } from '../persister/types.ts';
+import type { ColumnType } from '~/persister/types.ts';
+
+import ForeingActionEnum from '~/querier/enums/foreign-action.enum.ts';
 
 export interface QuerierInterface {
   get query(): QueryQuerierInterface;

@@ -1,11 +1,11 @@
 import { describe, it } from '@std/bdd';
 import { expect } from '@std/expect';
 
-import type { AnnotationInterface, ArtifactType, DecoratorType, PackInterface } from '@zeero/commons';
+import type { AnnotationInterface, ArtifactType, DecoratorType, PackInterface, TraceType, TransportInterface } from '@zeero/commons';
 import type { MiddlewareInterface } from '~/controller/interfaces.ts';
 import type { ContextType, EventType, NextFunctionType } from '~/controller/types.ts';
 
-import { ConsoleTransport, Decorator, Entity, Factory, Pack, Tracer } from '@zeero/commons';
+import { ConsoleTransport, Decorator, Entity, Factory, Pack, Queue, Tracer } from '@zeero/commons';
 import Application from '~/entrypoint/services/application.service.ts';
 import Anemic from '~/entrypoint/services/anemic.service.ts';
 import Controller from '~/controller/decorations/controller.decoration.ts';
@@ -121,12 +121,20 @@ describe('entrypoint', () => {
     }
   }
 
+  const mockQueue = new Queue<TraceType, TransportInterface>({
+    processorFn: (batch, processors) => {
+      for (const transport of processors) {
+        transport.send(batch);
+      }
+    },
+    processors: [],
+    intervalMs: 0,
+  })
+
+
   const mockTracer = {
     name: 'Tracer',
-    target: new Tracer({
-      name: 'AnemicTest',
-      transports: [new ConsoleTransport({ pretty: true, span: false, log: false })],
-    }),
+    target: new Tracer(mockQueue, { name: 'AnemicTest' }),
   };
 
   describe('simple server', () => {

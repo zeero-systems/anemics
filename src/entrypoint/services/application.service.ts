@@ -4,8 +4,9 @@ import type {
   DecorationType,
   PackerInterface,
   PackNewableType,
-  SpanInterface,
   TracerInterface,
+  TraceType,
+  TransportInterface,
 } from '@zeero/commons';
 
 import type { ServerInterface } from '~/network/interfaces.ts';
@@ -13,6 +14,7 @@ import type { ApplicationOptionsType } from '~/entrypoint/types.ts';
 import type { ApplicationInterface } from '~/entrypoint/interfaces.ts';
 import type { MiddlerInterface, MiddlewareInterface, RouterInterface } from '~/controller/interfaces.ts';
 import type { ContextType, MiddlerType, NextFunctionType, RouteType } from '~/controller/types.ts';
+import type { ResourcerInterface } from '~/resourcer/interfaces.ts';
 
 import {
   ConsoleTransport,
@@ -21,6 +23,7 @@ import {
   DecoratorMetadata,
   Metadata,
   Packer,
+  Queue,
   SpanEnum,
   StatusEnum,
   Tracer,
@@ -32,7 +35,6 @@ import Router from '~/controller/services/router.service.ts';
 import Ws from '~/network/services/ws.service.ts';
 import EventEnum from '~/controller/enums/event.enum.ts';
 import Resourcer from '~/resourcer/services/resourcer.service.ts';
-import { ResourcerInterface } from '../../resourcer/interfaces.ts';
 
 export class Application implements ApplicationInterface {
   public container!: ContainerInterface;
@@ -63,13 +65,17 @@ export class Application implements ApplicationInterface {
 
     this.resourcer = this.packer.container.construct<ResourcerInterface>('Resourcer') as ResourcerInterface;
     if (!this.container.collection.get('Tracer')) {
-      const tracer = {
-        name: 'Tracer',
-        target: new Tracer({
-          name: 'Anemic',
-          transports: [new ConsoleTransport({ pretty: true })],
-        }),
-      };
+      const queue = new Queue<TraceType, TransportInterface>({
+        processorFn: (batch, processors) => {
+          for (const transport of processors) {
+            transport.send(batch);
+          }
+        },
+        processors: [new ConsoleTransport({ pretty: true })],
+      })
+
+      const tracer = { name: 'Tracer', target: new Tracer(queue, { name: 'Anemic' }) };
+      
       this.packer.container.add([tracer], 'provider');
       this.packer.container.add([tracer], 'consumer');
     }
@@ -97,12 +103,12 @@ export class Application implements ApplicationInterface {
       span.attributes(resources);
     }
 
-    span.status({ type: StatusEnum.RESOLVED });
+    span.status(StatusEnum.RESOLVED);
     span.end();
   }
 
-  private setServers(span: SpanInterface): void {
-    const child = span.child({ name: 'servers' });
+  private setServers(tracer: TracerInterface): void {
+    const child = tracer.start({ name: 'servers' });
 
     if (this.options.http) {
       child.attributes({ http: this.options.http });
@@ -118,7 +124,7 @@ export class Application implements ApplicationInterface {
         this.servers.push(new Http(option));
         child.info(`${option.name} configured as http`);
       }
-      child.event({ name: 'http.configured', attributes: { count: this.options.http.length } });
+      child.event('http.configured');
     }
 
     if (this.options.socket) {
@@ -134,15 +140,15 @@ export class Application implements ApplicationInterface {
         this.servers.push(new Ws(option));
         child.info(`${option.name} configured as socket`);
       }
-      child.event({ name: 'socket.configured', attributes: { count: this.options.socket.length } });
+      child.event('socket.configured');
     }
 
-    child.status({ type: StatusEnum.RESOLVED });
+    child.status(StatusEnum.RESOLVED);
     child.end();
   }
 
-  private setMiddlewares(span: SpanInterface): void {
-    const child = span.child({ name: 'middlewares' });
+  private setMiddlewares(tracer: TracerInterface): void {
+    const child = tracer.start({ name: 'middlewares' });
     const artifacts = this.packer.artifacts();
 
     if (this.options.middlewares) {
@@ -181,16 +187,17 @@ export class Application implements ApplicationInterface {
     this.middler.wirefy(artifacts);
 
     child.info(`Global middlewares injected`);
-    child.event({ name: 'middlewares.injected', attributes: { count: Object.keys(this.middler.middlewares).length } });
+    child.event('middlewares.injected');
+    child.status(StatusEnum.RESOLVED);
+    child.attributes({ count: Object.keys(this.middler.middlewares).length });
 
-    child.status({ type: StatusEnum.RESOLVED });
     child.end();
   }
 
-  private setRoutes(span: SpanInterface): void {
+  private setRoutes(tracer: TracerInterface): void {
     const artifacts = this.packer.artifacts();
 
-    const child = span.child({ name: 'router' });
+    const child = tracer.start({ name: 'router' });
 
     this.router = new Router();
     this.router.routerify(artifacts);
@@ -202,8 +209,9 @@ export class Application implements ApplicationInterface {
       }
     }
 
-    child.event({ name: 'routes.routed', attributes: { count: this.router.size } });
-    child.status({ type: StatusEnum.RESOLVED });
+    child.event('routes.routed');
+    child.status(StatusEnum.RESOLVED);
+    child.attributes({ count: this.router.size });
     child.end();
   }
 
@@ -237,19 +245,19 @@ export class Application implements ApplicationInterface {
     return middlewares[event].reduce((a: NextFunctionType, b: MiddlewareInterface) => {
       return (async function next(context: ContextType): Promise<void> {
         context.handler.event = event;
-        using span = context.span.child({ name: `middleware ${(b as any).name}`, kind: SpanEnum.INTERNAL });
-        span.attributes({ middleware: (b as any).name, event });
+        const tracer = context.tracer.start({ name: `middleware ${(b as any).name}`, kind: SpanEnum.INTERNAL });
+        tracer.attributes({ middleware: (b as any).name, event });
 
         try {
           await b.onUse(context, () => {
-            span.status({ type: StatusEnum.RESOLVED });
+            tracer.status(StatusEnum.RESOLVED);
             return a(context);
           });
         } catch (error: any) {
           // @TODO maybe we should truncate the error cause to avoid circular references or big objects
           // @TODO also expose some knob to configure the truncate length or strategy
-          span.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
-          span.status({ type: StatusEnum.REJECTED });
+          tracer.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
+          tracer.status(StatusEnum.REJECTED);
           throw error;
         }
       }) as NextFunctionType;

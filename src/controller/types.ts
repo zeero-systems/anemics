@@ -4,7 +4,7 @@ import type {
   EntityInterface,
   KeyableType,
   NewableType,
-  SpanInterface,
+  TracerInterface,
 } from '@zeero/commons';
 import type { RequesterInterface, ResponserInterface } from '~/network/interfaces.ts';
 import type { FilterType } from '~/persister/types.ts';
@@ -52,7 +52,7 @@ export type ContextType<T = BodyInit> = {
   container: ContainerInterface;
   route: RouteType;
   server: ServerOptionsType;
-  span: SpanInterface;
+  tracer: TracerInterface;
 };
 
 export type NextFunctionType = (context?: ContextType) => Promise<void>;

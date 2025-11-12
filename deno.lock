@@ -18,7 +18,8 @@
     "jsr:@std/path@^1.1.1": "1.1.2",
     "jsr:@std/path@^1.1.2": "1.1.2",
     "jsr:@std/testing@1.0.16": "1.0.16",
-    "jsr:@zeero-systems/commons@~0.44.6": "0.44.6"
+    "jsr:@zeero-systems/commons@~0.45.3": "0.45.3",
+    "npm:@types/node@*": "24.2.0"
   },
   "jsr": {
     "@db/postgres@0.19.5": {
@@ -85,8 +86,19 @@
         "jsr:@std/path@^1.1.2"
       ]
     },
-    "@zeero-systems/commons@0.44.6": {
-      "integrity": "7f1f97d807f60bdc75a5daea00db21d867076984eafbf13f2581d2b18114049e"
+    "@zeero-systems/commons@0.45.3": {
+      "integrity": "20210defe75e2d9cb87de65d399a624fce173e975999fdf8dac9296442094d85"
+    }
+  },
+  "npm": {
+    "@types/node@24.2.0": {
+      "integrity": "sha512-3xyG3pMCq3oYCNg7/ZP+E1ooTaGB4cG8JWRsqqOYQdbWNY4zbaV0Ennrd7stjiJEFZCaybcIgpTjJWHRfBSIDw==",
+      "dependencies": [
+        "undici-types"
+      ]
+    },
+    "undici-types@7.10.0": {
+      "integrity": "sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag=="
     }
   },
   "redirects": {
@@ -229,7 +241,7 @@
       "jsr:@std/expect@1.0.17",
       "jsr:@std/fs@^1.0.19",
       "jsr:@std/testing@1.0.16",
-      "jsr:@zeero-systems/commons@~0.44.6"
+      "jsr:@zeero-systems/commons@~0.45.3"
     ]
   }
 }
