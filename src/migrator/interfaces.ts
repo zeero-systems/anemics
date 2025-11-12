@@ -1,11 +1,11 @@
-import type { ContainerInterface, SpanInterface, TracerInterface } from '@zeero/commons';
+import type { ContainerInterface, TracerInterface } from '@zeero/commons';
 import type { DatabaseInterface, TransactionInterface } from '~/persister/interfaces.ts';
 import type { QuerierInterface } from '~/querier/interfaces.ts';
-import type { MigrationActionType, MigrationOptionsType, MigratorOptionsType } from '~/migrator/types.ts';
+import type { MigrationActionType, MigratorOptionsType } from '~/migrator/types.ts';
 
 export interface MigrationInterface {
   querier: QuerierInterface;
-  span: SpanInterface;
+  tracer: TracerInterface;
   transaction: TransactionInterface;
   options: MigratorOptionsType;
 

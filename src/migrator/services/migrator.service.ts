@@ -6,7 +6,7 @@ import type {
   MigratorOptionsType,
 } from '~/migrator/types.ts';
 import type { MigrationInterface, MigratorInterface } from '~/migrator/interfaces.ts';
-import type { ContainerInterface, SpanInterface, TracerInterface } from '@zeero/commons';
+import type { ContainerInterface, TracerInterface } from '@zeero/commons';
 
 import { expandGlob, WalkEntry } from '@std/fs';
 import { SpanEnum, StatusEnum } from '@zeero/commons';
@@ -32,13 +32,13 @@ export class Migrator implements MigratorInterface {
     };
   }
 
-  async createTableIfNotExists(span: SpanInterface): Promise<boolean> {
+  async createTableIfNotExists(tracer: TracerInterface): Promise<boolean> {
     await using client = await this.database.connection();
     await using transaction = client.transaction(`${this.options.tableName}_check`);
 
     await transaction.begin();
 
-    const tableExistsSpan = span.child({ name: 'check migrator table exists', kind: SpanEnum.INTERNAL });
+    const tableExistsSpan = tracer.start({ name: 'check migrator table exists', kind: SpanEnum.INTERNAL });
 
     const tableExistsQuery = this.querier.query
       .select.column('COUNT(*)', 'count')
@@ -96,7 +96,7 @@ export class Migrator implements MigratorInterface {
 
     }
 
-    tableExistsSpan.status({ type: StatusEnum.RESOLVED });
+    tableExistsSpan.status(StatusEnum.RESOLVED);
     tableExistsSpan.attributes({ tableExists });
     tableExistsSpan.end();
 
@@ -106,7 +106,7 @@ export class Migrator implements MigratorInterface {
   }
   
   async getFileMigrations(options: MigrationFetchOptionsType): Promise<Array<MigrationRecordType>> {
-    const spanGet = options.span.child({ name: 'migration files', kind: SpanEnum.INTERNAL });
+    const tracerGet = options.tracer.start({ name: 'migration files', kind: SpanEnum.INTERNAL });
 
     const files: Array<WalkEntry> = [];
     
@@ -139,7 +139,7 @@ export class Migrator implements MigratorInterface {
       const importPath = file.path.startsWith('file://') ? file.path : `file://${file.path}`;
       const module = await import(importPath);
       const target = new module.default(
-        options.span,
+        options.tracer,
         this.querier,
         options.transaction,
         this.options,
@@ -149,11 +149,11 @@ export class Migrator implements MigratorInterface {
       migrations.push({ target, fileName: file.name, checksum });
     }
 
-    spanGet.info(`Found ${files.length} migration files`, { count: files.length });
+    tracerGet.info(`Found ${files.length} migration files`, { count: files.length });
 
-    spanGet.status({ type: StatusEnum.RESOLVED });
-    spanGet.attributes({ count: files.length });
-    spanGet.end();
+    tracerGet.status(StatusEnum.RESOLVED);
+    tracerGet.attributes({ count: files.length });
+    tracerGet.end();
 
     return migrations;
   }
@@ -192,10 +192,10 @@ export class Migrator implements MigratorInterface {
   }
 
   async up(includes?: Array<string>): Promise<boolean> {
-    using span = this.tracer.start({ name: `migrator up`, kind: SpanEnum.CLIENT });
+    using tracer = this.tracer.start({ name: `migrator up`, kind: SpanEnum.CLIENT });
 
     try {
-      await this.createTableIfNotExists(span);
+      await this.createTableIfNotExists(tracer);
 
       let returnValue = true;
       let migrationsToPersist: Array<MigrationRecordType> = [];
@@ -206,10 +206,10 @@ export class Migrator implements MigratorInterface {
       
       await transaction.begin();
 
-      const fileMigrations = await this.getFileMigrations({ span, transaction, includes });
+      const fileMigrations = await this.getFileMigrations({ tracer, transaction, includes });
 
       if (fileMigrations.length > 0) {
-        const persistedMigrations = await this.getPersistedMigrations({ span, transaction, includes });
+        const persistedMigrations = await this.getPersistedMigrations({ tracer, transaction, includes });
 
         migrationsToPersist = fileMigrations.filter((f) => persistedMigrations.find((r) => r.file_name === f.fileName) === undefined);
 
@@ -217,35 +217,35 @@ export class Migrator implements MigratorInterface {
       }
 
       if (migrationsToPersist.length > 0) {
-        span.info(`Applying ${migrationsToPersist.length} migrations`, { files: fileNamesToPersists });
-        await this.executeUp(migrationsToPersist, { span, transaction });
+        tracer.info(`Applying ${migrationsToPersist.length} migrations`, { files: fileNamesToPersists });
+        await this.executeUp(migrationsToPersist, { tracer, transaction });
       } else {
-        span.info(`Skipping migrations - not found, applied or mismatch`);
+        tracer.info(`Skipping migrations - not found, applied or mismatch`);
         returnValue = false;
       }
       
       await transaction.commit();
       
-      span.status({ type: StatusEnum.RESOLVED });
-      span.attributes({ appliedMigrations: fileNamesToPersists });
+      tracer.status(StatusEnum.RESOLVED);
+      tracer.attributes({ appliedMigrations: fileNamesToPersists });
 
       return returnValue;
     } catch (error: any) {
       const err = { name: error.name, message: error.message, cause: error.cause ?? 'unknown' };
 
-      span.error(`Error executing up: ${error.message}`, { error: err });
-      span.status({ type: StatusEnum.REJECTED, message: error.message });
-      span.attributes({ error: err });
+      tracer.error(`Error executing up: ${error.message}`, { error: err });
+      tracer.status(StatusEnum.REJECTED);
+      tracer.attributes({ error: err });
 
       throw error;
     }
   }
 
    async down(includes?: Array<string>, count?: number): Promise<boolean> {
-    using span = this.tracer.start({ name: `migrator down`, kind: SpanEnum.INTERNAL });
+    using tracer = this.tracer.start({ name: `migrator down`, kind: SpanEnum.INTERNAL });
 
     try {
-      await this.createTableIfNotExists(span);
+      await this.createTableIfNotExists(tracer);
 
       let returnValue = true;
       let migrationsToRollback: Array<MigrationRecordType> = [];
@@ -256,10 +256,10 @@ export class Migrator implements MigratorInterface {
 
       await transaction.begin();
 
-      const fileMigrations = await this.getFileMigrations({ span, transaction, includes });
+      const fileMigrations = await this.getFileMigrations({ tracer, transaction, includes });
 
       if (fileMigrations.length > 0) {
-        const persistedMigrations = await this.getPersistedMigrations({ span, transaction, includes, count });
+        const persistedMigrations = await this.getPersistedMigrations({ tracer, transaction, includes, count });
 
         migrationsToRollback = fileMigrations.filter((f) => persistedMigrations.find((r) => r.file_name === f.fileName));
 
@@ -267,23 +267,23 @@ export class Migrator implements MigratorInterface {
       }
 
       if (migrationsToRollback.length > 0) {
-        span.info(`Rolling back ${migrationsToRollback.length} migrations`, { files: fileNamesToRollback });
-        await this.executeDown(migrationsToRollback, { span, transaction });
+        tracer.info(`Rolling back ${migrationsToRollback.length} migrations`, { files: fileNamesToRollback });
+        await this.executeDown(migrationsToRollback, { tracer, transaction });
       } else {
-        span.info(`Skipping migrations - not found, applied or mismatch`);
+        tracer.info(`Skipping migrations - not found, applied or mismatch`);
         returnValue = false;
       }
 
       await transaction.commit();
 
-      span.status({ type: StatusEnum.RESOLVED });
-      span.attributes({ rolledBackMigrations: fileNamesToRollback });
+      tracer.status(StatusEnum.RESOLVED);
+      tracer.attributes({ rolledBackMigrations: fileNamesToRollback });
 
       return returnValue;
     } catch (error: any) {
-      span.error(`Error executing down: ${error.message}`, { error });
-      span.status({ type: StatusEnum.REJECTED, message: error.message });
-      span.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
+      tracer.error(`Error executing down: ${error.message}`, { error });
+      tracer.status(StatusEnum.REJECTED);
+      tracer.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
 
       throw error;
     }
@@ -309,18 +309,18 @@ export class Migrator implements MigratorInterface {
     }
 
     for (const migration of migrations) {
-      const migrationSpan = options.span.child({ name: `execute ${migration.fileName}`, kind: SpanEnum.CLIENT });
-      migration.target.span = migrationSpan;
+      const migrationTracer = options.tracer.start({ name: `execute ${migration.fileName}`, kind: SpanEnum.CLIENT });
+      migration.target.tracer = migrationTracer;
 
       await migration.target.up();
 
-      migrationSpan.status({ type: StatusEnum.RESOLVED });
-      migrationSpan.end();
+      migrationTracer.status(StatusEnum.RESOLVED);
+      migrationTracer.end();
 
       if (migration.target.persist) {
-        const persistSpan = options.span.child({ name: `persist ${migration.fileName}`, kind: SpanEnum.CLIENT });
+        const persistTracer = options.tracer.start({ name: `persist ${migration.fileName}`, kind: SpanEnum.CLIENT });
 
-        const time = Number((migrationSpan.options.endTime || 0) - migrationSpan.options.startTime).toFixed(3);
+        const time = Number((migrationTracer.trace.endTime || 0) - migrationTracer.trace.startTime).toFixed(3);
 
         const table = this.querier.query.insert
           .table(`${this.options.tableSchema}.${this.options.tableName}_files`)
@@ -337,9 +337,9 @@ export class Migrator implements MigratorInterface {
 
         const migrationRecord = await options.transaction.execute<{ id: number }>(table.text, { args: table.args });
 
-        persistSpan.attributes({ id: migrationRecord.rows[0].id, migrationId });
-        persistSpan.status({ type: StatusEnum.RESOLVED });
-        persistSpan.end();
+        persistTracer.attributes({ id: migrationRecord.rows[0].id, migrationId });
+        persistTracer.status(StatusEnum.RESOLVED);
+        persistTracer.end();
       }
     }
   }
@@ -352,8 +352,8 @@ export class Migrator implements MigratorInterface {
     const migrationIds: Array<number> = [];
 
     for (const migration of migrations) {
-      const migrationSpan = options.span.child({ name: `execute ${migration.fileName}`, kind: SpanEnum.CLIENT });
-      migration.target.span = migrationSpan;
+      const migrationTracer = options.tracer.start({ name: `execute ${migration.fileName}`, kind: SpanEnum.CLIENT });
+      migration.target.tracer = migrationTracer;
       await migration.target.down?.();
 
       if (migration.target.persist) {
@@ -373,8 +373,8 @@ export class Migrator implements MigratorInterface {
         }
       }
 
-      migrationSpan.status({ type: StatusEnum.RESOLVED });
-      migrationSpan.end();
+      migrationTracer.status(StatusEnum.RESOLVED);
+      migrationTracer.end();
     }
 
     if (migrationIds.length > 0) {
@@ -385,8 +385,8 @@ export class Migrator implements MigratorInterface {
   
       await options.transaction.execute(deleteQuery.text, { args: deleteQuery.args });
   
-      options.span.info(`Removed persisted migrations`, { migrationIds });
-      options.span.attributes({ migrationIds });
+      options.tracer.info(`Removed persisted migrations`, { migrationIds });
+      options.tracer.attributes({ migrationIds });
     }
 
   }

@@ -82,15 +82,15 @@ export class Application implements ApplicationInterface {
 
     this.tracer = this.packer.container.construct<TracerInterface>('Tracer') as TracerInterface;
 
-    const span = this.tracer.start({ name: 'application' });
+    const tracer = this.tracer.start({ name: 'application' });
 
     // @TODO better way to expose current package version
     this.tracer.info(`Anemic Framework v0.20.0`);
     this.tracer.info(`Running Deno v${Deno.version.deno} & Typescript v${Deno.version.typescript}`);
 
-    this.setServers(span);
-    this.setMiddlewares(span);
-    this.setRoutes(span);
+    this.setServers(tracer);
+    this.setMiddlewares(tracer);
+    this.setRoutes(tracer);
 
     this.packer.container.add([
       { name: 'Packer', target: this.packer },
@@ -100,11 +100,11 @@ export class Application implements ApplicationInterface {
 
     const resources = this.resourcer.getResource();
     if (resources) {
-      span.attributes(resources);
+      tracer.attributes(resources);
     }
 
-    span.status(StatusEnum.RESOLVED);
-    span.end();
+    tracer.status(StatusEnum.RESOLVED);
+    tracer.end();
   }
 
   private setServers(tracer: TracerInterface): void {

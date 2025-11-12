@@ -1,4 +1,4 @@
-import type { SpanInterface } from '@zeero/commons';
+import type { TracerInterface } from '@zeero/commons';
 import type { MigrationInterface } from '~/migrator/interfaces.ts';
 import type { MigratorOptionsType } from '~/migrator/types.ts';
 import type { QuerierInterface } from '~/querier/interfaces.ts';
@@ -11,7 +11,7 @@ export class TestTableMigration implements MigrationInterface {
   description = 'Create test table for migration testing';
 
   constructor(
-    public span: SpanInterface,
+    public tracer: TracerInterface,
     public querier: QuerierInterface,
     public transaction: TransactionInterface,
     public options: MigratorOptionsType,
@@ -29,17 +29,17 @@ export class TestTableMigration implements MigrationInterface {
     try {
       await this.transaction.execute(table);
       
-      this.span.info(`Test table created`);
-      this.span.status({ type: StatusEnum.RESOLVED });
+      this.tracer.info(`Test table created`);
+      this.tracer.status(StatusEnum.RESOLVED);
     } catch (error: any) {
-      this.span.error(`Error executing migration up: ${error.message}`);
-      this.span.status({ type: StatusEnum.REJECTED, message: error.message });
-      this.span.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
+      this.tracer.error(`Error executing migration up: ${error.message}`);
+      this.tracer.status(StatusEnum.REJECTED);
+      this.tracer.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
 
       throw error;
     }
 
-    this.span.attributes({ query: table });
+    this.tracer.attributes({ query: table });
   }
 
   async down(): Promise<void> {
@@ -48,17 +48,17 @@ export class TestTableMigration implements MigrationInterface {
     try {
       await this.transaction.execute(testTable);
 
-      this.span.info(`Test table dropped`);
-      this.span.status({ type: StatusEnum.RESOLVED });
+      this.tracer.info(`Test table dropped`);
+      this.tracer.status(StatusEnum.RESOLVED);
     } catch (error: any) {
-      this.span.error(`Error executing migration down: ${error.message}`);
-      this.span.status({ type: StatusEnum.REJECTED, message: error.message });
-      this.span.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
+      this.tracer.error(`Error executing migration down: ${error.message}`);
+      this.tracer.status(StatusEnum.REJECTED);
+      this.tracer.attributes({ error: { name: error.name, message: error.message, cause: error.cause ?? 'unknown' } });
 
       throw error;
     }
 
-    this.span.attributes({ query: testTable });
+    this.tracer.attributes({ query: testTable });
   }
 }
 

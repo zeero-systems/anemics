@@ -1,4 +1,4 @@
-import { SpanInterface } from '@zeero/commons';
+import { TracerInterface } from '@zeero/commons';
 import { MigrationInterface } from '~/migrator/interfaces.ts';
 import { TransactionInterface } from '~/persister/interfaces.ts';
 
@@ -12,7 +12,7 @@ export type MigrationOptionsType = {
 }
 
 export type MigrationFetchOptionsType = {
-  span: SpanInterface;
+  tracer: TracerInterface;
   transaction: TransactionInterface;
 } & MigrationOptionsType;
 
