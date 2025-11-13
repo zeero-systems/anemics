@@ -16,13 +16,12 @@ export interface RequesterInterface<T = BodyInit> extends Request {
 export interface ResponserInterface {
   body: BodyInit | undefined | null;
   parsed: BodyInit | undefined | null;
-  headers: Headers | undefined;
+  headers: Record<string, string> | undefined;
   status: HttpStatusEnum | undefined;
   statusText: string | undefined;
   metadata: Record<string | symbol, any>;
   setBody(value: BodyInit | undefined | null): void;
   setParsed(value: BodyInit | undefined | null): void;
-  setHeaders(headers: Headers): void;
   setHeader(name: string, value: string): void;
   setStatus(status: HttpStatusEnum): void;
   setStatusText(statusText: string): void;

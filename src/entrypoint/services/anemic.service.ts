@@ -135,20 +135,20 @@ export class Anemic implements AnemicInterface {
     const route = this.application.router.routes[method]?.find((route) => route.pattern?.test(requester.url));
 
     if (!route) {
-      readySpan.event('route.not.found');
+      readySpan.event('route.not_found');
       readySpan.status(StatusEnum.REJECTED);
       readySpan.end();
 
       return new Response(null, { status: 404 });
     }
 
-    readySpan.attributes({ method: requester.method, pathname: route.pathname });
+    readySpan.event('route.found');
     readySpan.info(`${requester.method} ${route.pathname}`);
 
     const container = this.application.packer.container.duplicate();
 
-    readySpan.attributes({ route: { action: route.action, controller: route.controller } });
     readySpan.status(StatusEnum.RESOLVED);
+    readySpan.attributes({ method: requester.method, pathname: route.pathname, action: route.action, controller: route.controller });
     readySpan.end();
 
     const responseTracer = tracer.start({ name: `response`, kind: SpanEnum.INTERNAL });
@@ -157,11 +157,13 @@ export class Anemic implements AnemicInterface {
     const context: ContextType = { handler, requester, responser, container, route, server, tracer: responseTracer };
     container.collection.set('Context', { artifact: { name: 'Context', target: context }, tags: ['P'] });
 
+    responseTracer.event('context.created');
+
     await this.execute(route, context);
 
     const status = responser.status || 200;
 
-    responseTracer.info(`${requester.method} ${route.pathname} with ${status}`);
+    responseTracer.event('response.executed');
     responseTracer.attributes({ status, statusText: responser.statusText, headers: responser.headers });
     responseTracer.status(StatusEnum.RESOLVED);
     responseTracer.end();

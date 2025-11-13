@@ -5,7 +5,7 @@ import HttpStatusEnum from '~/network/enums/http-status.enum.ts';
 export class Responser implements ResponserInterface {
   body: BodyInit | undefined | null;
   parsed: BodyInit | null | undefined;
-  headers: Headers | undefined;
+  headers: Record<string, string> | undefined;
   status: HttpStatusEnum | undefined;
   statusText: string | undefined;
   metadata: Record<string | symbol, any> = {};
@@ -21,12 +21,11 @@ export class Responser implements ResponserInterface {
     this.metadata[key] = value;
   }
 
-  setHeaders(headers: Headers) {
-    this.headers = headers;
-  }
   setHeader(name: string, value: string) {
-    if (!this.headers) this.headers = new Headers();
-    this.headers?.set(name, value);
+    if (!this.headers) { 
+      this.headers = {};
+    }
+    this.headers[name] = value;
   }
 
   setStatus(status: HttpStatusEnum) {
